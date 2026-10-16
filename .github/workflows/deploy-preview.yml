@@ -42,6 +42,10 @@ jobs:
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
           set ssl:verify-certificate true
+          echo "FTP current directory:"
+          pwd
+          echo "FTP root entries:"
+          cls -1
           cd "$FTP_DIR"
           put preview/index.html -o index.html
           bye
