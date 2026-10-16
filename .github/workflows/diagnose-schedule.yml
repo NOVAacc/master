@@ -21,7 +21,7 @@ jobs:
           sudo apt-get install -y -qq lftp
           echo "PROBE=master-cleanup-$(openssl rand -hex 16).php" >> "$GITHUB_ENV"
           cat > /tmp/test-schedule.py <<'PY'
-          import urllib.request,urllib.error,http.cookiejar,urllib.parse,json,os,secrets
+          import urllib.request,urllib.error,http.cookiejar,urllib.parse,json,os,secrets,re,html
           base='https://edu.china.kg'
           jar=http.cookiejar.CookieJar()
           class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -43,17 +43,27 @@ jobs:
           # Credentials stay local to this job; cleanup is limited to this exact synthetic account.
           open('/tmp/test-identity.json','w').write(json.dumps({'email':email,'slug':slug}))
           call('/register')
-          code,_,_=call('/register',{'name':'Проверка расписания','email':email,'slug':slug,'password':password,'password_confirmation':password},'POST')
-          print('Registration response:',code)
+          code,regheaders,_=call('/register',{'name':'Проверка расписания','email':email,'slug':slug,'password':password,'password_confirmation':password},'POST')
+          print('Registration response:',code,'location:',regheaders.get('Location'))
           if code not in (302,303):raise RuntimeError('Test registration failed')
           code,_,body=call('/dashboard')
-          page=json.loads(body)
+          print('Dashboard response:',code,'json:',body.lstrip().startswith(b'{'))
+          if not body.lstrip().startswith(b'{'):
+              match=re.search(r'data-page="([^"]+)"',body.decode())
+              if not match:raise RuntimeError('Dashboard not returned, status='+str(code))
+              page=json.loads(html.unescape(match.group(1)))
+          else:page=json.loads(body)
           print('Dashboard component:',page.get('component'))
           hours=[{'weekday':1,'starts_at':'09:00','ends_at':'18:00'},{'weekday':2,'starts_at':'10:00','ends_at':'19:00'}]
           code,headers,body=call('/schedule',{'hours':hours},'PUT')
           print('Schedule PUT response:',code,'content-type:',headers.get('Content-Type'))
           code,_,body=call('/dashboard')
-          page=json.loads(body)
+          print('Dashboard response:',code,'json:',body.lstrip().startswith(b'{'))
+          if not body.lstrip().startswith(b'{'):
+              match=re.search(r'data-page="([^"]+)"',body.decode())
+              if not match:raise RuntimeError('Dashboard not returned, status='+str(code))
+              page=json.loads(html.unescape(match.group(1)))
+          else:page=json.loads(body)
           print('Saved rows:',len(page.get('props',{}).get('hours',[])))
           print('Validation errors:',page.get('props',{}).get('errors',{}))
           print('Success notice:',page.get('props',{}).get('flash',{}).get('success'))
