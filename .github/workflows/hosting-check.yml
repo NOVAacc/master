@@ -1,9 +1,6 @@
 name: Check Fornex runtime
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/hosting-check.yml']
 permissions:
   contents: read
 concurrency:
@@ -25,8 +22,6 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq lftp
           echo "CHECK_NAME=master-check-$(openssl rand -hex 16).php" >> "$GITHUB_ENV"
-          echo "CHECK_DIR=master-handler-$(openssl rand -hex 16)" >> "$GITHUB_ENV"
-          printf '%s\n' '<IfModule mime_module>' 'AddHandler application/x-httpd-ea-php83___lsphp .php .phtml' '</IfModule>' > /tmp/master-handler.htaccess
           cat > /tmp/master-runtime.php <<'PHP'
           <?php
           header('Content-Type: application/json');
@@ -56,9 +51,6 @@ jobs:
           set ssl:verify-certificate true
           cd /
           put /tmp/master-runtime.php -o $CHECK_NAME
-          mkdir $CHECK_DIR
-          put /tmp/master-runtime.php -o $CHECK_DIR/index.php
-          put /tmp/master-handler.htaccess -o $CHECK_DIR/.htaccess
           bye
           EOF
       - name: Inspect server runtime
@@ -66,7 +58,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.MASTER_DB_PASSWORD }}
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error --max-time 30 "https://edu.china.kg/$CHECK_DIR/index.php" -o /tmp/runtime.json
+          curl --fail --silent --show-error --max-time 30 "https://edu.china.kg/$CHECK_NAME" -o /tmp/runtime.json
           python3 - <<'PY'
           import json
           r = json.load(open('/tmp/runtime.json'))
@@ -81,73 +73,6 @@ jobs:
           else
             echo "Database secret: MASTER_DB_PASSWORD is missing"
           fi
-      - name: Apply verified handler to site
-        run: |
-          set -euo pipefail
-          timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF > /tmp/root-entries.txt
-          set cmd:fail-exit true
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          set ssl:verify-certificate true
-          cd /
-          cls -a -1
-          bye
-          EOF
-          if grep -Fxq '.htaccess' /tmp/root-entries.txt; then
-            echo "HAD_HTACCESS=true" >> "$GITHUB_ENV"
-            timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
-          set cmd:fail-exit true
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          set ssl:verify-certificate true
-          cd /
-          get .htaccess -o /tmp/previous.htaccess
-          bye
-          EOF
-          else
-            echo "HAD_HTACCESS=false" >> "$GITHUB_ENV"
-            touch /tmp/previous.htaccess
-          fi
-          cp /tmp/previous.htaccess /tmp/site.htaccess
-          printf '\n# Master PHP handler begin\nAddHandler application/x-httpd-ea-php83___lsphp .php .phtml\n# Master PHP handler end\n' >> /tmp/site.htaccess
-          echo "HANDLER_CHANGED=true" >> "$GITHUB_ENV"
-          timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
-          set cmd:fail-exit true
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          set ssl:verify-certificate true
-          cd /
-          put /tmp/site.htaccess -o .htaccess
-          bye
-          EOF
-          curl --fail --silent --show-error --max-time 30 "https://edu.china.kg/$CHECK_NAME?root=1" -o /tmp/root-runtime.json
-          python3 - <<'PY'
-          import json
-          r = json.load(open('/tmp/root-runtime.json'))
-          print(json.dumps(r, indent=2))
-          assert r['php_version_id'] >= 80200
-          assert all(r['extensions'].values())
-          PY
-          curl --fail --silent --show-error --max-time 30 https://edu.china.kg/ -o /tmp/demo.html
-          grep -q 'Master' /tmp/demo.html
-      - name: Restore handler if validation failed
-        if: failure() && env.HANDLER_CHANGED == 'true'
-        run: |
-          set -euo pipefail
-          if test "$HAD_HTACCESS" = true; then
-            FTP_RESTORE='put /tmp/previous.htaccess -o .htaccess'
-          else
-            FTP_RESTORE='rm .htaccess'
-          fi
-          timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
-          set cmd:fail-exit true
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          set ssl:verify-certificate true
-          cd /
-          $FTP_RESTORE
-          bye
-          EOF
       - name: Remove temporary check
         if: always() && env.CHECK_NAME != ''
         run: |
@@ -161,8 +86,5 @@ jobs:
           set ssl:verify-certificate true
           cd /
           rm $CHECK_NAME
-          rm $CHECK_DIR/index.php
-          rm $CHECK_DIR/.htaccess
-          rmdir $CHECK_DIR
           bye
           EOF

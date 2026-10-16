@@ -1,21 +1,21 @@
-# Совместимость Fornex
+# Проверенная среда Fornex
 
-Проверено реальным временным PHP-скриптом на edu.china.kg 16 октября 2026:
+16 октября 2026 на edu.china.kg подтверждён PHP 8.3.33, SAPI litespeed. Установлены mbstring, PDO MySQL, DOM, ctype, fileinfo, tokenizer, OpenSSL и ZipArchive. Приватный каталог /home/n66843 доступен PHP для записи.
 
-- PHP 8.1.34 — требуется переключение домена на PHP 8.3 (Laravel 12 требует 8.2+).
-- mbstring, PDO MySQL, DOM, ctype, fileinfo, tokenizer и OpenSSL установлены.
-- ZipArchive доступен.
-- Приватный родительский каталог /home/n66843 доступен PHP для записи.
-- Проверенный в отдельной временной папке обработчик PHP 8.3 через AddType в .htaccess не изменил runtime: по-прежнему 8.1.34. Основной сайт этим тестом не изменялся.
-- Все временные диагностические файлы и папки удалены после проверки.
+В cPanel был выбран ea-php83, но фактически использовался PHP 8.1.34. Временный тест показал, что нужен именно обработчик LiteSpeed:
 
-Ранее сообщена MySQL 5.7.44-cll-lve, DB_HOST=localhost. Laravel 12 поддерживает MySQL 5.7+; CI приложения успешно прошёл на 5.7 и 8.0, включая конкурентное бронирование.
+```apache
+AddHandler application/x-httpd-ea-php83___lsphp .php .phtml
+```
 
-Смена PHP: cPanel → MultiPHP Manager → только edu.china.kg → PHP 8.3 → Apply. Затем можно повторить Check Fornex runtime в GitHub Actions. Если домен использует PHP-FPM, .htaccess не переключает версию — нужна панель.
+Он проверен в отдельной папке, затем добавлен к корню с проверкой сайта и возможностью восстановления прежнего .htaccess. Временные диагностические файлы удалены.
 
-Документация:
+MySQL ранее сообщён как 5.7.44-cll-lve, host localhost. Laravel 12 поддерживает MySQL 5.7+, PHP 8.2+. CI приложения проходит на MySQL 5.7 и 8.0, включая конкурентное бронирование. Установка/откат релиза отдельно проверяются на одноразовой MySQL 8.0.
+
+Источники:
 - https://laravel.com/docs/12.x/releases
 - https://laravel.com/docs/12.x/database
-- https://support.cpanel.net/hc/en-us/articles/24112641934103-How-to-set-a-different-PHP-version-per-directory
+- https://fornex.com/help/processing-php-html/
+- https://docs.litespeedtech.com/lsws/cp/cpanel/php/
 
-FTP: hostch01.fornex.org:21 с проверкой TLS. Изолированный корень / соответствует /home/n66843/public_html/edu.china.kg. Секреты не хранятся в репозитории.
+FTP-корень / соответствует /home/n66843/public_html/edu.china.kg. FTPS hostch01.fornex.org:21 с проверкой TLS.
