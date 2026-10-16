@@ -1,4 +1,4 @@
-import { usePage } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import type { ReactNode } from "react";
 export function Notice() {
     const { flash } = usePage<{ flash: { success?: string } }>().props;
@@ -33,8 +33,8 @@ export function Field({
 }
 export function Brand() {
     return (
-        <div className="brand">
+        <Link href="/" className="brand" aria-label="Master — главная страница">
             master<span>.</span>
-        </div>
+        </Link>
     );
 }

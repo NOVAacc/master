@@ -48,6 +48,31 @@ class MasterTest extends TestCase
             'client_phone' => '+996 555 123456', 'consent' => true];
     }
 
+    public function test_home_lists_ready_profiles_and_ranks_only_completed_bookings(): void
+    {
+        [$user, $older, $service] = $this->master('older');
+        $older->forceFill(['created_at' => now()->subDay()])->save();
+        [, $newer] = $this->master('newer');
+        [, $disabled] = $this->master('disabled');
+        $disabled->update(['booking_enabled' => false]);
+        [, $inactive, $inactiveService] = $this->master('inactive');
+        $inactiveService->update(['is_active' => false]);
+        $older->services()->create(['name' => 'Hidden cheap service', 'duration_minutes' => 30,
+            'price_som' => 1, 'is_active' => false]);
+        $appointment = app(BookAppointment::class)->create($older, $service,
+            CarbonImmutable::parse('2026-10-19 04:00:00', 'UTC'), 'Secret Customer', '+996555999888');
+        $appointment->update(['status' => 'completed']);
+        $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Home')
+            ->has('newMasters', 2)->where('newMasters.0.slug', 'newer')
+            ->where('newMasters.1.price_from', 800)->missing('newMasters.0.phone')
+            ->missing('newMasters.0.user_id')->has('topMasters', 1)
+            ->where('topMasters.0.slug', 'older')->where('topMasters.0.completed_count', 1))
+            ->assertDontSee('Secret Customer')->assertDontSee('+996555999888')->assertDontSee($user->email);
+        $this->actingAs($user)->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Home'));
+        $appointment->update(['status' => 'cancelled']);
+        $this->get('/')->assertInertia(fn (Assert $page) => $page->has('topMasters', 0));
+    }
+
     public function test_registration_creates_private_cabinet_and_profile(): void
     {
         $this->post('/register', ['name' => 'Айзада', 'email' => 'aizada@example.test',

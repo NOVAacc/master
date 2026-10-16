@@ -1,0 +1,155 @@
+import { Head, Link, usePage } from "@inertiajs/react";
+import { Brand } from "../Shared";
+
+type Master = {
+    slug: string;
+    display_name: string;
+    specialty: string | null;
+    address: string | null;
+    price_from: number;
+    completed_count: number;
+};
+
+function MasterCard({
+    master,
+    popular = false,
+}: {
+    master: Master;
+    popular?: boolean;
+}) {
+    return (
+        <Link
+            className="master-card panel"
+            href={`/m/${encodeURIComponent(master.slug)}`}
+        >
+            <div className="row">
+                <div className="avatar large" aria-hidden="true">
+                    {Array.from(master.display_name)[0]}
+                </div>
+                <div>
+                    <h3>{master.display_name}</h3>
+                    <p className="muted small">
+                        {master.specialty || "Частный специалист"}
+                    </p>
+                </div>
+            </div>
+            {master.address && <p className="muted small">{master.address}</p>}
+            {popular && (
+                <p className="small muted">
+                    Завершённых записей: {master.completed_count}
+                </p>
+            )}
+            <div className="row between master-card-footer">
+                <span>от {master.price_from.toLocaleString("ru-RU")} сом</span>
+                <span className="accent">Выбрать время →</span>
+            </div>
+        </Link>
+    );
+}
+
+export default function Home({
+    newMasters,
+    topMasters,
+}: {
+    newMasters: Master[];
+    topMasters: Master[];
+}) {
+    const { auth } = usePage<{ auth: { user: { name: string } | null } }>()
+        .props;
+    return (
+        <div className="catalog-wrap">
+            <Head title="Мастера и онлайн-запись" />
+            <header className="catalog-header row between">
+                <Brand />
+                <nav className="row" aria-label="Личный кабинет">
+                    <Link href={auth.user ? "/dashboard" : "/login"}>
+                        {auth.user ? "Мой кабинет" : "Войти"}
+                    </Link>
+                    {!auth.user && (
+                        <Link className="primary" href="/register">
+                            Стать мастером
+                        </Link>
+                    )}
+                </nav>
+            </header>
+            <main>
+                <section className="catalog-hero">
+                    <p className="eyebrow">МАСТЕР ДЛЯ ВАШЕГО ДЕЛА</p>
+                    <h1>
+                        Найдите своего мастера.
+                        <br />
+                        Выберите удобное время.
+                    </h1>
+                    <p className="muted">
+                        Знакомьтесь со специалистами, смотрите услуги и
+                        записывайтесь онлайн.
+                    </p>
+                    <nav className="row wrap" aria-label="Каталог мастеров">
+                        <a href="#new" className="primary">
+                            Новые мастера
+                        </a>
+                        <a href="#top" className="ghost">
+                            Популярные мастера
+                        </a>
+                    </nav>
+                </section>
+                <section
+                    id="new"
+                    className="catalog-section"
+                    aria-labelledby="new-title"
+                >
+                    <p className="eyebrow">НОВЫЕ ЗНАКОМСТВА</p>
+                    <h2 id="new-title">Новые мастера</h2>
+                    <p className="muted">
+                        Специалисты, которые недавно присоединились к Master.
+                    </p>
+                    {newMasters.length ? (
+                        <div className="masters-grid">
+                            {newMasters.map((master) => (
+                                <MasterCard key={master.slug} master={master} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="panel empty">
+                            Здесь появятся мастера с открытой записью и
+                            добавленными услугами.{" "}
+                            <Link href={auth.user ? "/dashboard" : "/register"}>
+                                Создать свой профиль
+                            </Link>
+                        </div>
+                    )}
+                </section>
+                <section
+                    id="top"
+                    className="catalog-section"
+                    aria-labelledby="top-title"
+                >
+                    <p className="eyebrow">ВЫБОР КЛИЕНТОВ</p>
+                    <h2 id="top-title">Популярные мастера</h2>
+                    <p className="muted">
+                        По количеству завершённых записей через Master.
+                    </p>
+                    {topMasters.length ? (
+                        <div className="masters-grid">
+                            {topMasters.map((master) => (
+                                <MasterCard
+                                    key={master.slug}
+                                    master={master}
+                                    popular
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="panel empty">
+                            Популярные мастера появятся после первых завершённых
+                            записей.
+                        </div>
+                    )}
+                </section>
+            </main>
+            <footer className="catalog-footer muted small">
+                Master — время для вашего дела.
+            </footer>
+        </div>
+    );
+}
