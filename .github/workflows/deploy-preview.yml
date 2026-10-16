@@ -23,6 +23,8 @@ jobs:
           test -n "$FTP_USER"
           test -n "$FTP_PASSWORD"
           test -n "$FTP_DIR"
+          # FTP_HOST must be ftp.n66843.hostch01.fornex.org
+          # FTP_USER must be the complete FTP account name, including @host
           sudo apt-get update -qq
           sudo apt-get install -y -qq lftp
           timeout 90s lftp -u "$FTP_USER","$FTP_PASSWORD" -p 21 "ftp://$FTP_HOST" <<EOF
