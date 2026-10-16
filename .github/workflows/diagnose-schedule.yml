@@ -21,7 +21,7 @@ jobs:
           sudo apt-get install -y -qq lftp
           echo "PROBE=master-cleanup-$(openssl rand -hex 16).php" >> "$GITHUB_ENV"
           cat > /tmp/test-schedule.py <<'PY'
-          import urllib.request,urllib.error,http.cookiejar,urllib.parse,json,os,secrets,re,html
+          import urllib.request,urllib.error,http.cookiejar,urllib.parse,json,os,secrets,re,html,http.client
           base='https://edu.china.kg'
           jar=http.cookiejar.CookieJar()
           class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -38,6 +38,7 @@ jobs:
               try:
                   with opener.open(req,timeout=30) as r:return r.status,r.headers,r.read()
               except urllib.error.HTTPError as e:return e.code,e.headers,e.read()
+              except http.client.RemoteDisconnected:return 0,{},b''
           marker=secrets.token_hex(10)
           email='master-check-'+marker+'@example.test'
           slug='master-check-'+marker
