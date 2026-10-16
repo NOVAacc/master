@@ -1,0 +1,72 @@
+name: Diagnose schedule persistence
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/diagnose-schedule.yml']
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FTP_USER: ${{ secrets.MASTER_FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.MASTER_FTP_PASSWORD }}
+    steps:
+      - name: Prepare limited read-only diagnostics
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
+          echo "PROBE=master-schedule-$(openssl rand -hex 16).php" >> "$GITHUB_ENV"
+          cat > /tmp/schedule-probe.php <<'PHP'
+          <?php
+          header('Content-Type: application/json');
+          header('Cache-Control: no-store');
+          ini_set('display_errors','0');
+          $base='/home/n66843/master-app/current';
+          require $base.'/vendor/autoload.php';
+          $app=require $base.'/bootstrap/app.php';
+          $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+          $hour=Illuminate\Support\Facades\DB::table('master_working_hours')->select('weekday','starts_at','ends_at')->first();
+          $log=$app->storagePath('logs/laravel.log');
+          $tail='';
+          if(is_file($log)){
+            $f=fopen($log,'rb');fseek($f,max(0,filesize($log)-65536));$tail=stream_get_contents($f);fclose($f);
+          }
+          preg_match_all('/SQLSTATE\\[[A-Z0-9]+\\][^\\n]{0,160}/',$tail,$errors);
+          $safe=[];
+          foreach(array_slice($errors[0],-5) as $error){
+            preg_match('/SQLSTATE\\[([A-Z0-9]+)\\]/',$error,$state);
+            preg_match('/(?:Unknown column|Column) [\x27\x60]([a-z_]+)[\x27\x60]/i',$error,$column);
+            $safe[]=['sqlstate'=>$state[1]??null,'column'=>$column[1]??null,'datetime_error'=>str_contains($error,'datetime'),'duplicate'=>str_contains($error,'Duplicate'),'constraint'=>str_contains($error,'constraint')];
+          }
+          echo json_encode(['weekday_type'=>$hour?gettype($hour->weekday):null,'time_type'=>$hour?gettype($hour->starts_at):null,'recent_database_error_types'=>$safe],JSON_THROW_ON_ERROR);
+          PHP
+      - name: Upload and inspect diagnostics
+        run: |
+          set -euo pipefail
+          timeout 60s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          put /tmp/schedule-probe.php -o $PROBE
+          bye
+          EOF
+          curl --fail --silent --show-error --max-time 30 "https://edu.china.kg/$PROBE"
+      - name: Remove diagnostics
+        if: always() && env.PROBE != ''
+        run: |
+          set -euo pipefail
+          timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          rm -f $PROBE
+          bye
+          EOF
