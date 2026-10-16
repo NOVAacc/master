@@ -1,9 +1,6 @@
 name: Check Fornex runtime
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/hosting-check.yml']
 permissions:
   contents: read
 concurrency:
@@ -25,8 +22,6 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq lftp
           echo "CHECK_NAME=master-check-$(openssl rand -hex 16).php" >> "$GITHUB_ENV"
-          echo "CHECK_DIR=master-php83-$(openssl rand -hex 16)" >> "$GITHUB_ENV"
-          printf '%s\n' '<IfModule mime_module>' 'AddType application/x-httpd-ea-php83___lsphp .php .phtml' '</IfModule>' > /tmp/master-php83.htaccess
           cat > /tmp/master-runtime.php <<'PHP'
           <?php
           header('Content-Type: application/json');
@@ -34,6 +29,7 @@ jobs:
           $required = ['mbstring','pdo_mysql','dom','ctype','fileinfo','tokenizer','openssl'];
           echo json_encode([
             'php' => PHP_VERSION,
+            'sapi' => PHP_SAPI,
             'php_version_id' => PHP_VERSION_ID,
             'extensions' => array_combine($required, array_map('extension_loaded', $required)),
             'zip' => class_exists('ZipArchive'),
@@ -53,9 +49,6 @@ jobs:
           set ssl:verify-certificate true
           cd /
           put /tmp/master-runtime.php -o $CHECK_NAME
-          mkdir $CHECK_DIR
-          put /tmp/master-runtime.php -o $CHECK_DIR/index.php
-          put /tmp/master-php83.htaccess -o $CHECK_DIR/.htaccess
           bye
           EOF
       - name: Inspect server runtime
@@ -64,15 +57,13 @@ jobs:
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --max-time 30 "https://edu.china.kg/$CHECK_NAME" -o /tmp/runtime.json
-          curl --fail --silent --show-error --max-time 30 "https://edu.china.kg/$CHECK_DIR/index.php" -o /tmp/runtime83.json
           python3 - <<'PY'
           import json
-          print('Default runtime:', json.load(open('/tmp/runtime.json')))
-          r = json.load(open('/tmp/runtime83.json'))
+          r = json.load(open('/tmp/runtime.json'))
           print(json.dumps(r, indent=2))
           assert r['php_version_id'] >= 80200, 'PHP 8.2+ is required'
           assert all(r['extensions'].values()), 'Required PHP extensions are missing'
-          assert r['zip'], 'ZipArchive is required for the FTPS release installer'
+          assert r['zip'], 'ZipArchive is required for archive extraction'
           assert r['private_parent_writable'], 'A private application directory must be writable'
           PY
           if test -n "$DB_PASSWORD"; then
@@ -93,8 +84,5 @@ jobs:
           set ssl:verify-certificate true
           cd /
           rm $CHECK_NAME
-          rm $CHECK_DIR/index.php
-          rm $CHECK_DIR/.htaccess
-          rmdir $CHECK_DIR
           bye
           EOF

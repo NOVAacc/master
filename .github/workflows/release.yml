@@ -1,0 +1,60 @@
+name: Build server release
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'bootstrap/**'
+      - 'config/**'
+      - 'database/**'
+      - 'resources/**'
+      - 'routes/**'
+      - 'public/**'
+      - 'composer.*'
+      - 'package*.json'
+      - 'vite.config.js'
+      - 'deploy/**'
+      - '.github/workflows/release.yml'
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, pdo_sqlite
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: cp .env.example .env && php artisan key:generate
+      - run: npm ci --no-audit --no-fund
+      - run: npm run check && npm run build
+      - run: php artisan test --compact
+      - name: Install production dependencies
+        run: composer install --no-dev --no-interaction --prefer-dist --no-progress --optimize-autoloader
+      - name: Build private release archive
+        run: |
+          python3 deploy/build-release.py /tmp/release/master-server.zip --revision "$GITHUB_SHA"
+          python3 - <<'PY'
+          import zipfile
+          with zipfile.ZipFile('/tmp/release/master-server.zip') as z:
+              names = z.namelist()
+              assert '.env' not in names
+              assert not any(n.startswith(('tests/', 'node_modules/', '.git/')) for n in names)
+              assert 'vendor/autoload.php' in names
+              assert 'public/build/manifest.json' in names
+              assert 'public/index.php' in names
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: master-server-release
+          path: /tmp/release/
+          retention-days: 14
