@@ -506,7 +506,14 @@ export default function Dashboard({
                                                 </span>
                                                 <h3>{a.client_name}</h3>
                                                 <p>
-                                                    {a.service_name_snapshot} ·{" "}
+                                                    {a.services_snapshot?.length
+                                                        ? a.services_snapshot
+                                                              .map(
+                                                                  (s) => s.name,
+                                                              )
+                                                              .join(" + ")
+                                                        : a.service_name_snapshot}{" "}
+                                                    ·{" "}
                                                     {a.price_som.toLocaleString()}{" "}
                                                     сом
                                                 </p>

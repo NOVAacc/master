@@ -116,6 +116,47 @@ class MasterTest extends TestCase
             'ends_at' => '2026-10-19 05:00:00', 'price_som' => 800, 'status' => 'pending']);
     }
 
+    public function test_multiple_services_reserve_the_combined_duration_and_keep_price_snapshots(): void
+    {
+        [, $master, $service] = $this->master();
+        $extra = $master->services()->create(['name' => 'Укладка', 'duration_minutes' => 30, 'price_som' => 400]);
+        $query = http_build_query(['date' => '2026-10-19', 'selection' => 1, 'services' => [$service->id, $extra->id]]);
+        $this->get('/m/aizada?'.$query)->assertInertia(fn (Assert $page) => $page
+            ->where('selectedServices', [$service->id, $extra->id])->where('workingDays', [1])
+            ->where('slots', fn ($slots) => collect($slots)->contains('label', '16:30') && ! collect($slots)->contains('label', '17:00')));
+        $payload = $this->payload($service);
+        unset($payload['service_id']);
+        $payload['service_ids'] = [$service->id, $extra->id];
+        $payload['price_som'] = 1;
+        $this->post('/m/aizada/book', $payload)->assertRedirect('/m/aizada')->assertSessionHasNoErrors();
+        $appointment = $master->appointments()->firstOrFail();
+        $this->assertSame(1200, $appointment->price_som);
+        $this->assertSame('2026-10-19 05:30:00', $appointment->ends_at->format('Y-m-d H:i:s'));
+        $this->assertSame('Стрижка + Укладка', $appointment->service_name_snapshot);
+        $this->assertCount(2, $appointment->services_snapshot);
+        $extra->update(['name' => 'Другая услуга', 'price_som' => 999]);
+        $this->assertSame(400, $appointment->fresh()->services_snapshot[1]['price_som']);
+        $this->post('/m/aizada/book', $this->payload($service, '2026-10-19T05:00:00+00:00'))->assertSessionHasErrors('starts_at');
+        $this->post('/m/aizada/book', $this->payload($service, '2026-10-19T05:30:00+00:00'))->assertSessionHasNoErrors();
+        $payload['starts_at'] = '2026-10-19T11:00:00+00:00';
+        $this->post('/m/aizada/book', $payload)->assertSessionHasErrors('starts_at');
+    }
+
+    public function test_multiple_services_reject_duplicates_empty_foreign_and_inactive_selections(): void
+    {
+        [, $master, $service] = $this->master();
+        [, , $foreign] = $this->master('other-multi');
+        $payload = $this->payload($service);
+        unset($payload['service_id']);
+        $this->post('/m/aizada/book', [...$payload, 'service_ids' => []])->assertSessionHasErrors('service_ids');
+        $this->post('/m/aizada/book', [...$payload, 'service_ids' => [$service->id, $service->id]])->assertSessionHasErrors('service_ids.0');
+        $this->post('/m/aizada/book', [...$payload, 'service_ids' => [$service->id, $foreign->id]])->assertNotFound();
+        $service->update(['is_active' => false]);
+        $this->post('/m/aizada/book', [...$payload, 'service_ids' => [$service->id]])->assertNotFound();
+        $this->assertDatabaseCount('master_appointments', 0);
+        $this->get('/m/aizada?selection=1')->assertInertia(fn (Assert $page) => $page->has('selectedServices', 0)->has('slots', 0));
+    }
+
     public function test_overlap_rejected_but_adjacent_slot_allowed(): void
     {
         [, , $service] = $this->master();

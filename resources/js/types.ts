@@ -28,5 +28,13 @@ export type Appointment = {
     ends_at: string;
     price_som: number;
     service_name_snapshot: string;
+    services_snapshot?:
+        | {
+              id: number;
+              name: string;
+              duration_minutes: number;
+              price_som: number;
+          }[]
+        | null;
     status: string;
 };

@@ -17,34 +17,44 @@ final class BookAppointment
      */
     public function create(
         MasterProfile $master,
-        MasterService $service,
+        MasterService|array $service,
         CarbonImmutable $startsAtUtc,
         string $clientName,
         string $clientPhone,
         ?string $comment = null
     ): MasterAppointment {
-        if ($service->master_profile_id !== $master->id || ! $service->is_active) {
-            throw ValidationException::withMessages(['service' => 'Услуга недоступна.']);
+        $selected = is_array($service) ? $service : [$service];
+        if (count($selected) < 1 || count($selected) > 20 ||
+            collect($selected)->contains(fn ($item) => ! $item instanceof MasterService || $item->master_profile_id !== $master->id || ! $item->is_active)) {
+            throw ValidationException::withMessages(['service_ids' => 'Выберите доступные услуги мастера.']);
+        }
+        $ids = collect($selected)->pluck('id')->unique()->values();
+        if ($ids->count() !== count($selected)) {
+            throw ValidationException::withMessages(['service_ids' => 'Услуги не должны повторяться.']);
         }
 
         if ($startsAtUtc->lessThanOrEqualTo(CarbonImmutable::now('UTC'))) {
             throw ValidationException::withMessages(['starts_at' => 'Выберите будущее время.']);
         }
 
-        return DB::transaction(function () use ($master, $service, $startsAtUtc, $clientName, $clientPhone, $comment) {
+        return DB::transaction(function () use ($master, $ids, $startsAtUtc, $clientName, $clientPhone, $comment) {
             $lockedMaster = MasterProfile::query()->whereKey($master->id)->lockForUpdate()->firstOrFail();
 
-            $service = MasterService::query()
-                ->whereKey($service->id)
+            $services = MasterService::query()
+                ->whereIn('id', $ids)
                 ->where('master_profile_id', $lockedMaster->id)
                 ->where('is_active', true)
-                ->firstOrFail();
+                ->orderBy('sort_order')->orderBy('id')->get();
+            if ($services->count() !== $ids->count()) {
+                throw ValidationException::withMessages(['service_ids' => 'Одна из услуг больше недоступна.']);
+            }
+            $duration = $services->sum('duration_minutes');
 
             if (! $lockedMaster->booking_enabled) {
                 throw ValidationException::withMessages(['booking' => 'Онлайн-запись отключена.']);
             }
 
-            $endsAtUtc = $startsAtUtc->addMinutes($service->duration_minutes);
+            $endsAtUtc = $startsAtUtc->addMinutes($duration);
             $overlap = MasterAppointment::query()
                 ->where('master_profile_id', $lockedMaster->id)
                 ->whereIn('status', ['pending', 'confirmed'])
@@ -63,21 +73,22 @@ final class BookAppointment
             }
 
             if ($startsAtUtc->lessThanOrEqualTo(CarbonImmutable::now('UTC')) ||
-                $service->duration_minutes < 5 ||
+                $services->contains(fn ($item) => $item->duration_minutes < 5) ||
                 ! (new WorkingHours)->contains($lockedMaster, $startsAtUtc, $endsAtUtc)) {
                 throw ValidationException::withMessages(['starts_at' => 'Выберите время в рабочем расписании мастера.']);
             }
 
             return MasterAppointment::query()->create([
                 'master_profile_id' => $lockedMaster->id,
-                'master_service_id' => $service->id,
+                'master_service_id' => $services->count() === 1 ? $services->first()->id : null,
+                'services_snapshot' => $services->map->only(['id', 'name', 'duration_minutes', 'price_som'])->all(),
                 'client_name' => $clientName,
                 'client_phone' => $clientPhone,
                 'client_comment' => $comment,
                 'starts_at' => $startsAtUtc->format('Y-m-d H:i:s'),
                 'ends_at' => $endsAtUtc->format('Y-m-d H:i:s'),
-                'price_som' => $service->price_som,
-                'service_name_snapshot' => $service->name,
+                'price_som' => $services->sum('price_som'),
+                'service_name_snapshot' => mb_substr($services->pluck('name')->implode(' + '), 0, 255),
                 'status' => $lockedMaster->auto_confirm ? 'confirmed' : 'pending',
             ]);
         }, 3);

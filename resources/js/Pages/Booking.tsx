@@ -1,10 +1,13 @@
 import { Head, router, useForm } from "@inertiajs/react";
+import { useState } from "react";
+import BookingCalendar from "../BookingCalendar";
 import { Brand, Errors, Field, Notice } from "../Shared";
 import type { Master, Service } from "../types";
 type Props = {
     master: Master;
     services: Service[];
-    selectedService: number | null;
+    selectedServices: number[];
+    workingDays: number[];
     date: string;
     minDate: string;
     maxDate: string;
@@ -12,20 +15,44 @@ type Props = {
 };
 export default function Booking(p: Props) {
     const f = useForm({
-        service_id: p.selectedService ?? "",
+        service_ids: p.selectedServices,
         starts_at: "",
         client_name: "",
         client_phone: "",
         client_comment: "",
         consent: false,
     });
-    const service = p.services.find((s) => s.id === p.selectedService);
-    const change = (date: string, id: number) => {
-        f.setData((d) => ({ ...d, starts_at: "", service_id: id }));
+    const [chosenDate, setChosenDate] = useState(p.date);
+    const [loading, setLoading] = useState(false);
+    const [loadError, setLoadError] = useState("");
+    const selected = p.services.filter((s) =>
+        f.data.service_ids.includes(s.id),
+    );
+    const duration = selected.reduce((sum, s) => sum + s.duration_minutes, 0);
+    const price = selected.reduce((sum, s) => sum + s.price_som, 0);
+    const ready =
+        !loading &&
+        chosenDate === p.date &&
+        [...f.data.service_ids].sort().join(",") ===
+            [...p.selectedServices].sort().join(",");
+    const change = (date: string, ids: number[]) => {
+        setChosenDate(date);
+        setLoadError("");
+        f.setData((d) => ({ ...d, starts_at: "", service_ids: ids }));
         router.get(
             `/m/${p.master.slug}`,
-            { date, service: id },
-            { preserveScroll: true, preserveState: true },
+            { date, services: ids, selection: 1 },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                replace: true,
+                onStart: () => setLoading(true),
+                onError: () =>
+                    setLoadError(
+                        "Не удалось обновить свободное время. Повторите выбор даты.",
+                    ),
+                onFinish: () => setLoading(false),
+            },
         );
     };
     return (
@@ -64,78 +91,153 @@ export default function Booking(p: Props) {
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault();
+                                if (
+                                    !ready ||
+                                    !selected.length ||
+                                    !f.data.starts_at
+                                )
+                                    return;
                                 f.post(`/m/${p.master.slug}/book`, {
-                                    onSuccess: () =>
+                                    onSuccess: (page) => {
+                                        setChosenDate(
+                                            page.props.date as string,
+                                        );
+                                        f.setData(
+                                            "service_ids",
+                                            page.props
+                                                .selectedServices as number[],
+                                        );
                                         f.reset(
                                             "starts_at",
                                             "client_name",
                                             "client_phone",
                                             "client_comment",
                                             "consent",
-                                        ),
+                                        );
+                                    },
                                 });
                             }}
                         >
                             <Errors errors={f.errors} />
-                            <Field label="Услуга">
-                                <select
-                                    value={p.selectedService ?? ""}
-                                    onChange={(e) =>
-                                        change(p.date, Number(e.target.value))
-                                    }
-                                >
-                                    {p.services.map((s) => (
-                                        <option key={s.id} value={s.id}>
-                                            {s.name} · {s.duration_minutes} мин
-                                            · {s.price_som.toLocaleString()} сом
-                                        </option>
-                                    ))}
-                                </select>
-                            </Field>
-                            {service?.description && (
-                                <p className="muted">{service.description}</p>
-                            )}
-                            <Field label="Дата">
-                                <input
-                                    type="date"
-                                    required
-                                    min={p.minDate}
-                                    max={p.maxDate}
-                                    value={p.date}
-                                    onChange={(e) => {
-                                        if (e.target.value)
-                                            change(
-                                                e.target.value,
-                                                p.selectedService!,
-                                            );
-                                    }}
-                                />
-                            </Field>
-                            <p className="field-title">Свободное время</p>
-                            <div className="slots">
-                                {p.slots.map((s) => (
-                                    <button
-                                        type="button"
-                                        className={
-                                            f.data.starts_at === s.value
-                                                ? "slot selected"
-                                                : "slot"
-                                        }
-                                        key={s.value}
-                                        onClick={() =>
-                                            f.setData("starts_at", s.value)
-                                        }
+                            <fieldset className="booking-services">
+                                <legend className="field-title">Услуги</legend>
+                                <p className="muted small">
+                                    Можно выбрать несколько услуг за один визит.
+                                </p>
+                                {p.services.map((s) => (
+                                    <label
+                                        key={s.id}
+                                        className={`booking-service${f.data.service_ids.includes(s.id) ? " selected" : ""}`}
                                     >
-                                        {s.label}
-                                    </button>
+                                        <input
+                                            type="checkbox"
+                                            checked={f.data.service_ids.includes(
+                                                s.id,
+                                            )}
+                                            disabled={f.processing}
+                                            onChange={(e) =>
+                                                change(
+                                                    chosenDate,
+                                                    e.target.checked
+                                                        ? [
+                                                              ...f.data
+                                                                  .service_ids,
+                                                              s.id,
+                                                          ]
+                                                        : f.data.service_ids.filter(
+                                                              (id) =>
+                                                                  id !== s.id,
+                                                          ),
+                                                )
+                                            }
+                                        />
+                                        <span className="booking-service-info">
+                                            <strong>{s.name}</strong>
+                                            {s.description && (
+                                                <span className="muted small">
+                                                    {s.description}
+                                                </span>
+                                            )}
+                                            <span className="muted small">
+                                                {s.duration_minutes} мин
+                                            </span>
+                                        </span>
+                                        <span className="booking-service-price">
+                                            {s.price_som.toLocaleString(
+                                                "ru-RU",
+                                            )}{" "}
+                                            сом
+                                        </span>
+                                    </label>
                                 ))}
+                            </fieldset>
+                            <div className="booking-total" aria-live="polite">
+                                <span>
+                                    {selected.length
+                                        ? `Выбрано услуг: ${selected.length} · ${duration} мин`
+                                        : "Выберите хотя бы одну услугу"}
+                                </span>
+                                <strong>
+                                    {price.toLocaleString("ru-RU")} сом
+                                </strong>
                             </div>
-                            {!p.slots.length && (
-                                <p className="empty">
-                                    На этот день свободного времени нет.
-                                    Выберите другую дату.
+                            <p className="field-title">Дата</p>
+                            <BookingCalendar
+                                value={chosenDate}
+                                min={p.minDate}
+                                max={p.maxDate}
+                                workingDays={p.workingDays}
+                                onChange={(date) =>
+                                    change(date, f.data.service_ids)
+                                }
+                            />
+                            {loadError && (
+                                <p className="errors" role="alert">
+                                    {loadError}
                                 </p>
                             )}
+                            <p className="field-title">Свободное время</p>
+                            <div className="slots">
+                                {(ready && selected.length ? p.slots : []).map(
+                                    (s) => (
+                                        <button
+                                            type="button"
+                                            className={
+                                                f.data.starts_at === s.value
+                                                    ? "slot selected"
+                                                    : "slot"
+                                            }
+                                            key={s.value}
+                                            aria-pressed={
+                                                f.data.starts_at === s.value
+                                            }
+                                            disabled={f.processing}
+                                            onClick={() =>
+                                                f.setData("starts_at", s.value)
+                                            }
+                                        >
+                                            {s.label}
+                                        </button>
+                                    ),
+                                )}
+                            </div>
+                            <div aria-live="polite">
+                                {loading ? (
+                                    <p className="muted small">
+                                        Обновляем свободное время…
+                                    </p>
+                                ) : !selected.length ? (
+                                    <p className="muted small">
+                                        Сначала выберите услуги.
+                                    </p>
+                                ) : ready && !p.slots.length ? (
+                                    <p className="empty">
+                                        На этот день нет свободного времени на
+                                        все выбранные услуги. Выберите другую
+                                        дату.
+                                    </p>
+                                ) : null}
+                            </div>
                             <div className="form-grid">
                                 <Field label="Ваше имя">
                                     <input
@@ -195,7 +297,12 @@ export default function Booking(p: Props) {
                             </label>
                             <button
                                 className="primary wide"
-                                disabled={f.processing || !f.data.starts_at}
+                                disabled={
+                                    f.processing ||
+                                    !ready ||
+                                    !selected.length ||
+                                    !f.data.starts_at
+                                }
                             >
                                 {f.processing ? "Отправляем…" : "Записаться"}
                             </button>
