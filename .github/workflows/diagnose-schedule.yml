@@ -5,82 +5,56 @@ on:
     workflows: ['Deploy Master application']
     types: [completed]
     branches: [main]
+  push:
+    branches: [main]
+    paths: ['.github/workflows/diagnose-schedule.yml', '.github/scripts/**']
 permissions:
   contents: read
+concurrency:
+  group: master-live-schedule-test
+  cancel-in-progress: false
 jobs:
   diagnose:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
       FTP_USER: ${{ secrets.MASTER_FTP_USER }}
       FTP_PASSWORD: ${{ secrets.MASTER_FTP_PASSWORD }}
     steps:
-      - name: Prepare isolated HTTP test and scoped cleanup
+      - uses: actions/checkout@v4
+      - name: Prepare scoped cleanup endpoint
         run: |
           set -euo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y -qq lftp
           echo "PROBE=master-cleanup-$(openssl rand -hex 16).php" >> "$GITHUB_ENV"
-          cat > /tmp/test-schedule.py <<'PY'
-          import urllib.request,urllib.error,http.cookiejar,urllib.parse,json,os,secrets,re,html,http.client
-          base='https://edu.china.kg'
-          jar=http.cookiejar.CookieJar()
-          class NoRedirect(urllib.request.HTTPRedirectHandler):
-              def redirect_request(self,*a,**kw): return None
-          opener=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar),NoRedirect())
-          version=None
-          def call(path,data=None,method='GET'):
-              headers={'X-Requested-With':'XMLHttpRequest','Accept':'text/html,application/xhtml+xml','Referer':base+'/dashboard'}
-              if version is not None:headers.update({'X-Inertia':'true','X-Inertia-Version':version})
-              for c in jar:
-                  if c.name=='XSRF-TOKEN':headers['X-XSRF-TOKEN']=urllib.parse.unquote(c.value)
-              if data is not None:headers['Content-Type']='application/json'
-              req=urllib.request.Request(base+path,data=json.dumps(data).encode() if data is not None else None,headers=headers,method=method)
-              try:
-                  with opener.open(req,timeout=30) as r:return r.status,r.headers,r.read()
-              except urllib.error.HTTPError as e:return e.code,e.headers,e.read()
-              except http.client.RemoteDisconnected:return 0,{},b''
-          marker=secrets.token_hex(10)
-          email='master-check-'+marker+'@example.test'
-          slug='master-check-'+marker
-          password=secrets.token_urlsafe(24)
-          # Credentials stay local to this job; cleanup is limited to this exact synthetic account.
-          open('/tmp/test-identity.json','w').write(json.dumps({'email':email,'slug':slug}))
-          _,_,initial=call('/register')
-          initial_page=json.loads(html.unescape(re.search(r'data-page="([^"]+)"',initial.decode()).group(1)))
-          version=initial_page['version']
-          code,regheaders,_=call('/register',{'name':'Проверка расписания','email':email,'slug':slug,'password':password,'password_confirmation':password},'POST')
-          print('Registration response:',code,'location:',regheaders.get('Location'))
-          if code not in (302,303):raise RuntimeError('Test registration failed')
-          code,_,body=call('/dashboard')
-          print('Dashboard response:',code,'json:',body.lstrip().startswith(b'{'))
-          if not body.lstrip().startswith(b'{'):
-              match=re.search(r'data-page="([^"]+)"',body.decode())
-              if not match:raise RuntimeError('Dashboard not returned, status='+str(code))
-              page=json.loads(html.unescape(match.group(1)))
-          else:page=json.loads(body)
-          print('Dashboard component:',page.get('component'))
-          hours=[{'weekday':1,'starts_at':'09:00','ends_at':'18:00'},{'weekday':2,'starts_at':'10:00','ends_at':'19:00'}]
-          code,headers,body=call('/schedule',{'hours':hours},'POST')
-          print('Schedule POST response:',code)
-          assert code in (302,303)
-          code,_,body=call('/dashboard')
-          page=json.loads(body)
-          assert page['props'].get('errors',{}) == {}, page['props'].get('errors')
-          assert page['props']['hours'] == hours, 'Saved schedule did not survive reload'
-          print('Initial schedule persisted across reload')
-          hours=[{'weekday':2,'starts_at':'11:30','ends_at':'20:15'}]
-          code,_,_=call('/schedule',{'hours':hours},'POST')
-          assert code in (302,303)
-          code,_,body=call('/dashboard')
-          assert json.loads(body)['props']['hours'] == hours, 'Edited schedule did not survive reload'
-          print('Changed times and removed day persisted')
-          code,_,_=call('/schedule',{'hours':[]},'POST')
-          assert code in (302,303)
-          code,_,body=call('/dashboard')
-          assert json.loads(body)['props']['hours'] == []
-          print('All days can be set to non-working')
+          python3 - <<'PY'
+          import secrets, hashlib, time
+          from pathlib import Path
+          token = secrets.token_hex(32)
+          text = Path('.github/scripts/cleanup-live-check.php.template').read_text()
+          text = text.replace('__TOKEN_HASH__', hashlib.sha256(token.encode()).hexdigest()).replace('__EXPIRES__', str(int(time.time())+600))
+          Path('/tmp/cleanup.php').write_text(text)
+          Path('/tmp/check-header.txt').write_text('X-Master-Check: '+token)
+          PY
+      - name: Upload scoped cleanup endpoint
+        run: |
+          set -euo pipefail
+          timeout 60s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set net:timeout 10
+          set net:max-retries 1
+          set ftp:ssl-auth TLS
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          put /tmp/cleanup.php -o $PROBE
+          bye
+          EOF
+      - name: Save, reload, edit and clear schedule through HTTPS
+        run: python3 .github/scripts/check-live-schedule.py
       - name: Remove only the synthetic test account
         if: always()
         run: |

@@ -1,0 +1,15 @@
+<?php
+ini_set('display_errors','0');
+header('Content-Type: application/json');
+if(time()>__EXPIRES__||($_SERVER['REQUEST_METHOD']??'')!=='POST'||!hash_equals('__TOKEN_HASH__',hash('sha256',$_SERVER['HTTP_X_MASTER_CHECK']??''))){http_response_code(403);exit;}
+$base='/home/n66843/master-app/current';
+require $base.'/vendor/autoload.php';
+$app=require $base.'/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+$input=json_decode(file_get_contents('php://input'),true);
+$email=$input['email']??'';$slug=$input['slug']??'';
+if(!preg_match('/^master-check-[a-f0-9]{20}@example[.]test$/',$email)||!preg_match('/^master-check-[a-f0-9]{20}$/',$slug)){http_response_code(422);exit;}
+$user=App\Models\User::where('email',$email)->where('name','Проверка расписания')->where('created_at','>=',now()->subMinutes(15))->first();
+if($user && App\Models\MasterProfile::where('user_id',$user->id)->where('slug',$slug)->exists())$user->delete();
+echo '{"test_account_removed":true}';
+
