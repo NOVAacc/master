@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from "@inertiajs/react";
 import { Brand } from "../Shared";
+import Icon from "../Icon";
 
 type Master = {
     slug: string;
@@ -22,7 +23,7 @@ function MasterCard({
             className="master-card panel"
             href={`/m/${encodeURIComponent(master.slug)}`}
         >
-            <div className="row">
+            <div className="master-card-identity">
                 <div className="avatar large" aria-hidden="true">
                     {Array.from(master.display_name)[0]}
                 </div>
@@ -33,7 +34,12 @@ function MasterCard({
                     </p>
                 </div>
             </div>
-            {master.address && <p className="muted small">{master.address}</p>}
+            {master.address && (
+                <p className="master-address muted small">
+                    <Icon name="location" />
+                    {master.address}
+                </p>
+            )}
             {popular && (
                 <p className="small muted">
                     Завершённых записей: {master.completed_count}
@@ -41,7 +47,9 @@ function MasterCard({
             )}
             <div className="row between master-card-footer">
                 <span>от {master.price_from.toLocaleString("ru-RU")} сом</span>
-                <span className="accent">Выбрать время →</span>
+                <span className="card-book-action">
+                    Записаться <Icon name="arrow" />
+                </span>
             </div>
         </Link>
     );
@@ -73,8 +81,8 @@ export default function Home({
                 </nav>
             </header>
             <main>
-                <section className="catalog-hero">
-                    <p className="eyebrow">МАСТЕР ДЛЯ ВАШЕГО ДЕЛА</p>
+                <section className="catalog-hero panel">
+                    <p className="eyebrow">ОНЛАЙН-ЗАПИСЬ · MASTER</p>
                     <h1>
                         Найдите своего мастера.
                         <br />
@@ -84,6 +92,10 @@ export default function Home({
                         Знакомьтесь со специалистами, смотрите услуги и
                         записывайтесь онлайн.
                     </p>
+                    <div className="hero-note">
+                        <Icon name="check" /> Услуги, цены и свободное время — в
+                        профиле мастера
+                    </div>
                     <nav className="row wrap" aria-label="Каталог мастеров">
                         <a href="#new" className="primary">
                             Новые мастера

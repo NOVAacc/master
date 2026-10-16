@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Icon from "./Icon";
 
 type DisplayMode = "auto" | "mobile" | "desktop";
 const storageKey = "master.display-mode";
@@ -56,6 +57,11 @@ export default function DisplayModeFooter() {
                         aria-pressed={mode === value}
                         onClick={() => selectMode(value)}
                     >
+                        {value !== "auto" && (
+                            <Icon
+                                name={value === "mobile" ? "phone" : "monitor"}
+                            />
+                        )}
                         {label}
                     </button>
                 ))}

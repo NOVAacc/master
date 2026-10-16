@@ -34,7 +34,10 @@ export function Field({
 export function Brand() {
     return (
         <Link href="/" className="brand" aria-label="Master — главная страница">
-            master<span>.</span>
+            <span className="brand-mark" aria-hidden="true">
+                <i />
+            </span>
+            master
         </Link>
     );
 }

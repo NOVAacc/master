@@ -1,5 +1,6 @@
 import { Head, Link, router, useForm } from "@inertiajs/react";
 import { useState } from "react";
+import Icon from "../Icon";
 import { Brand, Errors, Field, Notice } from "../Shared";
 import type { Appointment, Hour, Master, Service } from "../types";
 const days = [
@@ -204,7 +205,11 @@ function Schedule({ hours }: { hours: Hour[] }) {
             <button className="primary" disabled={f.processing}>
                 {f.processing ? "Сохраняем…" : "Сохранить расписание"}
             </button>
-            {f.recentlySuccessful && <p role="status" className="accent">Расписание сохранено</p>}
+            {f.recentlySuccessful && (
+                <p role="status" className="accent">
+                    Расписание сохранено
+                </p>
+            )}
         </form>
     );
 }
@@ -375,7 +380,20 @@ export default function Dashboard({
                             className={tab === key ? "active" : ""}
                             onClick={() => setTab(key)}
                         >
-                            {label}
+                            <Icon
+                                name={
+                                    {
+                                        appointments: "calendar",
+                                        services: "grid",
+                                        schedule: "clock",
+                                        profile: "user",
+                                    }[key] || "grid"
+                                }
+                            />
+                            <span>{label}</span>
+                            <span className="nav-chevron" aria-hidden="true">
+                                ›
+                            </span>
                         </button>
                     ))}
                 </nav>
@@ -394,7 +412,7 @@ export default function Dashboard({
                 </div>
             </aside>
             <main className="main">
-                <header className="row between">
+                <header className="row between dashboard-header">
                     <div>
                         <p className="eyebrow">
                             ЛИЧНЫЙ КАБИНЕТ · {master.timezone}

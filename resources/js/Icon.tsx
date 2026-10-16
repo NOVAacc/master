@@ -1,0 +1,73 @@
+import type { ReactNode } from "react";
+const paths: Record<string, ReactNode> = {
+    calendar: (
+        <>
+            <rect x="3" y="5" width="18" height="16" rx="3" />
+            <path d="M7 3v4m10-4v4M3 11h18m-14 4h2m4 0h2m-8 3h2" />
+        </>
+    ),
+    grid: (
+        <>
+            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        </>
+    ),
+    clock: (
+        <>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" />
+        </>
+    ),
+    user: (
+        <>
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
+        </>
+    ),
+    arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
+    location: (
+        <>
+            <path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z" />
+            <circle cx="12" cy="10" r="2" />
+        </>
+    ),
+    check: <path d="m5 12 4 4L19 6" />,
+    monitor: (
+        <>
+            <rect x="3" y="4" width="18" height="13" rx="2" />
+            <path d="M8 21h8m-4-4v4" />
+        </>
+    ),
+    phone: (
+        <>
+            <rect x="6" y="2" width="12" height="20" rx="3" />
+            <path d="M11 18h2" />
+        </>
+    ),
+};
+export default function Icon({
+    name,
+    className = "",
+}: {
+    name: string;
+    className?: string;
+}) {
+    return (
+        <svg
+            className={`icon ${className}`}
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+        >
+            {paths[name] || paths.grid}
+        </svg>
+    );
+}
