@@ -11,6 +11,13 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Inspect FTPS certificate names
+        env:
+          FTP_HOST: ${{ secrets.MASTER_FTP_HOST }}
+        run: |
+          set -euo pipefail
+          echo "Checking the FTPS certificate presented on port 21"
+          timeout 20s openssl s_client -starttls ftp -connect "${FTP_HOST}:21" -servername "$FTP_HOST" -showcerts </dev/null 2>/dev/null | openssl x509 -noout -subject -issuer -ext subjectAltName
       - name: Upload preview over FTPS
         env:
           FTP_HOST: ${{ secrets.MASTER_FTP_HOST }}
