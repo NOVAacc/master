@@ -1,0 +1,56 @@
+<?php
+ini_set('display_errors', '0');
+header('Content-Type: application/json; charset=utf-8');
+if (time() > __EXPIRES__ || ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' ||
+    ! hash_equals('__TOKEN_HASH__', hash('sha256', $_SERVER['HTTP_X_MASTER_CHECK'] ?? ''))) {
+    http_response_code(403);
+    exit;
+}
+try {
+    $base = '/home/n66843/master-app/current';
+    require $base.'/vendor/autoload.php';
+    $app = require $base.'/bootstrap/app.php';
+    $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+    $result = Illuminate\Support\Facades\DB::transaction(function () {
+        $master = App\Models\MasterProfile::where('slug', 'aizada')->where('display_name', 'Айзада')->lockForUpdate()->firstOrFail();
+        $backup = '/home/n66843/master-app/shared/storage/app/aizada-before-services-'.gmdate('Ymd-His').'-'.bin2hex(random_bytes(6)).'.json';
+        $handle = fopen($backup, 'x');
+        if (! $handle) throw new RuntimeException('backup_failed');
+        chmod($backup, 0600);
+        $snapshot = json_encode(['profile' => $master->toArray(), 'services' => $master->services()->get()->toArray()], JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        if (fwrite($handle, $snapshot) !== strlen($snapshot)) throw new RuntimeException('backup_failed');
+        fclose($handle);
+        $changes = [];
+        if (! filled($master->specialty)) $changes['specialty'] = 'Мастер по наращиванию ресниц';
+        if (! filled($master->bio)) $changes['bio'] = 'Наращивание ресниц: от естественной классики до выразительного объёма. В списке услуг также доступны коррекция, снятие, ламинирование и окрашивание. Выберите одну или несколько процедур и удобное время. Прайс и длительность указаны как пример для заполнения профиля; детали процедуры уточняются перед визитом.';
+        if ($changes) $master->update($changes);
+        $original = $master->services()->where('name', 'Наращивание')->first();
+        if ($original && in_array($original->description, [null, '', 'Описание наращивания'], true)) {
+            $original->update(['description' => 'Базовая процедура наращивания ресниц. Эффект и объём уточняются перед визитом. Существующая цена и длительность сохранены.']);
+        }
+        $items = [
+            ['Классическое наращивание ресниц', 120, 1200, 'Одна искусственная ресница на одну натуральную. Сдержанный эффект, акцент на длине и изгибе. Примерная цена; снятие предыдущего наращивания выбирается отдельно.'],
+            ['Наращивание ресниц 2D', 150, 1500, 'Лёгкие пучки из двух ресниц для более заметного объёма. Форма, длина и изгиб согласовываются перед процедурой. Примерная цена.'],
+            ['Наращивание ресниц 3D', 150, 1800, 'Пучки из трёх тонких ресниц для выразительного объёма. Подбор эффекта обсуждается перед процедурой. Примерная цена.'],
+            ['Наращивание — мокрый эффект', 150, 1700, 'Выразительные лучики с эффектом влажных ресниц. Длина и схема подбираются перед началом работы. Примерная цена.'],
+            ['Коррекция наращённых ресниц', 90, 900, 'Обновление наращивания и заполнение пропусков. Возможность коррекции зависит от состояния оставшихся ресниц; при необходимости мастер предложит новое наращивание. Примерная цена.'],
+            ['Снятие наращённых ресниц', 30, 300, 'Отдельная процедура снятия искусственных ресниц. Можно добавить к новому наращиванию при записи. Примерная цена.'],
+            ['Ламинирование ресниц', 60, 1300, 'Процедура для оформления изгиба натуральных ресниц без наращивания. Выбирается как альтернатива наращиванию, а не вместе с ним. Примерная цена; окрашивание выбирается отдельно.'],
+            ['Окрашивание ресниц', 30, 400, 'Окрашивание натуральных ресниц для более заметного оттенка. Можно выбрать отдельно или добавить к ламинированию. Примерная цена.'],
+        ];
+        $created = 0;
+        $order = (int) $master->services()->max('sort_order');
+        foreach ($items as [$name, $minutes, $price, $description]) {
+            $service = $master->services()->firstOrCreate(['name' => $name], [
+                'description' => $description, 'duration_minutes' => $minutes,
+                'price_som' => $price, 'is_active' => true, 'sort_order' => ++$order,
+            ]);
+            if ($service->wasRecentlyCreated) $created++;
+        }
+        return ['status' => 'populated', 'created' => $created, 'service_count' => $master->services()->count()];
+    });
+    echo json_encode($result, JSON_THROW_ON_ERROR);
+} catch (Throwable $error) {
+    http_response_code(500);
+    echo '{"status":"failed"}';
+}

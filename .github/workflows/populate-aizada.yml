@@ -1,0 +1,84 @@
+name: Populate Aizada service profile
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/populate-aizada.yml', '.github/ops/populate-aizada.php.template']
+permissions:
+  contents: read
+concurrency:
+  group: master-populate-aizada
+  cancel-in-progress: false
+jobs:
+  populate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FTP_USER: ${{ secrets.MASTER_FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.MASTER_FTP_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare expiring profile population endpoint
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
+          echo "PROBE=master-profile-$(openssl rand -hex 16).php" >> "$GITHUB_ENV"
+          python3 - <<'PY'
+          import secrets, hashlib, time
+          from pathlib import Path
+          token = secrets.token_hex(32)
+          text = Path('.github/ops/populate-aizada.php.template').read_text()
+          text = text.replace('__TOKEN_HASH__', hashlib.sha256(token.encode()).hexdigest()).replace('__EXPIRES__', str(int(time.time())+600))
+          Path('/tmp/profile.php').write_text(text)
+          Path('/tmp/profile-header.txt').write_text('X-Master-Check: '+token)
+          PY
+      - name: Upload temporary endpoint through FTPS
+        run: |
+          set -euo pipefail
+          timeout 60s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set net:timeout 10
+          set net:max-retries 1
+          set ftp:ssl-auth TLS
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          put /tmp/profile.php -o $PROBE
+          bye
+          EOF
+      - name: Populate only the Aizada profile
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 45 -X POST -H @/tmp/profile-header.txt "https://edu.china.kg/$PROBE"
+      - name: Verify published profile and services
+        run: |
+          python3 - <<'PY'
+          import urllib.request, re, html, json
+          with urllib.request.urlopen('https://edu.china.kg/m/aizada', timeout=30) as response:
+              text = response.read().decode()
+          page = json.loads(html.unescape(re.search(r'data-page="([^"]+)"', text).group(1)))
+          props = page['props']
+          assert props['master']['specialty'] and props['master']['bio']
+          services = {item['name']: item for item in props['services']}
+          for name in ['Классическое наращивание ресниц', 'Наращивание ресниц 2D', 'Наращивание ресниц 3D', 'Наращивание — мокрый эффект', 'Коррекция наращённых ресниц', 'Снятие наращённых ресниц', 'Ламинирование ресниц', 'Окрашивание ресниц']:
+              assert name in services and services[name]['description'] and services[name]['duration_minutes'] > 0 and services[name]['price_som'] > 0
+          print('Verified populated Aizada profile and 8 lash services')
+          PY
+      - name: Remove temporary endpoint
+        if: always() && env.PROBE != ''
+        run: |
+          set -euo pipefail
+          timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set net:timeout 10
+          set net:max-retries 1
+          set ftp:ssl-auth TLS
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          rm -f $PROBE
+          bye
+          EOF
