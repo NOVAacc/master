@@ -26,7 +26,7 @@ jobs:
           sudo apt-get install -y -qq lftp
           echo "CHECK_NAME=master-check-$(openssl rand -hex 16).php" >> "$GITHUB_ENV"
           echo "CHECK_DIR=master-handler-$(openssl rand -hex 16)" >> "$GITHUB_ENV"
-          printf '%s\n' '<IfModule mime_module>' 'AddHandler application/x-httpd-ea-php83 .php .phtml' '</IfModule>' > /tmp/master-handler.htaccess
+          printf '%s\n' '<IfModule mime_module>' 'AddHandler application/x-httpd-ea-php83___lsphp .php .phtml' '</IfModule>' > /tmp/master-handler.htaccess
           cat > /tmp/master-runtime.php <<'PHP'
           <?php
           header('Content-Type: application/json');
@@ -109,7 +109,7 @@ jobs:
             touch /tmp/previous.htaccess
           fi
           cp /tmp/previous.htaccess /tmp/site.htaccess
-          printf '\n# Master PHP handler begin\nAddHandler application/x-httpd-ea-php83 .php .phtml\n# Master PHP handler end\n' >> /tmp/site.htaccess
+          printf '\n# Master PHP handler begin\nAddHandler application/x-httpd-ea-php83___lsphp .php .phtml\n# Master PHP handler end\n' >> /tmp/site.htaccess
           echo "HANDLER_CHANGED=true" >> "$GITHUB_ENV"
           timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
           set cmd:fail-exit true
