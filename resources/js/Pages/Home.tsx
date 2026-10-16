@@ -147,9 +147,6 @@ export default function Home({
                     )}
                 </section>
             </main>
-            <footer className="catalog-footer muted small">
-                Master — время для вашего дела.
-            </footer>
         </div>
     );
 }
