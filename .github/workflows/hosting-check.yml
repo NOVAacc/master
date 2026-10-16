@@ -1,0 +1,90 @@
+name: Check Fornex runtime
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/hosting-check.yml']
+permissions:
+  contents: read
+concurrency:
+  group: master-hosting-check
+  cancel-in-progress: false
+jobs:
+  runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FTP_USER: ${{ secrets.MASTER_FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.MASTER_FTP_PASSWORD }}
+    steps:
+      - name: Prepare temporary runtime check
+        run: |
+          set -euo pipefail
+          test -n "$FTP_USER"
+          test -n "$FTP_PASSWORD"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
+          echo "CHECK_NAME=master-check-$(openssl rand -hex 16).php" >> "$GITHUB_ENV"
+          cat > /tmp/master-runtime.php <<'PHP'
+          <?php
+          header('Content-Type: application/json');
+          header('Cache-Control: no-store');
+          $required = ['mbstring','pdo_mysql','dom','ctype','fileinfo','tokenizer','openssl'];
+          echo json_encode([
+            'php' => PHP_VERSION,
+            'php_version_id' => PHP_VERSION_ID,
+            'extensions' => array_combine($required, array_map('extension_loaded', $required)),
+            'zip' => class_exists('ZipArchive'),
+            'private_parent_writable' => is_writable('/home/n66843'),
+          ], JSON_THROW_ON_ERROR);
+          PHP
+      - name: Upload check
+        run: |
+          set -euo pipefail
+          timeout 90s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set net:timeout 15
+          set net:max-retries 1
+          set ftp:ssl-auth TLS
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          put /tmp/master-runtime.php -o $CHECK_NAME
+          bye
+          EOF
+      - name: Inspect server runtime
+        env:
+          DB_PASSWORD: ${{ secrets.MASTER_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 30 "https://edu.china.kg/$CHECK_NAME" -o /tmp/runtime.json
+          python3 - <<'PY'
+          import json
+          r = json.load(open('/tmp/runtime.json'))
+          print(json.dumps(r, indent=2))
+          assert r['php_version_id'] >= 80200, 'PHP 8.2+ is required'
+          assert all(r['extensions'].values()), 'Required PHP extensions are missing'
+          assert r['zip'], 'ZipArchive is required for the FTPS release installer'
+          assert r['private_parent_writable'], 'A private application directory must be writable'
+          PY
+          if test -n "$DB_PASSWORD"; then
+            echo "Database secret: configured"
+          else
+            echo "Database secret: MASTER_DB_PASSWORD is missing"
+          fi
+      - name: Remove temporary check
+        if: always() && env.CHECK_NAME != ''
+        run: |
+          set -euo pipefail
+          timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set net:timeout 15
+          set net:max-retries 1
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          rm $CHECK_NAME
+          bye
+          EOF
