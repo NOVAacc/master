@@ -31,7 +31,7 @@ function ServiceEditor({ service }: { service?: Service }) {
             className="service-editor"
             onSubmit={(e) => {
                 e.preventDefault();
-                if (service) f.put(`/services/${service.id}`);
+                if (service) f.post(`/services/${service.id}`);
                 else f.post("/services", { onSuccess: () => f.reset() });
             }}
         >
@@ -103,7 +103,7 @@ function ServiceEditor({ service }: { service?: Service }) {
 function Schedule({ hours }: { hours: Hour[] }) {
     const f = useForm({
         hours: hours.map((h) => ({
-            ...h,
+            weekday: Number(h.weekday),
             starts_at: h.starts_at.slice(0, 5),
             ends_at: h.ends_at.slice(0, 5),
         })),
@@ -112,7 +112,10 @@ function Schedule({ hours }: { hours: Hour[] }) {
         <form
             onSubmit={(e) => {
                 e.preventDefault();
-                f.put("/schedule");
+                f.post("/schedule", {
+                    preserveScroll: true,
+                    onSuccess: () => f.setDefaults(),
+                });
             }}
         >
             <p className="muted">
@@ -199,8 +202,9 @@ function Schedule({ hours }: { hours: Hour[] }) {
                 );
             })}
             <button className="primary" disabled={f.processing}>
-                Сохранить расписание
+                {f.processing ? "Сохраняем…" : "Сохранить расписание"}
             </button>
+            {f.recentlySuccessful && <p role="status" className="accent">Расписание сохранено</p>}
         </form>
     );
 }
@@ -219,7 +223,7 @@ function Profile({ master }: { master: Master }) {
         <form
             onSubmit={(e) => {
                 e.preventDefault();
-                f.put("/profile");
+                f.post("/profile");
             }}
         >
             <Errors errors={f.errors} />
@@ -340,7 +344,7 @@ export default function Dashboard({
     const changeStatus = (a: Appointment, status: string) => {
         setPending(a.id);
         setMessage("");
-        router.put(
+        router.post(
             `/appointments/${a.id}`,
             { status },
             {

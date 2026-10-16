@@ -1,13 +1,15 @@
-name: Diagnose schedule persistence
+name: Verify live schedule save
 on:
   workflow_dispatch:
-  push:
+  workflow_run:
+    workflows: ['Deploy Master application']
+    types: [completed]
     branches: [main]
-    paths: ['.github/workflows/diagnose-schedule.yml']
 permissions:
   contents: read
 jobs:
   diagnose:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -60,63 +62,25 @@ jobs:
           else:page=json.loads(body)
           print('Dashboard component:',page.get('component'))
           hours=[{'weekday':1,'starts_at':'09:00','ends_at':'18:00'},{'weekday':2,'starts_at':'10:00','ends_at':'19:00'}]
-          code,headers,body=call('/schedule',{'hours':hours},'PUT')
-          print('Schedule PUT response:',code,'content-type:',headers.get('Content-Type'))
-          if code not in (302,303):
-              code,headers,body=call('/schedule',{'hours':hours,'_method':'PUT'},'POST')
-              print('Schedule POST override response:',code)
+          code,headers,body=call('/schedule',{'hours':hours},'POST')
+          print('Schedule POST response:',code)
+          assert code in (302,303)
           code,_,body=call('/dashboard')
-          print('Dashboard response:',code,'json:',body.lstrip().startswith(b'{'))
-          if not body.lstrip().startswith(b'{'):
-              match=re.search(r'data-page="([^"]+)"',body.decode())
-              if not match:raise RuntimeError('Dashboard not returned, status='+str(code))
-              page=json.loads(html.unescape(match.group(1)))
-          else:page=json.loads(body)
-          print('Saved rows:',len(page.get('props',{}).get('hours',[])))
-          print('Validation errors:',page.get('props',{}).get('errors',{}))
-          print('Success notice:',page.get('props',{}).get('flash',{}).get('success'))
-          PY
-          cat > /tmp/cleanup.php <<'PHP'
-          <?php
-          ini_set('display_errors','0');
-          header('Content-Type: application/json');
-          if(time()>__EXPIRES__||($_SERVER['REQUEST_METHOD']??'')!=='POST'||!hash_equals('__TOKEN_HASH__',hash('sha256',$_SERVER['HTTP_X_MASTER_CHECK']??''))){http_response_code(403);exit;}
-          $base='/home/n66843/master-app/current';
-          require $base.'/vendor/autoload.php';
-          $app=require $base.'/bootstrap/app.php';
-          $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
-          $input=json_decode(file_get_contents('php://input'),true);
-          $email=$input['email']??'';$slug=$input['slug']??'';
-          if(!preg_match('/^master-check-[a-f0-9]{20}@example[.]test$/',$email)||!preg_match('/^master-check-[a-f0-9]{20}$/',$slug)){http_response_code(422);exit;}
-          $user=App\Models\User::where('email',$email)->where('name','Проверка расписания')->where('created_at','>=',now()->subMinutes(15))->first();
-          if($user && App\Models\MasterProfile::where('user_id',$user->id)->where('slug',$slug)->exists())$user->delete();
-          echo '{"test_account_removed":true}';
-          PHP
-          python3 - <<'PY'
-          import secrets,hashlib,time
-          p='/tmp/cleanup.php'
-          token=secrets.token_hex(32)
-          s=open(p).read().replace('__TOKEN_HASH__',hashlib.sha256(token.encode()).hexdigest()).replace('__EXPIRES__',str(int(time.time())+600))
-          open(p,'w').write(s)
-          open('/tmp/check-header.txt','w').write('X-Master-Check: '+token)
-          PY
-      - name: Upload scoped cleanup endpoint
-        run: |
-          set -euo pipefail
-          timeout 60s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
-          set cmd:fail-exit true
-          set net:timeout 10
-          set net:max-retries 1
-          set ftp:ssl-auth TLS
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          set ssl:verify-certificate true
-          cd /
-          put /tmp/cleanup.php -o $PROBE
-          bye
-          EOF
-      - name: Reproduce save over real HTTPS
-        run: python3 /tmp/test-schedule.py
+          page=json.loads(body)
+          assert page['props'].get('errors',{}) == {}, page['props'].get('errors')
+          assert page['props']['hours'] == hours, 'Saved schedule did not survive reload'
+          print('Initial schedule persisted across reload')
+          hours=[{'weekday':2,'starts_at':'11:30','ends_at':'20:15'}]
+          code,_,_=call('/schedule',{'hours':hours},'POST')
+          assert code in (302,303)
+          code,_,body=call('/dashboard')
+          assert json.loads(body)['props']['hours'] == hours, 'Edited schedule did not survive reload'
+          print('Changed times and removed day persisted')
+          code,_,_=call('/schedule',{'hours':[]},'POST')
+          assert code in (302,303)
+          code,_,body=call('/dashboard')
+          assert json.loads(body)['props']['hours'] == []
+          print('All days can be set to non-working')
       - name: Remove only the synthetic test account
         if: always()
         run: |

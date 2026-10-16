@@ -23,7 +23,12 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', [
             'master' => $master,
             'services' => $master->services()->orderBy('sort_order')->get(),
-            'hours' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->orderBy('weekday')->get(),
+            'hours' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->orderBy('weekday')->get()
+                ->map(fn ($hour) => [
+                    'weekday' => (int) $hour->weekday,
+                    'starts_at' => substr($hour->starts_at, 0, 5),
+                    'ends_at' => substr($hour->ends_at, 0, 5),
+                ]),
             'appointments' => $master->appointments()->where('ends_at', '>=', now('UTC')->subDays(30))
                 ->orderBy('starts_at')->limit(200)->get(),
             'publicUrl' => route('public.master', $master->slug),
@@ -94,7 +99,11 @@ class DashboardController extends Controller
             MasterProfile::whereKey($master->id)->lockForUpdate()->firstOrFail();
             DB::table('master_working_hours')->where('master_profile_id', $master->id)->delete();
             foreach ($data['hours'] as $hour) {
-                DB::table('master_working_hours')->insert([...$hour, 'master_profile_id' => $master->id,
+                DB::table('master_working_hours')->insert([
+                    'weekday' => (int) $hour['weekday'],
+                    'starts_at' => $hour['starts_at'],
+                    'ends_at' => $hour['ends_at'],
+                    'master_profile_id' => $master->id,
                     'created_at' => now(), 'updated_at' => now()]);
             }
         });

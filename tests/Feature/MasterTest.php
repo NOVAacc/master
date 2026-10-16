@@ -158,6 +158,44 @@ class MasterTest extends TestCase
         $this->assertDatabaseCount('master_working_hours', 0);
     }
 
+    public function test_schedule_post_round_trip_updates_multiple_days_and_preserves_other_masters(): void
+    {
+        [$user, $master] = $this->master();
+        [, $other] = $this->master('other-schedule');
+        $hours = [
+            ['weekday' => 1, 'starts_at' => '08:30', 'ends_at' => '17:15'],
+            ['weekday' => 3, 'starts_at' => '10:00', 'ends_at' => '20:30'],
+        ];
+        $this->actingAs($user)->from('/dashboard')->post('/schedule', ['hours' => $hours])
+            ->assertRedirect('/dashboard')->assertSessionHasNoErrors();
+        $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('hours', $hours));
+        $updated = [['weekday' => 3, 'starts_at' => '11:45', 'ends_at' => '18:00']];
+        $this->post('/schedule', ['hours' => $updated])->assertSessionHasNoErrors();
+        $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('hours', $updated));
+        $this->assertSame(1, DB::table('master_working_hours')->where('master_profile_id', $other->id)->count());
+        $this->post('/schedule', ['hours' => []])->assertSessionHasNoErrors();
+        $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->has('hours', 0));
+    }
+
+    public function test_cabinet_updates_accept_post_without_bypassing_ownership(): void
+    {
+        [$user, $master, $service] = $this->master();
+        [, , $otherService] = $this->master('other-owner');
+        $this->actingAs($user)->post('/profile', [
+            'display_name' => 'Новое имя', 'timezone' => 'Asia/Bishkek',
+            'booking_enabled' => true, 'auto_confirm' => false,
+        ])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('master_profiles', ['id' => $master->id, 'display_name' => 'Новое имя']);
+        $data = ['name' => 'Новая услуга', 'duration_minutes' => 90, 'price_som' => 1200, 'is_active' => true];
+        $this->post('/services/'.$service->id, $data)->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('master_services', ['id' => $service->id, 'duration_minutes' => 90]);
+        $this->post('/services/'.$otherService->id, $data)->assertNotFound();
+        $appointment = app(BookAppointment::class)->create($master, $service->fresh(),
+            CarbonImmutable::parse('2026-10-19 04:00:00', 'UTC'), 'Клиент', '+996555123456');
+        $this->post('/appointments/'.$appointment->id, ['status' => 'confirmed'])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('master_appointments', ['id' => $appointment->id, 'status' => 'confirmed']);
+    }
+
     public function test_inactive_or_foreign_service_is_not_bookable(): void
     {
         [, $master, $service] = $this->master();
