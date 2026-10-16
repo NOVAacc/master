@@ -1,15 +1,9 @@
-# Architecture
+# Архитектура
 
-Domain: edu.china.kg (temporary)
-Database: n66843_master
-Database username: n66843_masteruser
+Laravel 12 обслуживает авторизацию, валидацию, транзакции и Inertia-страницы. React/TypeScript отвечает за кабинет и форму записи. Tailwind и CSS формируют адаптивный интерфейс. Данные хранятся в MySQL; SQLite используется для локального запуска и быстрых тестов.
 
-Stack proposal: Laravel, Inertia, React and MySQL. Do not store credentials in the repository.
+Публичный маршрут `/m/{slug}` отдаёт только разрешённые поля профиля, услуги и свободные интервалы. Имена и контакты других клиентов не передаются. Изменение услуг и записей доступно только владельцу профиля; регистрация атомарно создаёт пользователя и его профиль.
 
-Required preflight for JAZ shared hosting: PHP version/extensions, web root, database host, FTP/SFTP, SSH/Composer, scheduled tasks and HTTPS.
+Бронирование блокирует строку профиля мастера, повторно загружает активную услугу и проверяет рабочие часы, время, пересечения и блокировки. Соседние интервалы допустимы. Полная продолжительность услуги должна помещаться в одно рабочее окно. Расписание редактируется в локальном времени мастера, записи хранятся в UTC. Отменённые и завершённые записи не открываются заново.
 
-MVP models: users, master_profiles, services, working_hours, availability_blocks, appointments, clients.
-
-An appointment must reserve the whole service duration; overlapping active appointments are rejected at transaction time. Public booking needs rate limiting and personal-data notice.
-
-Deployment is not configured yet.
+Текущий deploy обслуживает статическое демо. Серверное приложение собирается и проверяется CI, но требует отдельной конфигурации безопасного document root и переменных окружения.

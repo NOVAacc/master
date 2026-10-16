@@ -1,18 +1,11 @@
-# JAZ hosting compatibility
+# Совместимость Fornex
 
-Checked with hosting panel information supplied by project owner on 2026-10-16.
+Ранее сообщены PHP 8.1 (позже возможность PHP 8.3), MySQL 5.7.44-cll-lve и DB_HOST=localhost. Фактическую версию PHP для edu.china.kg нужно подтвердить перед серверным deploy.
 
-- PHP: 8.1
-- MySQL: 5.7.44-cll-lve
-- MySQL host: localhost
-- Database: n66843_master
-- Database user: n66843_masteruser
-- Deployment hostname: edu.china.kg
+Laravel 12 требует PHP 8.2+ и поддерживает MySQL 5.7+. Прежнее утверждение в этом проекте о требовании MySQL 8 было ошибочным. Документация:
+- https://laravel.com/docs/12.x/releases
+- https://laravel.com/docs/12.x/database
 
-## Decision
+CI запускается на PHP 8.3 с MySQL 5.7 и 8.0. MySQL 5.7 устарел; обновление предпочтительно, но не является обязательным для текущего кода.
 
-Do not deploy a current Laravel release on PHP 8.1. Request PHP 8.3 or 8.4 (preferably) for the subdomain. MySQL 5.7 is end-of-life: request MySQL 8.0+ or a supported MariaDB version and verify the exact Laravel version's database requirements before selecting framework dependencies.
-
-Prepare application code and schema independently of hosting while waiting for a compatible runtime. Do not run migrations on the hosting database until the environment and backup strategy are confirmed.
-
-Production requires APP_DEBUG=false, HTTPS, a private .env, secure document root, and tested rollback.
+Демо опубликовано по FTPS hostch01.fornex.org:21, TLS проверяется. FTP-корень `/` должен соответствовать `/home/n66843/public_html/edu.china.kg`. Секреты не хранятся в репозитории.

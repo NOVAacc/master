@@ -23,7 +23,7 @@ final class BookAppointment
         string $clientPhone,
         ?string $comment = null
     ): MasterAppointment {
-        if ($service->master_profile_id !== $master->id || !$service->is_active) {
+        if ($service->master_profile_id !== $master->id || ! $service->is_active) {
             throw ValidationException::withMessages(['service' => 'Услуга недоступна.']);
         }
 
@@ -40,7 +40,7 @@ final class BookAppointment
                 ->where('is_active', true)
                 ->firstOrFail();
 
-            if (!$lockedMaster->booking_enabled) {
+            if (! $lockedMaster->booking_enabled) {
                 throw ValidationException::withMessages(['booking' => 'Онлайн-запись отключена.']);
             }
 
@@ -62,7 +62,12 @@ final class BookAppointment
                 throw ValidationException::withMessages(['starts_at' => 'Это время уже занято.']);
             }
 
-            // Working-hours and exception validation will be added before enabling public booking.
+            if ($startsAtUtc->lessThanOrEqualTo(CarbonImmutable::now('UTC')) ||
+                $service->duration_minutes < 5 ||
+                ! (new WorkingHours)->contains($lockedMaster, $startsAtUtc, $endsAtUtc)) {
+                throw ValidationException::withMessages(['starts_at' => 'Выберите время в рабочем расписании мастера.']);
+            }
+
             return MasterAppointment::query()->create([
                 'master_profile_id' => $lockedMaster->id,
                 'master_service_id' => $service->id,

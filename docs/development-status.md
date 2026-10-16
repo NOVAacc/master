@@ -1,19 +1,17 @@
-# Development status
+# Состояние Master
 
-## Implemented in repository
+## Реализовано
 
-- Initial migration drafts for master profiles, services, appointments, working hours, and time blocks
-- Eloquent models for profiles, services, appointments
-- Booking service with database transaction, master-row locking, overlap detection, and blocked-time detection
+Запускаемый Laravel 12 / Inertia / React / TypeScript проект, регистрация/вход/выход, кабинет мастера, услуги, недельное расписание, публичные страницы, выбор свободного времени и бронирование, ручное/автоматическое подтверждение, отмена и завершение. Цены и названия сохраняются в записи как снимок. Все временные отметки записей — UTC.
 
-## Not implemented yet
+Проверяются принадлежность услуги мастеру, активность, будущее время, рабочие часы с учётом часового пояса, полная длительность услуги, блокировки и занятые интервалы. Обновления расписания/услуги и бронирования используют блокировку одной строки мастера. Закрытая отменённая запись не может быть открыта заново поверх новой записи.
 
-- Complete Laravel 12 application scaffold (composer.json, artisan, bootstrap, routes)
-- Authentication, dashboard, public booking UI, and APIs
-- Working-hours enforcement and timezone boundary checks
-- Validation of all migrations against a supported MySQL instance
-- Automated tests, CI, deployment, and production configuration
+Веб-тесты проверяют авторизацию и изоляцию кабинетов, приватность публичной страницы, бронирования, соседние интервалы, выходные, отключённые услуги, блокировки, согласие и контакты, расписание. Отдельный тест запускает два процесса против MySQL для проверки конкуренции. TypeScript и production-сборка включены в CI.
 
-The booking service is **not exposed as a public endpoint** until working-hours enforcement, rate limiting, privacy protections, and tests are in place. Current files are source components, not a runnable application.
+## Публикация
 
-PHP 8.3 is available on JAZ, but MySQL server is 5.7.44 and cannot be upgraded there. Laravel 12 requires MySQL 8.0+ for officially supported operation. The JAZ database is not connected and no migrations have been run.
+На edu.china.kg опубликовано статическое демо `preview/index.html`. Workflow проверяет фактическое совпадение HTTPS-страницы с исходником. Серверное приложение не опубликовано и не подключено к хостинговой базе. CI не использует реальные данные и не выполняет миграции на Fornex.
+
+## Осталось
+
+Визуальный календарь, карточки клиентов и история, UI исключений/перерывов, восстановление пароля, уведомления, администрирование, эксплуатационный мониторинг и резервное копирование. Для production необходимы проверка PHP/расширений на хостинге, отдельный приватный каталог приложения, серверный `.env`, миграции после резервной копии и проверка отката.
