@@ -1,0 +1,139 @@
+name: Deploy Master application
+on:
+  workflow_run:
+    workflows: ['Build server release']
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: master-production
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      FTP_USER: ${{ secrets.MASTER_FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.MASTER_FTP_PASSWORD }}
+      MASTER_DB_PASSWORD: ${{ secrets.MASTER_DB_PASSWORD }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Select tested release
+        id: source
+        run: |
+          set -euo pipefail
+          test -n "$FTP_USER"
+          test -n "$FTP_PASSWORD"
+          test -n "$MASTER_DB_PASSWORD"
+          RUN_ID='${{ github.event.workflow_run.id }}'
+          if test -z "$RUN_ID"; then
+            RUN_ID=$(gh run list --workflow release.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          fi
+          test -n "$RUN_ID"
+          SHA=$(gh api "repos/$GH_REPO/actions/runs/$RUN_ID" --jq .head_sha)
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.source.outputs.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: master-server-release
+          path: /tmp/release
+          run-id: ${{ steps.source.outputs.run_id }}
+          github-token: ${{ github.token }}
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: openssl
+          coverage: none
+      - name: Prepare encrypted, expiring installation
+        run: |
+          set -euo pipefail
+          cd /tmp/release
+          sha256sum --check master-server.zip.sha256
+          cd "$GITHUB_WORKSPACE"
+          python3 deploy/prepare-install.py /tmp/release/master-server.zip /tmp/master-install \
+            --revision '${{ steps.source.outputs.sha }}' \
+            --release '${{ steps.source.outputs.sha }}-${{ github.run_id }}-${{ github.run_attempt }}'
+          python3 - <<'PY'
+          import json, os
+          n = json.load(open('/tmp/master-install/names.json'))
+          with open(os.environ['GITHUB_ENV'], 'a') as f:
+              f.write('INSTALLER_NAME='+n['installer']+'\nUPLOAD_NAME='+n['upload']+'\n')
+          PY
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
+      - name: Upload encrypted release and one-time installer
+        run: |
+          set -euo pipefail
+          timeout 180s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set net:timeout 30
+          set net:max-retries 1
+          set ftp:ssl-auth TLS
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          put /tmp/master-install/$UPLOAD_NAME -o $UPLOAD_NAME
+          put /tmp/master-install/$INSTALLER_NAME -o $INSTALLER_NAME
+          bye
+          EOF
+      - name: Install privately, back up database, migrate and activate
+        run: |
+          set -euo pipefail
+          CODE=$(curl --silent --show-error --max-time 180 -w '%{http_code}' \
+            -H @/tmp/master-install/auth-header.txt -H 'Content-Type: application/json' \
+            --data-binary @/tmp/master-install/request.json \
+            "https://edu.china.kg/$INSTALLER_NAME" -o /tmp/install-result.json)
+          cat /tmp/install-result.json
+          test "$CODE" = 200
+          python3 - <<'PY'
+          import json
+          assert json.load(open('/tmp/install-result.json'))['status'] == 'activated'
+          PY
+          echo 'APP_ACTIVATED=true' >> "$GITHUB_ENV"
+      - name: Verify application and private-file protection
+        run: |
+          set -euo pipefail
+          for PAGE in login register up; do
+            curl --fail --silent --show-error --max-time 30 "https://edu.china.kg/$PAGE?deploy=${{ steps.source.outputs.sha }}" -o "/tmp/master-$PAGE.html"
+          done
+          grep -q '/build/assets/' /tmp/master-login.html
+          grep -q 'Auth' /tmp/master-login.html
+          curl --fail --silent --show-error --location --max-time 30 https://edu.china.kg/ -o /tmp/master-home.html
+          grep -q '/build/assets/' /tmp/master-home.html
+          for PRIVATE in .env vendor/autoload.php storage/logs/laravel.log; do
+            CODE=$(curl --silent --show-error --max-time 30 -o /dev/null -w '%{http_code}' "https://edu.china.kg/$PRIVATE")
+            test "$CODE" = 403 || test "$CODE" = 404
+          done
+      - name: Roll back application if public verification failed
+        if: failure() && env.APP_ACTIVATED == 'true'
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 120 \
+            -H @/tmp/master-install/auth-header.txt -H 'Content-Type: application/json' \
+            --data-binary @/tmp/master-install/rollback.json "https://edu.china.kg/$INSTALLER_NAME"
+      - name: Remove installer and encrypted upload
+        if: always() && env.INSTALLER_NAME != ''
+        run: |
+          set -euo pipefail
+          timeout 90s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set net:timeout 15
+          set net:max-retries 1
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          rm -f $INSTALLER_NAME
+          rm -f $UPLOAD_NAME
+          bye
+          EOF
+          rm -rf /tmp/master-install

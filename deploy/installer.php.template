@@ -1,0 +1,232 @@
+<?php
+// Generated, short-lived, fixed-operation installer. No shell or arbitrary paths from requests.
+declare(strict_types=1);
+ini_set('display_errors', '0');
+@set_time_limit(180);
+header('Content-Type: application/json');
+header('Cache-Control: no-store');
+const DEPLOY = __DEPLOY_CONFIG__;
+
+function deployFail(string $reason): never { throw new RuntimeException($reason); }
+function writeFile(string $path, string $data, int $mode = 0600): void {
+    $tmp = $path.'.tmp-'.bin2hex(random_bytes(6));
+    if (file_put_contents($tmp, $data, LOCK_EX) !== strlen($data)) deployFail('write_failed');
+    chmod($tmp, $mode);
+    if (!rename($tmp, $path)) deployFail('rename_failed');
+}
+function makeDir(string $path): void {
+    if (is_link($path)) deployFail('unexpected_symlink');
+    if (!is_dir($path) && !mkdir($path, 0700, true)) deployFail('directory_failed');
+}
+function envValue(string $value): string {
+    return '"'.str_replace(['\\', '"', '$', "\r", "\n"], ['\\\\', '\\"', '\\$', '\\r', '\\n'], $value).'"';
+}
+function saveState(array $state): void {
+    writeFile(DEPLOY['base'].'/deployments/'.DEPLOY['release'].'.json', json_encode($state, JSON_THROW_ON_ERROR));
+}
+function restoreRoot(array $state): void {
+    foreach ($state['root_files'] as $name => $existed) {
+        if ($existed) writeFile(DEPLOY['root'].'/'.$name, file_get_contents($state['backup'].'/root-'.$name), 0644);
+        elseif (is_file(DEPLOY['root'].'/'.$name)) unlink(DEPLOY['root'].'/'.$name);
+    }
+}
+function switchRelease(?string $path): void {
+    $current = DEPLOY['base'].'/current';
+    if ($path === null) { if (is_link($current)) unlink($current); return; }
+    if (!str_starts_with($path, DEPLOY['base'].'/releases/') || !is_dir($path)) deployFail('invalid_previous_release');
+    $next = DEPLOY['base'].'/.current-'.bin2hex(random_bytes(8));
+    if (!symlink($path, $next) || !rename($next, $current)) deployFail('activation_failed');
+}
+function rollback(array $state): array {
+    $current = DEPLOY['base'].'/current';
+    if (is_link($current) && !in_array(readlink($current), [DEPLOY['base'].'/releases/'.DEPLOY['release'], $state['previous']], true)) deployFail('release_has_changed');
+    switchRelease($state['previous']);
+    restoreRoot($state);
+    if ($state['env_existed']) writeFile(DEPLOY['base'].'/shared/.env', file_get_contents($state['backup'].'/previous.env'));
+    $state['status'] = 'rolled_back';
+    saveState($state);
+    return $state;
+}
+function backupDatabase(PDO $pdo, array $tables, string $path): void {
+    $file = fopen($path, 'xb');
+    if (!$file) deployFail('backup_failed');
+    chmod($path, 0600);
+    $write = static function (string $sql) use ($file): void {
+        if (fwrite($file, $sql) !== strlen($sql)) deployFail('backup_write_failed');
+    };
+    try {
+        $pdo->exec('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+        $pdo->beginTransaction();
+        $write("-- Master pre-deployment backup\nSET FOREIGN_KEY_CHECKS=0;\nSET SQL_MODE='NO_AUTO_VALUE_ON_ZERO';\n");
+        foreach ($tables as $table) {
+            $q = '`'.str_replace('`', '``', $table).'`';
+            $schema = $pdo->query('SHOW CREATE TABLE '.$q)->fetch(PDO::FETCH_NUM);
+            $write('DROP TABLE IF EXISTS '.$q.";\n".$schema[1].";\n");
+            $rows = $pdo->query('SELECT * FROM '.$q);
+            while ($row = $rows->fetch(PDO::FETCH_ASSOC)) {
+                $columns = implode(',', array_map(fn ($c) => '`'.str_replace('`', '``', $c).'`', array_keys($row)));
+                $values = implode(',', array_map(fn ($v) => $v === null ? 'NULL' : $pdo->quote((string) $v), array_values($row)));
+                $write('INSERT INTO '.$q.' ('.$columns.') VALUES ('.$values.");\n");
+            }
+        }
+        $write("SET FOREIGN_KEY_CHECKS=1;\n");
+        $pdo->commit();
+    } finally {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        fclose($file);
+    }
+}
+function extractRelease(string $zipPath, string $release): void {
+    $zip = new ZipArchive;
+    if ($zip->open($zipPath) !== true) deployFail('invalid_archive');
+    for ($i = 0; $i < $zip->numFiles; $i++) {
+        $name = $zip->getNameIndex($i);
+        $zip->getExternalAttributesIndex($i, $opsys, $attributes);
+        if ($name === false || str_contains($name, "\0") || str_contains($name, '\\') || str_starts_with($name, '/') ||
+            preg_match('~(^|/)\.\.(/|$)~', $name) || (($attributes >> 16) & 0170000) === 0120000) deployFail('unsafe_archive');
+    }
+    if (!$zip->extractTo($release)) deployFail('extraction_failed');
+    $zip->close();
+    $manifest = json_decode(file_get_contents($release.'/release.json'), true, 8, JSON_THROW_ON_ERROR);
+    if (($manifest['revision'] ?? '') !== DEPLOY['revision']) deployFail('revision_mismatch');
+}
+function copyAssets(string $source, string $target): void {
+    makeDir($target);
+    foreach (new DirectoryIterator($source) as $file) {
+        if ($file->isDot() || $file->isLink()) continue;
+        $destination = $target.'/'.$file->getFilename();
+        if ($file->isDir()) copyAssets($file->getPathname(), $destination);
+        else writeFile($destination, file_get_contents($file->getPathname()), 0644);
+    }
+    chmod($target, 0755);
+}
+
+$lock = null;
+$state = null;
+$phase = 'preflight';
+try {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || time() > DEPLOY['expires'] ||
+        !hash_equals(DEPLOY['token_hash'], hash('sha256', $_SERVER['HTTP_X_MASTER_DEPLOY'] ?? ''))) {
+        http_response_code(403); echo '{"error":"forbidden"}'; exit;
+    }
+    if (realpath(__DIR__) !== realpath(DEPLOY['root']) || PHP_VERSION_ID < 80200) deployFail('runtime_or_root_mismatch');
+    if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 16384) deployFail('request_too_large');
+    $input = json_decode(file_get_contents('php://input'), true, 16, JSON_THROW_ON_ERROR);
+    if (!is_array($input)) deployFail('invalid_request');
+    $base = DEPLOY['base'];
+    if (is_dir($base) && !is_file($base.'/.master-managed')) deployFail('unmanaged_application_directory');
+    makeDir($base);
+    if (!is_file($base.'/.master-managed')) writeFile($base.'/.master-managed', DEPLOY['root']);
+    if (file_get_contents($base.'/.master-managed') !== DEPLOY['root']) deployFail('site_mismatch');
+    foreach (['releases', 'shared', 'backups', 'deployments'] as $dir) makeDir($base.'/'.$dir);
+    $lock = fopen($base.'/deploy.lock', 'c');
+    if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) deployFail('deployment_busy');
+    chmod($base.'/deploy.lock', 0600);
+    $statePath = $base.'/deployments/'.DEPLOY['release'].'.json';
+    if (($input['action'] ?? '') === 'rollback') {
+        if (!is_file($statePath)) deployFail('no_deployment');
+        $state = json_decode(file_get_contents($statePath), true, 16, JSON_THROW_ON_ERROR);
+        if ($state['status'] !== 'activated') deployFail('not_activated');
+        rollback($state);
+        echo '{"status":"rolled_back","database_restored":false}';
+        exit;
+    }
+    if (($input['action'] ?? '') !== 'install' || is_file($statePath)) deployFail('invalid_or_repeated_install');
+    foreach (['key', 'iv', 'tag', 'db_password'] as $field) {
+        if (!isset($input[$field]) || !is_string($input[$field]) || strlen($input[$field]) > 4096) deployFail('missing_install_data');
+    }
+    if ($input['db_password'] === '') deployFail('missing_database_password');
+    $encrypted = __DIR__.'/'.DEPLOY['upload'];
+    if (!is_file($encrypted) || !hash_equals(DEPLOY['sha256'], hash_file('sha256', $encrypted))) deployFail('upload_checksum_failed');
+    $key = base64_decode($input['key'], true); $iv = base64_decode($input['iv'], true); $tag = base64_decode($input['tag'], true);
+    if ($key === false || strlen($key) !== 32 || $iv === false || strlen($iv) !== 12 || $tag === false || strlen($tag) !== 16) deployFail('invalid_encryption_parameters');
+    $plain = openssl_decrypt(file_get_contents($encrypted), 'aes-256-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag);
+    if ($plain === false) deployFail('decryption_failed');
+    $release = $base.'/releases/'.DEPLOY['release'];
+    if (file_exists($release)) deployFail('release_already_exists');
+    makeDir($release);
+    $zipPath = $base.'/.release-'.DEPLOY['release'].'.zip';
+    writeFile($zipPath, $plain); unset($plain, $key);
+    try { extractRelease($zipPath, $release); } finally { unlink($zipPath); }
+    require $release.'/vendor/autoload.php';
+    $phase = 'database_connect';
+    $pdo = new PDO('mysql:host='.DEPLOY['db_host'].';port='.DEPLOY['db_port'].';dbname='.DEPLOY['db_name'].';charset=utf8mb4',
+        DEPLOY['db_user'], $input['db_password'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $tables = $pdo->query("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'")->fetchAll(PDO::FETCH_COLUMN);
+    $envPath = $base.'/shared/.env';
+    if (!is_file($envPath) && count($tables) > 0) deployFail('initial_database_is_not_empty');
+    $backup = $base.'/backups/'.DEPLOY['release']; makeDir($backup);
+    backupDatabase($pdo, $tables, $backup.'/database.sql');
+    $previous = is_link($base.'/current') ? readlink($base.'/current') : null;
+    $state = ['status' => 'installing', 'backup' => $backup, 'previous' => $previous, 'env_existed' => is_file($envPath), 'root_files' => []];
+    foreach (['index.php', 'index.html', '.htaccess'] as $file) {
+        $state['root_files'][$file] = is_file(__DIR__.'/'.$file);
+        if ($state['root_files'][$file]) writeFile($backup.'/root-'.$file, file_get_contents(__DIR__.'/'.$file));
+    }
+    if ($state['env_existed']) writeFile($backup.'/previous.env', file_get_contents($envPath));
+    saveState($state);
+    $existing = $state['env_existed'] ? Dotenv\Dotenv::parse(file_get_contents($envPath)) : [];
+    $appKey = $existing['APP_KEY'] ?? ('base64:'.base64_encode(random_bytes(32)));
+    $env = ['APP_NAME' => 'Master', 'APP_ENV' => 'production', 'APP_KEY' => $appKey, 'APP_DEBUG' => 'false',
+        'APP_URL' => DEPLOY['url'], 'APP_LOCALE' => 'ru', 'APP_FALLBACK_LOCALE' => 'en', 'DB_CONNECTION' => 'mysql',
+        'DB_HOST' => DEPLOY['db_host'], 'DB_PORT' => (string) DEPLOY['db_port'], 'DB_DATABASE' => DEPLOY['db_name'],
+        'DB_USERNAME' => DEPLOY['db_user'], 'DB_PASSWORD' => $input['db_password'], 'SESSION_DRIVER' => 'file',
+        'SESSION_SECURE_COOKIE' => DEPLOY['secure_cookies'] ? 'true' : 'false', 'CACHE_STORE' => 'file',
+        'QUEUE_CONNECTION' => 'sync', 'LOG_CHANNEL' => 'single', 'LOG_LEVEL' => 'warning'];
+    $text = ''; foreach ($env as $name => $value) $text .= $name.'='.envValue($value)."\n";
+    // Verify lossless encoding of passwords containing punctuation before saving.
+    if (Dotenv\Dotenv::parse($text)['DB_PASSWORD'] !== $input['db_password']) deployFail('environment_encoding_failed');
+    writeFile($envPath, $text); unset($input['db_password'], $env, $text);
+    if (!symlink($envPath, $release.'/.env')) deployFail('env_link_failed');
+    $storage = $base.'/shared/storage';
+    foreach (['app/private','app/public','framework/cache/data','framework/sessions','framework/views','logs'] as $dir) makeDir($storage.'/'.$dir);
+    // Release storage contains only empty directories generated by the packager.
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($release.'/storage', FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
+    foreach ($iterator as $entry) { if (!$entry->isDir() || $entry->isLink()) deployFail('nonempty_release_storage'); rmdir($entry->getPathname()); }
+    rmdir($release.'/storage');
+    if (!symlink($storage, $release.'/storage')) deployFail('storage_link_failed');
+    $phase = 'bootstrap';
+    $app = require $release.'/bootstrap/app.php';
+    $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+    $kernel->bootstrap();
+    $phase = 'migration';
+    if ($kernel->call('migrate', ['--force' => true, '--no-interaction' => true]) !== 0) deployFail('migration_failed');
+    $phase = 'smoke';
+    $http = $app->make(Illuminate\Contracts\Http\Kernel::class);
+    $request = Illuminate\Http\Request::create(DEPLOY['url'].'/login', 'GET');
+    $response = $http->handle($request);
+    if ($response->getStatusCode() !== 200 || !str_contains($response->getContent(), '/build/assets/')) deployFail('release_smoke_failed');
+    $http->terminate($request, $response);
+    $phase = 'activation';
+    copyAssets($release.'/public/build', __DIR__.'/build');
+    foreach (['favicon.ico', 'robots.txt'] as $file) if (is_file($release.'/public/'.$file)) writeFile(__DIR__.'/'.$file, file_get_contents($release.'/public/'.$file), 0644);
+    $baseLiteral = var_export($base, true);
+    $launcher = '<?php'."\n".'declare(strict_types=1);'."\n".'ini_set(\'display_errors\', \'0\');'."\n".
+        'define(\'LARAVEL_START\', microtime(true));'."\n".'$base = '.$baseLiteral.';'."\n".
+        'if (file_exists($base.\'/shared/storage/framework/maintenance.php\')) require $base.\'/shared/storage/framework/maintenance.php\';'."\n".
+        'require $base.\'/current/vendor/autoload.php\';'."\n".'$app = require $base.\'/current/bootstrap/app.php\';'."\n".
+        '$app->handleRequest(Illuminate\\Http\\Request::capture());'."\n";
+    $originalHtaccess = $state['root_files']['.htaccess'] ? file_get_contents($backup.'/root-.htaccess') : '';
+    $originalHtaccess = preg_replace('/\n?# MASTER MANAGED BEGIN.*?# MASTER MANAGED END\n?/s', '', $originalHtaccess);
+    $managed = "\n# MASTER MANAGED BEGIN\nOptions -Indexes\nDirectoryIndex index.php index.html\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteRule ^ index.php [L]\n</IfModule>\n<FilesMatch \"^(\\.env|composer\\.(json|lock)|artisan|.*\\.sql)$\">\nRequire all denied\n</FilesMatch>\n# MASTER MANAGED END\n";
+    switchRelease($release);
+    writeFile(__DIR__.'/index.php', $launcher, 0644);
+    writeFile(__DIR__.'/.htaccess', $originalHtaccess.$managed, 0644);
+    if (is_file(__DIR__.'/index.html')) unlink(__DIR__.'/index.html'); // Original is retained in private backup.
+    if (function_exists('opcache_invalidate')) opcache_invalidate(__DIR__.'/index.php', true);
+    $state['status'] = 'activated'; saveState($state);
+    echo json_encode(['status' => 'activated', 'revision' => DEPLOY['revision'], 'database_backup' => true], JSON_THROW_ON_ERROR);
+} catch (Throwable $e) {
+    if ($state !== null && ($state['status'] ?? '') === 'installing') {
+        try { rollback($state); } catch (Throwable $ignored) { /* Private backup remains available. */ }
+    }
+    if (isset($base) && is_dir($base.'/deployments')) {
+        @file_put_contents($base.'/deployments/errors.log', date(DATE_ATOM).' '.get_class($e).' '.$e->getMessage()."\n", FILE_APPEND | LOCK_EX);
+        @chmod($base.'/deployments/errors.log', 0600);
+    }
+    http_response_code(500);
+    $safe = $e instanceof RuntimeException && preg_match('/^[a-z_]+$/', $e->getMessage()) ? $e->getMessage() : $phase.'_failed';
+    echo json_encode(['error' => $safe]);
+} finally {
+    if (is_resource($lock)) { flock($lock, LOCK_UN); fclose($lock); }
+}
