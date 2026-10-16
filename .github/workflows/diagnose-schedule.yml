@@ -27,8 +27,10 @@ jobs:
           class NoRedirect(urllib.request.HTTPRedirectHandler):
               def redirect_request(self,*a,**kw): return None
           opener=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar),NoRedirect())
+          version=None
           def call(path,data=None,method='GET'):
-              headers={'X-Inertia':'true','X-Requested-With':'XMLHttpRequest','Accept':'text/html,application/xhtml+xml','Referer':base+'/dashboard'}
+              headers={'X-Requested-With':'XMLHttpRequest','Accept':'text/html,application/xhtml+xml','Referer':base+'/dashboard'}
+              if version is not None:headers.update({'X-Inertia':'true','X-Inertia-Version':version})
               for c in jar:
                   if c.name=='XSRF-TOKEN':headers['X-XSRF-TOKEN']=urllib.parse.unquote(c.value)
               if data is not None:headers['Content-Type']='application/json'
@@ -42,7 +44,9 @@ jobs:
           password=secrets.token_urlsafe(24)
           # Credentials stay local to this job; cleanup is limited to this exact synthetic account.
           open('/tmp/test-identity.json','w').write(json.dumps({'email':email,'slug':slug}))
-          call('/register')
+          _,_,initial=call('/register')
+          initial_page=json.loads(html.unescape(re.search(r'data-page="([^"]+)"',initial.decode()).group(1)))
+          version=initial_page['version']
           code,regheaders,_=call('/register',{'name':'Проверка расписания','email':email,'slug':slug,'password':password,'password_confirmation':password},'POST')
           print('Registration response:',code,'location:',regheaders.get('Location'))
           if code not in (302,303):raise RuntimeError('Test registration failed')
