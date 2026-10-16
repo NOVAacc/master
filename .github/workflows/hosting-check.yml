@@ -1,6 +1,9 @@
 name: Check Fornex runtime
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/hosting-check.yml']
 permissions:
   contents: read
 concurrency:
@@ -30,6 +33,8 @@ jobs:
           echo json_encode([
             'php' => PHP_VERSION,
             'sapi' => PHP_SAPI,
+            'document_root_matches' => realpath($_SERVER['DOCUMENT_ROOT'] ?? '') === realpath(__DIR__),
+            'php_handlers' => array_values(preg_grep('/^\\s*(AddHandler|AddType|SetHandler)\\s+/i', is_file(__DIR__.'/.htaccess') ? file(__DIR__.'/.htaccess', FILE_IGNORE_NEW_LINES) : [])),
             'php_version_id' => PHP_VERSION_ID,
             'extensions' => array_combine($required, array_map('extension_loaded', $required)),
             'zip' => class_exists('ZipArchive'),
