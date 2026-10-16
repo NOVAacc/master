@@ -8,6 +8,7 @@ permissions:
 jobs:
   preview:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - name: Upload preview over FTPS
@@ -24,7 +25,10 @@ jobs:
           test -n "$FTP_DIR"
           sudo apt-get update -qq
           sudo apt-get install -y -qq lftp
-          lftp -u "$FTP_USER","$FTP_PASSWORD" "$FTP_HOST" <<EOF
+          timeout 90s lftp -u "$FTP_USER","$FTP_PASSWORD" "$FTP_HOST" <<EOF
+          set net:timeout 15
+          set net:max-retries 1
+          set net:reconnect-interval-base 2
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
           set ssl:verify-certificate true
