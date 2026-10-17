@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MasterImageController;
 use App\Http\Controllers\PublicBookingController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,3 +27,5 @@ Route::middleware('auth')->group(function () {
 });
 Route::get('/m/{master:slug}', [PublicBookingController::class, 'show'])->name('public.master');
 Route::post('/m/{master:slug}/book', [PublicBookingController::class, 'book'])->middleware('throttle:10,1');
+
+Route::get('/m/{master:slug}/image/{kind}/{version}', MasterImageController::class)->whereIn('kind', ['avatar', 'cover'])->where('version', '[A-Za-z0-9]{40}')->name('master.image');

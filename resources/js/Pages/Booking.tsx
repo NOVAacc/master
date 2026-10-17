@@ -1,5 +1,6 @@
 import { Head, router, useForm } from "@inertiajs/react";
 import { useState } from "react";
+import ProfileIdentity from "../ProfileIdentity";
 import BookingCalendar from "../BookingCalendar";
 import { Brand, Errors, Field, Notice } from "../Shared";
 import type { Master, Service } from "../types";
@@ -69,21 +70,17 @@ export default function Booking(p: Props) {
             <Brand />
             <div className="booking-grid">
                 <aside className="panel profile-card">
-                    <div className="avatar large">
-                        {p.master.display_name.charAt(0)}
+                    <ProfileIdentity master={p.master} />
+                    <div className="profile-about">
+                        <p>{p.master.bio}</p>
+                        <p className="muted">{p.master.address}</p>
+                        <hr />
+                        <small>
+                            Время указано для часового пояса
+                            <br />
+                            {p.master.timezone}
+                        </small>
                     </div>
-                    <h1>{p.master.display_name}</h1>
-                    <p className="accent">
-                        {p.master.specialty || "Частный специалист"}
-                    </p>
-                    <p>{p.master.bio}</p>
-                    <p className="muted">{p.master.address}</p>
-                    <hr />
-                    <small>
-                        Время указано для часового пояса
-                        <br />
-                        {p.master.timezone}
-                    </small>
                 </aside>
                 <section className="panel">
                     <p className="eyebrow">ОНЛАЙН-ЗАПИСЬ</p>

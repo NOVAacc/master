@@ -9,7 +9,9 @@ use App\Services\EditAppointment;
 use App\Services\WhatsApp;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -65,10 +67,27 @@ class DashboardController extends Controller
 
     public function profile(Request $request)
     {
+        if ($request->has('instagram_username')) {
+            $value = trim((string) $request->input('instagram_username'));
+            if (str_contains(strtolower($value), 'instagram.com/')) {
+                $url = parse_url(preg_match('~^https?://~i', $value) ? $value : 'https://'.$value);
+                if (in_array(strtolower($url['host'] ?? ''), ['instagram.com', 'www.instagram.com'], true)) {
+                    $value = trim($url['path'] ?? '', '/');
+                }
+            }
+            $request->merge(['instagram_username' => ltrim($value, '@') ?: null]);
+        }
         $data = $request->validate([
             'display_name' => ['required', 'string', 'max:100'],
             'specialty' => ['nullable', 'string', 'max:150'],
             'bio' => ['nullable', 'string', 'max:2000'],
+            'tagline' => ['nullable', 'string', 'max:160'],
+            'instagram_username' => ['nullable', 'string', 'regex:/^(?!\.)(?!.*\.\.)(?!.*\.$)[A-Za-z0-9_.]{1,30}$/'],
+            'profile_theme' => ['sometimes', 'in:graphite,sand,sage,lilac'],
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=4096,max_height=4096'],
+            'cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=4096,max_height=4096'],
+            'remove_avatar' => ['sometimes', 'boolean'],
+            'remove_cover' => ['sometimes', 'boolean'],
             'phone' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string', 'max:255'],
             'timezone' => ['required', 'timezone'],
@@ -80,9 +99,41 @@ class DashboardController extends Controller
             throw ValidationException::withMessages(['phone' => 'Укажите номер WhatsApp с кодом страны.']);
         }
         $master = $this->master($request);
-        DB::transaction(function () use ($master, $data) {
-            MasterProfile::whereKey($master->id)->lockForUpdate()->firstOrFail()->update($data);
-        });
+        $disk = Storage::disk('local');
+        $uploaded = [];
+        $oldPaths = [];
+        try {
+            foreach (['avatar', 'cover'] as $kind) {
+                if ($request->hasFile($kind)) {
+                    $path = $request->file($kind)->store('profile-images/'.$master->id, 'local');
+                    if (! $path) {
+                        throw ValidationException::withMessages([$kind => 'Не удалось сохранить изображение. Попробуйте ещё раз.']);
+                    }
+                    $uploaded[$kind] = $path;
+                }
+            }
+            DB::transaction(function () use ($master, $data, $uploaded, &$oldPaths) {
+                $locked = MasterProfile::whereKey($master->id)->lockForUpdate()->firstOrFail();
+                $values = Arr::except($data, ['avatar', 'cover', 'remove_avatar', 'remove_cover']);
+                foreach (['avatar', 'cover'] as $kind) {
+                    if (isset($uploaded[$kind]) || ($data['remove_'.$kind] ?? false)) {
+                        if ($locked->{$kind.'_path'}) {
+                            $oldPaths[] = $locked->{$kind.'_path'};
+                        }
+                        $values[$kind.'_path'] = $uploaded[$kind] ?? null;
+                    }
+                }
+                $locked->update($values);
+            });
+        } catch (\Throwable $error) {
+            foreach ($uploaded as $path) {
+                $disk->delete($path);
+            }
+            throw $error;
+        }
+        foreach ($oldPaths as $path) {
+            $disk->delete($path);
+        }
 
         return back()->with('success', 'Профиль сохранён.');
     }

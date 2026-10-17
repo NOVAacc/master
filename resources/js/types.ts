@@ -18,6 +18,12 @@ export type Master = {
     booking_enabled: boolean;
     auto_confirm: boolean;
     whatsapp_notifications: boolean;
+    avatar_url?: string | null;
+    cover_url?: string | null;
+    tagline?: string | null;
+    instagram_username?: string | null;
+    instagram_url?: string | null;
+    profile_theme?: string | null;
 };
 export type Hour = { weekday: number; starts_at: string; ends_at: string };
 export type Appointment = {

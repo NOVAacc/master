@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from "@inertiajs/react";
 import { Brand } from "../Shared";
 import Icon from "../Icon";
+import { MasterAvatar } from "../ProfileIdentity";
 
 type Master = {
     slug: string;
@@ -9,6 +10,9 @@ type Master = {
     address: string | null;
     price_from: number;
     completed_count: number;
+    avatar_url?: string | null;
+    cover_url?: string | null;
+    profile_theme?: string | null;
 };
 
 function MasterCard({
@@ -23,10 +27,15 @@ function MasterCard({
             className="master-card panel"
             href={`/m/${encodeURIComponent(master.slug)}`}
         >
+            <div
+                className={`master-card-cover theme-${master.profile_theme || "graphite"}`}
+            >
+                {master.cover_url && (
+                    <img src={master.cover_url} alt="" loading="lazy" />
+                )}
+            </div>
             <div className="master-card-identity">
-                <div className="avatar large" aria-hidden="true">
-                    {Array.from(master.display_name)[0]}
-                </div>
+                <MasterAvatar master={master} large />
                 <div>
                     <h3>{master.display_name}</h3>
                     <p className="muted small">

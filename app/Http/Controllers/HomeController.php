@@ -12,7 +12,7 @@ class HomeController extends Controller
     public function __invoke(): Response
     {
         $profiles = MasterProfile::query()
-            ->select(['id', 'slug', 'display_name', 'specialty', 'address'])
+            ->select(['id', 'slug', 'display_name', 'specialty', 'address', 'avatar_path', 'cover_path', 'profile_theme'])
             ->where('booking_enabled', true)
             ->whereHas('services', fn (Builder $query) => $query->where('is_active', true))
             ->withMin(['services as price_from' => fn (Builder $query) => $query->where('is_active', true)], 'price_som')
@@ -23,6 +23,9 @@ class HomeController extends Controller
             'display_name' => $master->display_name,
             'specialty' => $master->specialty,
             'address' => $master->address,
+            'avatar_url' => $master->avatar_url,
+            'cover_url' => $master->cover_url,
+            'profile_theme' => $master->profile_theme,
             'price_from' => (int) $master->price_from,
             'completed_count' => (int) $master->completed_count,
         ];

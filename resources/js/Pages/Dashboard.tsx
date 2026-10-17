@@ -1,6 +1,8 @@
 import { Head, Link, router, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import Icon from "../Icon";
+import ProfileSettings from "../ProfileSettings";
+import { MasterAvatar } from "../ProfileIdentity";
 import ServicesPanel from "../ServicesPanel";
 import EditAppointmentForm from "../EditAppointmentForm";
 import AppointmentCalendar from "../AppointmentCalendar";
@@ -131,128 +133,6 @@ function Schedule({ hours }: { hours: Hour[] }) {
                     Расписание сохранено
                 </p>
             )}
-        </form>
-    );
-}
-function Profile({ master }: { master: Master }) {
-    const f = useForm({
-        display_name: master.display_name,
-        specialty: master.specialty ?? "",
-        bio: master.bio ?? "",
-        phone: master.phone ?? "",
-        address: master.address ?? "",
-        timezone: master.timezone,
-        booking_enabled: master.booking_enabled,
-        auto_confirm: master.auto_confirm,
-        whatsapp_notifications: master.whatsapp_notifications ?? false,
-    });
-    return (
-        <form
-            onSubmit={(e) => {
-                e.preventDefault();
-                f.post("/profile");
-            }}
-        >
-            <Errors errors={f.errors} />
-            <div className="form-grid">
-                <Field label="Имя на странице">
-                    <input
-                        required
-                        maxLength={100}
-                        value={f.data.display_name}
-                        onChange={(e) =>
-                            f.setData("display_name", e.target.value)
-                        }
-                    />
-                </Field>
-                <Field label="Специализация">
-                    <input
-                        maxLength={150}
-                        value={f.data.specialty}
-                        onChange={(e) => f.setData("specialty", e.target.value)}
-                    />
-                </Field>
-                <Field label="Адрес">
-                    <input
-                        maxLength={255}
-                        value={f.data.address}
-                        onChange={(e) => f.setData("address", e.target.value)}
-                    />
-                </Field>
-                <Field label="Телефон">
-                    <input
-                        type="tel"
-                        maxLength={30}
-                        value={f.data.phone}
-                        onChange={(e) => f.setData("phone", e.target.value)}
-                    />
-                </Field>
-            </div>
-            <Field label="О себе">
-                <textarea
-                    maxLength={2000}
-                    value={f.data.bio}
-                    onChange={(e) => f.setData("bio", e.target.value)}
-                />
-            </Field>
-            <Field label="Часовой пояс">
-                <select
-                    value={f.data.timezone}
-                    onChange={(e) => f.setData("timezone", e.target.value)}
-                >
-                    {[
-                        ...new Set([
-                            master.timezone,
-                            "Asia/Bishkek",
-                            "Asia/Almaty",
-                            "Asia/Tashkent",
-                            "Europe/Moscow",
-                            "UTC",
-                        ]),
-                    ].map((z) => (
-                        <option key={z}>{z}</option>
-                    ))}
-                </select>
-            </Field>
-            <label className="check">
-                <input
-                    type="checkbox"
-                    checked={f.data.booking_enabled}
-                    onChange={(e) =>
-                        f.setData("booking_enabled", e.target.checked)
-                    }
-                />
-                Принимать онлайн-записи
-            </label>
-            <label className="check">
-                <input
-                    type="checkbox"
-                    checked={f.data.auto_confirm}
-                    onChange={(e) =>
-                        f.setData("auto_confirm", e.target.checked)
-                    }
-                />
-                Подтверждать записи автоматически
-            </label>
-            <label className="check">
-                <input
-                    type="checkbox"
-                    checked={f.data.whatsapp_notifications}
-                    onChange={(e) =>
-                        f.setData("whatsapp_notifications", e.target.checked)
-                    }
-                />
-                Получать подтверждённые записи в WhatsApp на указанный выше
-                телефон
-            </label>
-            <p className="muted small">
-                Автоматические уведомления начнут работать после подключения
-                отправки. Для связи с клиентом уже доступна кнопка WhatsApp в
-                записи.
-            </p>
-            <button className="primary" disabled={f.processing}>
-                Сохранить профиль
-            </button>
         </form>
     );
 }
@@ -586,9 +466,7 @@ export default function Dashboard({
                         </p>
                         <h1>{master.display_name}</h1>
                     </div>
-                    <div className="avatar">
-                        {master.display_name.charAt(0)}
-                    </div>
+                    <MasterAvatar master={master} />
                 </header>
                 <Notice />
                 {!whatsappAutomatic && (
@@ -761,7 +639,7 @@ export default function Dashboard({
                                     {publicUrl} ↗
                                 </a>
                             </p>
-                            <Profile master={master} />
+                            <ProfileSettings master={master} />
                         </>
                     )}
                 </section>
