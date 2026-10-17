@@ -81,8 +81,11 @@ class DashboardController extends Controller
         }
         $master = $this->master($request);
         $request->merge(['slug' => strtolower(trim((string) $request->input('slug', $master->slug)))]);
+        $slugRules = $request->input('slug') === $master->slug
+            ? ['required', 'string'] // Keep legacy links unchanged while editing other fields.
+            : ['required', 'string', 'regex:/^[a-z0-9]{3,30}$/', Rule::unique('master_profiles', 'slug')->ignore($master->id)];
         $data = $request->validate([
-            'slug' => ['required', 'string', 'regex:/^[a-z0-9]{3,30}$/', Rule::unique('master_profiles', 'slug')->ignore($master->id)],
+            'slug' => $slugRules,
             'display_name' => ['required', 'string', 'max:100'],
             'specialty' => ['nullable', 'string', 'max:150'],
             'bio' => ['nullable', 'string', 'max:2000'],
