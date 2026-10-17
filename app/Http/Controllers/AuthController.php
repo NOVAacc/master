@@ -166,6 +166,10 @@ class AuthController extends Controller
                 return ['invalid', null];
             }
             if ($user->login_locked_until && $user->login_locked_until->isFuture()) return ['locked', null];
+            if ($user->login_locked_until && $user->login_locked_until->isPast()) {
+                $user->failed_login_attempts = 0;
+                $user->login_locked_until = null;
+            }
             if (!Hash::check($data['password'], $user->password)) {
                 $attempts = $user->failed_login_attempts + 1;
                 $user->forceFill([
