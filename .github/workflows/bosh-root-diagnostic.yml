@@ -1,0 +1,56 @@
+name: Diagnose BOSH FTP document root
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      FTP_USER: ${{ secrets.BOSH_FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.BOSH_FTP_PASSWORD }}
+    steps:
+      - name: Inspect FTPS home and BOSH HTTP roots
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$FTP_USER" && test -n "$FTP_PASSWORD"
+          echo "BOSH_DNS=$(getent ahostsv4 bosh.kg | awk 'NR==1{print $1}')"
+          echo "FORNEX_DNS=$(getent ahostsv4 hostch01.fornex.org | awk 'NR==1{print $1}')"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
+          timeout 50s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 -e "
+            set cmd:fail-exit true;
+            set net:max-retries 1;
+            set net:timeout 15;
+            set ftp:ssl-auth TLS;
+            set ftp:ssl-force true;
+            set ftp:ssl-protect-data true;
+            set ssl:verify-certificate true;
+            pwd;
+            cls -1;
+            bye
+          " | head -35
+          for NAME in / /bosh.kg /public_html/bosh.kg /public_html/bosh.kg/public_html/bosh.kg /public_html /home/n66843/public_html/bosh.kg; do
+            PROBE="bosh-check-$(openssl rand -hex 12).txt"
+            VALUE=$(openssl rand -hex 24)
+            printf '%s' "$VALUE" > "/tmp/$PROBE"
+            if timeout 25s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 -e "
+              set cmd:fail-exit true; set net:max-retries 1; set net:timeout 10;
+              set ftp:ssl-auth TLS; set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate true;
+              cd $NAME; put /tmp/$PROBE -o $PROBE; bye
+            " >/dev/null 2>&1; then
+              for SCHEME in http https; do
+                RESPONSE=$(curl --silent --show-error --max-time 12 "$SCHEME://bosh.kg/$PROBE" || true)
+                if test "$RESPONSE" = "$VALUE"; then echo "FOUND_DOCUMENT_ROOT=$NAME SCHEME=$SCHEME"; fi
+              done
+              timeout 25s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 -e "
+                set ftp:ssl-auth TLS; set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate true;
+                cd $NAME; rm -f $PROBE; bye
+              " >/dev/null 2>&1 || true
+              echo "WRITABLE=$NAME"
+            fi
+            rm -f "/tmp/$PROBE"
+          done
