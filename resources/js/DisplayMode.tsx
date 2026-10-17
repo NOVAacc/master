@@ -55,14 +55,11 @@ export default function DisplayModeFooter() {
                         key={value}
                         type="button"
                         aria-pressed={mode === value}
+                        aria-label={label === "Авто" ? "Автоматический режим" : label === "Мобильная" ? "Мобильная версия" : "Десктопная версия"}
+                        title={label === "Авто" ? "Автоматический режим" : label === "Мобильная" ? "Мобильная версия" : "Десктопная версия"}
                         onClick={() => selectMode(value)}
                     >
-                        {value !== "auto" && (
-                            <Icon
-                                name={value === "mobile" ? "phone" : "monitor"}
-                            />
-                        )}
-                        {label}
+                        <Icon name={value === "auto" ? "devices" : value === "mobile" ? "phone" : "monitor"} />
                     </button>
                 ))}
             </div>
