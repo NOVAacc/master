@@ -59,9 +59,11 @@ echo json_encode(['key'=>base64_encode($key),'iv'=>base64_encode($iv),'tag'=>bas
         payload['nikita_otp_api_key'] = otp_key
     smtp_host = os.environ.get('BOSH_SMTP_HOST', '').strip()
     smtp_password = os.environ.get('BOSH_SMTP_PASSWORD', '')
-    if bool(smtp_host) != bool(smtp_password):
-        raise ValueError('Set BOTH BOSH_SMTP_HOST and BOSH_SMTP_PASSWORD to enable SMTP')
-    if smtp_host:
+    if smtp_password and not smtp_host:
+        raise ValueError('BOSH_SMTP_HOST is required when BOSH_SMTP_PASSWORD is set')
+    # Allow deployments before the mailbox password is configured. Never enable
+    # logging or dummy SMTP as a fallback for verification/reset messages.
+    if smtp_password:
         payload['smtp'] = {'host': smtp_host, 'password': smtp_password}
 
     (args.output / 'request.json').write_text(json.dumps(payload))
