@@ -105,7 +105,12 @@ class AuthController extends Controller
         }
         $user = DB::transaction(function () use ($pending) {
             $user = User::where('phone', $pending['phone'])->lockForUpdate()->first();
-            if ($user) return $user;
+            if ($user) {
+                if ($user->password_initialized_at) {
+                    throw ValidationException::withMessages(['code' => 'Для этого аккаунта используйте вход по паролю. Если забыли пароль — восстановите его через почту.']);
+                }
+                return $user;
+            }
             if ($pending['mode'] !== 'register') {
                 throw ValidationException::withMessages(['code' => 'Аккаунт не найден. Сначала зарегистрируйтесь.']);
             }
@@ -134,11 +139,51 @@ class AuthController extends Controller
         return redirect()->route('dashboard');
     }
 
-    // Existing email/password accounts remain accessible via the legacy sign-in form.
+    // Existing legacy email/password users and new phone/password users share one lockout policy.
     public function login(Request $request)
     {
-        $data = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string']]);
-        if (!Auth::attempt($data)) throw ValidationException::withMessages(['email' => 'Неверный email или пароль.']);
+        $data = $request->validate([
+            'identifier' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email'],
+            'password' => ['required', 'string'],
+        ]);
+        $identifier = trim((string) ($data['identifier'] ?? $data['email'] ?? ''));
+        if (!$identifier) {
+            throw ValidationException::withMessages(['identifier' => 'Введите номер телефона или почту.']);
+        }
+        $column = str_contains($identifier, '@') ? 'email' : 'phone';
+        if ($column === 'phone') {
+            try { $identifier = $this->phone($identifier); }
+            catch (ValidationException $e) { throw ValidationException::withMessages(['identifier' => 'Введите корректный номер телефона.']); }
+        } else {
+            $identifier = strtolower($identifier);
+        }
+        $outcome = DB::transaction(function () use ($column, $identifier, $data) {
+            $user = User::where($column, $identifier)->lockForUpdate()->first();
+            if (!$user) {
+                // Prevent obvious timing distinction between existing/missing accounts.
+                Hash::check($data['password'], '$2y$12$KbQiHKyt3oc0UghTmumD/eJbcTsVHBDrY5r65J5xt2.jV4PaLNIuu');
+                return ['invalid', null];
+            }
+            if ($user->login_locked_until && $user->login_locked_until->isFuture()) return ['locked', null];
+            if (!Hash::check($data['password'], $user->password)) {
+                $attempts = $user->failed_login_attempts + 1;
+                $user->forceFill([
+                    'failed_login_attempts' => $attempts,
+                    'login_locked_until' => $attempts >= 5 ? now()->addHour() : null,
+                ])->save();
+                return [$attempts >= 5 ? 'locked' : 'invalid', null];
+            }
+            $user->forceFill(['failed_login_attempts' => 0, 'login_locked_until' => null])->save();
+            return ['success', $user];
+        });
+        if ($outcome[0] === 'locked') {
+            throw ValidationException::withMessages(['identifier' => 'После 5 неверных попыток вход заблокирован на 1 час.']);
+        }
+        if ($outcome[0] !== 'success') {
+            throw ValidationException::withMessages(['identifier' => 'Неверный номер, почта или пароль.']);
+        }
+        Auth::login($outcome[1]);
         $request->session()->regenerate();
         return redirect()->intended(route('dashboard'));
     }
