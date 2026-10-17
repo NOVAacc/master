@@ -23,7 +23,7 @@ export default function Auth({ register }: { register: boolean }) {
                 <Head title={register ? "Регистрация" : "Вход"} />
                 <p className="eyebrow">BOSH · КАБИНЕТ МАСТЕРА</p>
                 <h1>{register ? "Создать аккаунт" : "Войти в BOSH"}</h1>
-                <p className="muted">{codeSent && !legacy ? "Введите код из SMS." : register ? "Только имя и номер телефона." : "Введите номер телефона, чтобы получить код."}</p>
+                <p className="muted">{codeSent && !legacy ? "Введите 5-значный код из SMS. Он действует 3 минуты." : register ? "Только имя и номер телефона." : "Введите номер телефона, чтобы получить код."}</p>
                 <form onSubmit={e => {
                     e.preventDefault();
                     if (legacy) { f.transform(data => ({ email: data.email, password: data.password })).post("/login"); return; }
@@ -36,7 +36,7 @@ export default function Auth({ register }: { register: boolean }) {
                         <Field label="Email"><input type="email" required value={f.data.email} onChange={e => f.setData("email", e.target.value)} autoComplete="username" /></Field>
                         <Field label="Пароль"><input type="password" required value={f.data.password} onChange={e => f.setData("password", e.target.value)} autoComplete="current-password" /></Field>
                     </> : codeSent ? <>
-                        <Field label="Код подтверждения"><input autoComplete="one-time-code" inputMode="numeric" autoFocus required minLength={4} maxLength={10} placeholder="Код из SMS" value={f.data.code} onChange={e => f.setData("code", e.target.value.replace(/[^a-zA-Z0-9]/g, ""))} /></Field>
+                        <Field label="Код подтверждения"><input autoComplete="one-time-code" inputMode="numeric" autoFocus required minLength={5} maxLength={5} pattern="[0-9]{5}" placeholder="5-значный код" value={f.data.code} onChange={e => f.setData("code", e.target.value.replace(/\D/g, "").slice(0, 5))} /></Field>
                         <p className="muted">SMS отправлено на {f.data.phone}.</p>
                     </> : <>
                         {register && <Field label="Ваше имя"><input autoComplete="name" required maxLength={100} value={f.data.name} onChange={e => f.setData("name", e.target.value)} placeholder="Как к вам обращаться" /></Field>}
