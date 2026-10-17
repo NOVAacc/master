@@ -2164,48 +2164,39 @@ h2 {
 }
 
 
-/* One unmistakable phone convention throughout BOSH: 996 + nine local digits. */
-.phone-number-field {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    overflow: hidden;
-    border: 1px solid #d9dfe7;
-    border-radius: 12px;
-    background: #fff;
-    transition: border-color .15s ease, box-shadow .15s ease;
-}
-.phone-number-field:focus-within {
-    border-color: #5574a6;
-    box-shadow: 0 0 0 3px rgba(66, 103, 169, .13);
-}
-.phone-country-prefix {
-    display: flex;
-    align-self: stretch;
-    align-items: center;
-    padding: 0 13px;
-    background: #f0f3f7;
-    border-right: 1px solid #d9dfe7;
-    font-weight: 700;
-    color: #253b59;
-    font-variant-numeric: tabular-nums;
-    user-select: none;
-}
+/* Phone fields follow the same restrained styling as other form inputs. */
 .phone-number-field input {
-    flex: 1 1 145px;
-    width: 0;
-    min-width: 0;
-    border: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    background: transparent;
-    letter-spacing: .04em;
+    width: 100%;
 }
 .phone-hint {
-    flex-basis: 100%;
-    padding: 0 12px 8px;
-    font-size: 11px;
-    color: #6b7587;
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #737373;
+}
+.phone-fixed-prefix {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.phone-fixed-prefix .phone-country-prefix {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    border-right: 1px solid #e5e5e5;
+    color: #737373;
+    font-variant-numeric: tabular-nums;
+}
+.phone-fixed-prefix input {
+    flex: 1;
+    width: 0;
+    min-width: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
 }
 .schedule-day {
     align-items: flex-start;
