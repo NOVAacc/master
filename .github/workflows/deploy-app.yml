@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      FTP_USER: ${{ secrets.MASTER_FTP_USER }}
-      FTP_PASSWORD: ${{ secrets.MASTER_FTP_PASSWORD }}
+      FTP_USER: ${{ secrets.BOSH_FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.BOSH_FTP_PASSWORD }}
       MASTER_DB_PASSWORD: ${{ secrets.MASTER_DB_PASSWORD }}
       NIKITA_OTP_API_KEY: ${{ secrets.nikita_api }}
       BOSH_SMTP_HOST: ${{ secrets.BOSH_SMTP_HOST }}
@@ -56,28 +56,35 @@ jobs:
           php-version: '8.3'
           extensions: openssl
           coverage: none
-      - name: Preflight BOSH domain and shared application root
+      - name: Verify new BOSH web root is writable using the dedicated FTP account
         run: |
           set -euo pipefail
-          # The domain must already point to the SAME document root as edu.china.kg.
-          # Refuse the cutover rather than creating a second application or database.
-          for DOMAIN in edu.china.kg bosh.kg; do
-            curl --fail --silent --show-error --max-time 25 "https://$DOMAIN/login" -o "/tmp/bosh-$DOMAIN.html"
-            curl --fail --silent --show-error --max-time 25 "https://$DOMAIN/up" -o /dev/null
-            grep -q '/build/assets/' "/tmp/bosh-$DOMAIN.html"
-            grep -q 'Auth' "/tmp/bosh-$DOMAIN.html"
-          done
-          python3 - <<'PY'
-          import re
-          original = open('/tmp/bosh-edu.china.kg.html').read()
-          canonical = open('/tmp/bosh-bosh.kg.html').read()
-          def assets(html):
-              return sorted(set(re.findall(r'/build/assets/[^"<> ]+', html)))
-          # A different build indicates the domains do not currently share a web root.
-          assert assets(original) and assets(original) == assets(canonical), (
-              'bosh.kg must serve the existing edu.china.kg application before switching canonical URL'
-          )
-          PY
+          test -n "$FTP_USER" && test -n "$FTP_PASSWORD"
+          # Reject a misconfigured FTP chroot. A random probe must be accessible
+          # from bosh.kg itself, NOT from the old edu.china.kg site.
+          PROBE="bosh-deploy-probe-$(openssl rand -hex 16).txt"
+          VALUE=$(openssl rand -hex 32)
+          printf '%s' "$VALUE" > "/tmp/$PROBE"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
+          timeout 90s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set net:timeout 20
+          set net:max-retries 1
+          set ftp:ssl-auth TLS
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          put /tmp/$PROBE -o $PROBE
+          bye
+          EOF
+          trap 'timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 -e "set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate true; rm -f $PROBE; bye" || true; rm -f "/tmp/$PROBE"' EXIT
+          RECEIVED=$(curl --fail --silent --show-error --max-time 30 "https://bosh.kg/$PROBE")
+          test "$RECEIVED" = "$VALUE"
+          # Must NOT be the old site directory: keep both deployment roots separate.
+          OLD_CODE=$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' "https://edu.china.kg/$PROBE")
+          test "$OLD_CODE" != 200
       - name: Prepare encrypted, expiring installation
         run: |
           set -euo pipefail
@@ -87,15 +94,14 @@ jobs:
           python3 deploy/prepare-install.py /tmp/release/master-server.zip /tmp/master-install \
             --revision '${{ steps.source.outputs.sha }}' \
             --release '${{ steps.source.outputs.sha }}-${{ github.run_id }}-${{ github.run_attempt }}' \
-            --url https://bosh.kg
+            --url https://bosh.kg \
+            --site-root /home/n66843/public_html/bosh.kg
           python3 - <<'PY'
           import json, os
           n = json.load(open('/tmp/master-install/names.json'))
           with open(os.environ['GITHUB_ENV'], 'a') as f:
               f.write('INSTALLER_NAME='+n['installer']+'\nUPLOAD_NAME='+n['upload']+'\n')
           PY
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq lftp
       - name: Upload encrypted release and one-time installer
         run: |
           set -euo pipefail
@@ -118,7 +124,7 @@ jobs:
           CODE=$(curl --silent --show-error --max-time 180 -w '%{http_code}' \
             -H @/tmp/master-install/auth-header.txt -H 'Content-Type: application/json' \
             --data-binary @/tmp/master-install/request.json \
-            "https://edu.china.kg/$INSTALLER_NAME" -o /tmp/install-result.json)
+            "https://bosh.kg/$INSTALLER_NAME" -o /tmp/install-result.json)
           cat /tmp/install-result.json
           test "$CODE" = 200
           python3 - <<'PY'
@@ -143,27 +149,13 @@ jobs:
             CODE=$(curl --silent --show-error --max-time 30 -o /dev/null -w '%{http_code}' "https://bosh.kg/$PRIVATE")
             test "$CODE" = 403 || test "$CODE" = 404
           done
-      - name: Verify application and private-file protection
-        run: |
-          set -euo pipefail
-          for PAGE in login register up; do
-            curl --fail --silent --show-error --max-time 30 "https://edu.china.kg/$PAGE?deploy=${{ steps.source.outputs.sha }}" -o "/tmp/master-$PAGE.html"
-          done
-          grep -q '/build/assets/' /tmp/master-login.html
-          grep -q 'Auth' /tmp/master-login.html
-          curl --fail --silent --show-error --location --max-time 30 https://edu.china.kg/ -o /tmp/master-home.html
-          grep -q '/build/assets/' /tmp/master-home.html
-          for PRIVATE in .env vendor/autoload.php storage/logs/laravel.log; do
-            CODE=$(curl --silent --show-error --max-time 30 -o /dev/null -w '%{http_code}' "https://edu.china.kg/$PRIVATE")
-            test "$CODE" = 403 || test "$CODE" = 404
-          done
       - name: Roll back application if public verification failed
         if: failure() && env.APP_ACTIVATED == 'true'
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --max-time 120 \
             -H @/tmp/master-install/auth-header.txt -H 'Content-Type: application/json' \
-            --data-binary @/tmp/master-install/rollback.json "https://edu.china.kg/$INSTALLER_NAME"
+            --data-binary @/tmp/master-install/rollback.json "https://bosh.kg/$INSTALLER_NAME"
       - name: Remove installer and encrypted upload
         if: always() && env.INSTALLER_NAME != ''
         run: |
