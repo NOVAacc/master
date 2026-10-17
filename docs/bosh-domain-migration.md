@@ -1,30 +1,30 @@
-# BOSH: canonical domain switch without moving database
+# BOSH: move to separate Fornex web root without moving MySQL
 
-## Existing production data remain unchanged
-- MySQL database: `n66843_master`; user: `n66843_masteruser`; host: localhost.
-- Private application: `/home/n66843/master-app/current` and shared `.env`, `storage`.
-- Existing web root and FTP target: `/home/n66843/public_html/edu.china.kg`.
-- APP_KEY, logins, appointments, uploaded files and all records stay in place; **no database import, clone or replacement**.
-- A change of domain naturally requires users to log in again because browser cookies are host-scoped.
+## Source and destination
+- Old site root: `/home/n66843/public_html/edu.china.kg`
+- **New site root**: `/home/n66843/public_html/bosh.kg`
+- **Unchanged private application**: `/home/n66843/master-app` with existing `current`, `shared/.env`, `shared/storage`.
+- **Unchanged MySQL database**: `n66843_master` on `localhost`, user `n66843_masteruser`.
+- **Unchanged APP_KEY** and all client/agent data, appointments, services and uploads.
 
-## Required cPanel operation before deploy
-In **Fornex cPanel → Domains → bosh.kg → Manage**, set **Document Root** to
-`/home/n66843/public_html/edu.china.kg` (or relative `public_html/edu.china.kg`).
-It must be exactly the already-running edu.china.kg directory, **not** a fresh `public_html/bosh.kg` folder.
-cPanel may restrict changing a primary/alias domain's root; if so, request support or recreate as an addon domain with that shared document root.
-Configure valid SSL/AutoSSL for both `bosh.kg` and `www.bosh.kg` if www is enabled. Confirm `https://bosh.kg/login` shows the existing BOSH login screen.
+## Required Fornex and GitHub configuration
 
-## Protected GitHub cutover
-The deploy workflow checks both HTTPS domains return the *same current build* before it does anything.
-If BOSH does not share the existing site, the workflow fails **before uploading or changing any files**, preserving the working edu.china.kg version.
-Once the check passes, installer runs against the **original document root and original DB** and sets
-`APP_URL=https://bosh.kg`. Production smoke tests then validate BOSH /login, /register, /up and deny access to protected files. Automatic rollback retains existing DB.
+1. In Fornex cPanel, verify the document root for bosh.kg is **public_html/bosh.kg** and PHP 8.3 is enabled there. The old directory remains untouched.
+2. Enable valid HTTPS/AutoSSL for bosh.kg; `https://bosh.kg` must be reachable.
+3. Create an **FTP/FTPS account with its home directory exactly set to `public_html/bosh.kg`**. The account's `/` in FTP must map to bosh.kg, **not** edu.china.kg.
+4. In GitHub repository Secrets and variables → Actions, set:
+   - `BOSH_FTP_USER`: full login of the new FTPS account.
+   - `BOSH_FTP_PASSWORD`: password of that FTPS account.
+   Keep existing `MASTER_DB_PASSWORD`, `nikita_api`, and other secrets unchanged.
 
-Keep edu.china.kg available as a fallback during initial DNS propagation, then add a deliberate HTTPS redirect to bosh.kg only after the new host is verified.
+The deploy makes a unique, harmless text-file upload over verified TLS and fetches it from bosh.kg over HTTPS; it additionally asserts the probe is **not** accessible from edu.china.kg. If either check fails, deployment stops *before* installation; the probe is removed. The installer accepts the new site root only when the original master-app installation marker matches the exact old root and the private path and canonical URL match the expected BOSH paths.
 
-## Validation
-1. DNS and TLS for bosh.kg; check GET /login and /up.
-2. Log in through bosh.kg with an existing master phone/password.
-3. Verify same services, appointment history, master slug and public URL on bosh.kg.
-4. Test booking, persistence in **same** database and Nikita OTP. Do not request SMS on random customer numbers.
-5. Verify private .env cannot be fetched and a prior release can roll back.
+## After preflight
+
+The release is installed into the **existing private application and database**, while public PHP launcher, build files and .htaccess are placed inside `public_html/bosh.kg`. The server-side `APP_URL` changes to `https://bosh.kg`. Existing accounts remain, but host-specific sessions must log in again. Automatic rollback restores the previous code and the .env; the database is not overwritten or rolled back.
+
+Keep edu.china.kg active temporarily. Redirect old links to the new domain only after validating bookings, master profiles, Nikita OTP and images on bosh.kg.
+
+## Warning
+
+Do **not** upload a new Laravel application to the bosh.kg directory or initialize a fresh database. The old FTP secrets might be restricted to the edu.china.kg directory. Explicit BOSH-specific FTPS secrets and a successful HTTPS probe are mandatory before the cutover can proceed.
