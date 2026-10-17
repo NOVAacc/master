@@ -55,7 +55,7 @@ class PublicBookingController extends Controller
         }
 
         return Inertia::render('Booking', [
-            'master' => $master->only('slug', 'display_name', 'specialty', 'bio', 'address', 'timezone', 'booking_enabled'),
+            'master' => $master->only('slug', 'display_name', 'specialty', 'bio', 'address', 'timezone', 'booking_enabled', 'auto_confirm'),
             'services' => $services->map->only(['id', 'name', 'description', 'duration_minutes', 'price_som']),
             'selectedService' => $selected->first()?->id,
             'selectedServices' => $selected->pluck('id')->all(),

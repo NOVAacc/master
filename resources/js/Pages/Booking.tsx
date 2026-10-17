@@ -176,6 +176,7 @@ export default function Booking(p: Props) {
                                             "client_phone",
                                             "client_comment",
                                             "consent",
+                                            "whatsapp_consent",
                                         );
                                     },
                                 });

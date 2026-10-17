@@ -99,6 +99,17 @@ class WhatsAppTest extends TestCase
         $this->assertSame(2, $appointment->notifications()->where('status', 'accepted')->where('attempts', 2)->count());
     }
 
+    public function test_changing_the_master_number_blocks_delivery_to_the_old_number(): void
+    {
+        config(['services.whatsapp.enabled' => false]);
+        [, $master, , $appointment] = $this->fixture(true, false);
+        $master->update(['phone' => '+996555999888']);
+        config(['services.whatsapp.enabled' => true]);
+        app(WhatsApp::class)->send($appointment->notifications()->sole());
+        Http::assertNothingSent();
+        $this->assertSame('recipient_changed', $appointment->notifications()->sole()->status);
+    }
+
     public function test_manual_links_and_receipt_are_private_to_the_booking_session(): void
     {
         config(['services.whatsapp.enabled' => false]);

@@ -93,6 +93,12 @@ final class WhatsApp
         if (! ($notification->recipient === 'client' ? $appointment->whatsapp_consent : $master->whatsapp_notifications)) {
             return;
         }
+        $currentPhone = self::phone($notification->recipient === 'client' ? $appointment->client_phone : $master->phone);
+        if ($currentPhone !== $notification->phone) {
+            $notification->update(['status' => 'recipient_changed', 'error_code' => 'recipient_changed']);
+
+            return;
+        }
         // Atomic claim prevents parallel confirmations and retries from sending duplicates.
         if (! MasterNotification::whereKey($notification->id)->whereIn('status', ['not_configured', 'failed'])
             ->where('attempts', '<', 5)->update(['status' => 'sending', 'attempts' => DB::raw('attempts + 1'), 'error_code' => null])) {

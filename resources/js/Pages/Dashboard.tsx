@@ -584,6 +584,8 @@ export default function Dashboard({
                                                         :{" "}
                                                         {(
                                                             {
+                                                                recipient_changed:
+                                                                    "номер изменён — отправка остановлена",
                                                                 accepted:
                                                                     "принято сервисом",
                                                                 not_configured:
