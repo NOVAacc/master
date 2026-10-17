@@ -1,10 +1,6 @@
 <?php
 return [
-    'nikita' => [
-        'login' => env('NIKITA_LOGIN'),
-        'password' => env('NIKITA_PASSWORD'),
-        'sender' => env('NIKITA_SENDER'),
-    ],
+    'nikita' => ['otp_key' => env('NIKITA_OTP_API_KEY')],
     'whatsapp' => [
         'enabled' => env('WHATSAPP_ENABLED', false),
         'sender_number' => env('WHATSAPP_SENDER_NUMBER', '996550512233'),
