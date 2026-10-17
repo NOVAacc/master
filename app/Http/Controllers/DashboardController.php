@@ -64,6 +64,8 @@ class DashboardController extends Controller
                     'weekday' => (int) $hour->weekday,
                     'starts_at' => substr($hour->starts_at, 0, 5),
                     'ends_at' => substr($hour->ends_at, 0, 5),
+                    'break_starts_at' => $hour->break_starts_at ? substr($hour->break_starts_at, 0, 5) : null,
+                    'break_ends_at' => $hour->break_ends_at ? substr($hour->break_ends_at, 0, 5) : null,
                 ]),
             'appointments' => $master->appointments()->where('ends_at', '>=', now('UTC')->subDays(30))
                 ->with(['notifications:id,master_appointment_id,recipient,status,error_code,revision', 'changes'])->orderBy('starts_at')->limit(200)->get()->map($presentAppointment),
@@ -188,7 +190,26 @@ class DashboardController extends Controller
             'hours.*.weekday' => ['required', 'integer', 'between:1,7', 'distinct'],
             'hours.*.starts_at' => ['required', 'date_format:H:i'],
             'hours.*.ends_at' => ['required', 'date_format:H:i', 'after:hours.*.starts_at'],
+            'hours.*.break_starts_at' => ['nullable', 'date_format:H:i'],
+            'hours.*.break_ends_at' => ['nullable', 'date_format:H:i'],
         ]);
+        foreach ($data['hours'] as $index => $hour) {
+            $start = $hour['starts_at'];
+            $end = $hour['ends_at'];
+            $breakStart = $hour['break_starts_at'] ?? null;
+            $breakEnd = $hour['break_ends_at'] ?? null;
+            if ($start >= $end) {
+                throw ValidationException::withMessages([
+                    "hours.$index.ends_at" => 'Конец рабочего дня должен быть позже начала.',
+                ]);
+            }
+            if (($breakStart === null) !== ($breakEnd === null) ||
+                ($breakStart !== null && ($breakStart < $start || $breakEnd > $end || $breakStart >= $breakEnd))) {
+                throw ValidationException::withMessages([
+                    "hours.$index.break_starts_at" => 'Обед должен быть внутри рабочего дня; укажите начало и конец перерыва.',
+                ]);
+            }
+        }
         $master = $this->master($request);
         DB::transaction(function () use ($master, $data) {
             MasterProfile::whereKey($master->id)->lockForUpdate()->firstOrFail();
@@ -198,6 +219,8 @@ class DashboardController extends Controller
                     'weekday' => (int) $hour['weekday'],
                     'starts_at' => $hour['starts_at'],
                     'ends_at' => $hour['ends_at'],
+                    'break_starts_at' => $hour['break_starts_at'] ?? null,
+                    'break_ends_at' => $hour['break_ends_at'] ?? null,
                     'master_profile_id' => $master->id,
                     'created_at' => now(), 'updated_at' => now()]);
             }

@@ -2162,3 +2162,83 @@ h2 {
         gap: 24px;
     }
 }
+
+
+/* One unmistakable phone convention throughout BOSH: 996 + nine local digits. */
+.phone-number-field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    overflow: hidden;
+    border: 1px solid #d9dfe7;
+    border-radius: 12px;
+    background: #fff;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+.phone-number-field:focus-within {
+    border-color: #5574a6;
+    box-shadow: 0 0 0 3px rgba(66, 103, 169, .13);
+}
+.phone-country-prefix {
+    display: flex;
+    align-self: stretch;
+    align-items: center;
+    padding: 0 13px;
+    background: #f0f3f7;
+    border-right: 1px solid #d9dfe7;
+    font-weight: 700;
+    color: #253b59;
+    font-variant-numeric: tabular-nums;
+    user-select: none;
+}
+.phone-number-field input {
+    flex: 1 1 145px;
+    width: 0;
+    min-width: 0;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent;
+    letter-spacing: .04em;
+}
+.phone-hint {
+    flex-basis: 100%;
+    padding: 0 12px 8px;
+    font-size: 11px;
+    color: #6b7587;
+}
+.schedule-day {
+    align-items: flex-start;
+}
+.schedule-day-fields {
+    display: grid;
+    gap: 9px;
+    width: min(100%, 390px);
+}
+.schedule-day-fields > .row,
+.schedule-lunch-times {
+    display: flex;
+    gap: 12px;
+    align-items: end;
+    flex-wrap: wrap;
+}
+.schedule-time-label {
+    flex: 1 1 130px;
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+.schedule-time-label input {
+    width: 100%;
+    min-width: 0;
+}
+.schedule-lunch-switch {
+    font-size: 13px;
+    color: #475569;
+}
+.schedule-lunch-times {
+    padding: 12px;
+    border: 1px solid #e4e8ed;
+    background: #f7f9fc;
+    border-radius: 12px;
+}

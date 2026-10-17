@@ -293,10 +293,10 @@ class MasterTest extends TestCase
         ];
         $this->actingAs($user)->from('/dashboard')->post('/schedule', ['hours' => $hours])
             ->assertRedirect('/dashboard')->assertSessionHasNoErrors();
-        $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('hours', $hours));
+        $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('hours', array_map(fn ($h) => $h + ['break_starts_at' => null, 'break_ends_at' => null], $hours)));
         $updated = [['weekday' => 3, 'starts_at' => '11:45', 'ends_at' => '18:00']];
         $this->post('/schedule', ['hours' => $updated])->assertSessionHasNoErrors();
-        $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('hours', $updated));
+        $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('hours', array_map(fn ($h) => $h + ['break_starts_at' => null, 'break_ends_at' => null], $updated)));
         $this->assertSame(1, DB::table('master_working_hours')->where('master_profile_id', $other->id)->count());
         $this->post('/schedule', ['hours' => []])->assertSessionHasNoErrors();
         $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->has('hours', 0));

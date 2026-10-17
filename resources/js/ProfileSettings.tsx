@@ -1,3 +1,4 @@
+import PhoneInput from "./PhoneInput";
 import { useForm } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import { Errors, Field } from "./Shared";
@@ -305,13 +306,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
                         </small>
                     </Field>
                     <Field label="Телефон / WhatsApp">
-                        <input
-                            type="tel"
-                            maxLength={30}
-                            placeholder="+996"
-                            value={f.data.phone}
-                            onChange={(e) => f.setData("phone", e.target.value)}
-                        />
+                        <PhoneInput value={f.data.phone} onChange={value => f.setData("phone", value)} label="Телефон мастера" />
                     </Field>
                     <Field label="Адрес приёма">
                         <input

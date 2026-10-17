@@ -32,109 +32,91 @@ function Schedule({ hours }: { hours: Hour[] }) {
             weekday: Number(h.weekday),
             starts_at: h.starts_at.slice(0, 5),
             ends_at: h.ends_at.slice(0, 5),
+            break_starts_at: h.break_starts_at?.slice(0, 5) ?? null,
+            break_ends_at: h.break_ends_at?.slice(0, 5) ?? null,
         })),
     });
+    type WorkingDay = (typeof f.data.hours)[number];
+    function updateDay(weekday: number, patch: Partial<WorkingDay>) {
+        f.setData("hours", f.data.hours.map(h => h.weekday === weekday ? { ...h, ...patch } : h));
+    }
     return (
-        <form
-            onSubmit={(e) => {
-                e.preventDefault();
-                f.post("/schedule", {
-                    preserveScroll: true,
-                    onSuccess: () => f.setDefaults(),
-                });
-            }}
-        >
+        <form onSubmit={(e) => {
+            e.preventDefault();
+            f.post("/schedule", {
+                preserveScroll: true,
+                onSuccess: () => f.setDefaults(),
+            });
+        }}>
             <p className="muted">
-                Одно рабочее окно на день. Существующие записи при изменении
-                расписания сохраняются.
+                Укажите рабочее время и при необходимости обед. В часы перерыва
+                клиенты не смогут записаться. Существующие записи сохраняются.
             </p>
             <Errors errors={f.errors} />
             {days.map((day, i) => {
-                const h = f.data.hours.find((h) => h.weekday === i + 1);
+                const weekday = i + 1;
+                const h = f.data.hours.find(x => x.weekday === weekday);
+                const lunch = !!h?.break_starts_at && !!h?.break_ends_at;
                 return (
-                    <div className="schedule-row" key={day}>
+                    <div className="schedule-row schedule-day" key={day}>
                         <label className="check">
-                            <input
-                                type="checkbox"
-                                checked={!!h}
-                                onChange={(e) =>
-                                    f.setData(
-                                        "hours",
-                                        e.target.checked
-                                            ? [
-                                                  ...f.data.hours,
-                                                  {
-                                                      weekday: i + 1,
-                                                      starts_at: "09:00",
-                                                      ends_at: "18:00",
-                                                  },
-                                              ]
-                                            : f.data.hours.filter(
-                                                  (h) => h.weekday !== i + 1,
-                                              ),
-                                    )
-                                }
-                            />
+                            <input type="checkbox" checked={!!h} onChange={e => {
+                                f.setData("hours", e.target.checked
+                                    ? [...f.data.hours, {
+                                        weekday, starts_at: "09:00", ends_at: "18:00",
+                                        break_starts_at: null, break_ends_at: null,
+                                    }]
+                                    : f.data.hours.filter(x => x.weekday !== weekday));
+                            }} />
                             {day}
                         </label>
                         {h ? (
-                            <div className="row">
-                                <input
-                                    aria-label={`${day}: начало`}
-                                    required
-                                    type="time"
-                                    value={h.starts_at}
-                                    onChange={(e) =>
-                                        f.setData(
-                                            "hours",
-                                            f.data.hours.map((x) =>
-                                                x.weekday === i + 1
-                                                    ? {
-                                                          ...x,
-                                                          starts_at:
-                                                              e.target.value,
-                                                      }
-                                                    : x,
-                                            ),
-                                        )
-                                    }
-                                />
-                                <span>—</span>
-                                <input
-                                    aria-label={`${day}: окончание`}
-                                    required
-                                    type="time"
-                                    value={h.ends_at}
-                                    onChange={(e) =>
-                                        f.setData(
-                                            "hours",
-                                            f.data.hours.map((x) =>
-                                                x.weekday === i + 1
-                                                    ? {
-                                                          ...x,
-                                                          ends_at:
-                                                              e.target.value,
-                                                      }
-                                                    : x,
-                                            ),
-                                        )
-                                    }
-                                />
+                            <div className="schedule-day-fields">
+                                <div className="row">
+                                    <label className="schedule-time-label">
+                                        <span className="muted small">С</span>
+                                        <input aria-label={day + ": начало"} required type="time"
+                                            value={h.starts_at} onChange={e => updateDay(weekday, {starts_at: e.target.value})} />
+                                    </label>
+                                    <label className="schedule-time-label">
+                                        <span className="muted small">До</span>
+                                        <input aria-label={day + ": окончание"} required type="time"
+                                            value={h.ends_at} onChange={e => updateDay(weekday, {ends_at: e.target.value})} />
+                                    </label>
+                                </div>
+                                <label className="check schedule-lunch-switch">
+                                    <input type="checkbox" checked={lunch} onChange={e => updateDay(weekday,
+                                        e.target.checked
+                                            ? {break_starts_at: "13:00", break_ends_at: "14:00"}
+                                            : {break_starts_at: null, break_ends_at: null}
+                                    )} />
+                                    Обеденный перерыв
+                                </label>
+                                {lunch && (
+                                    <div className="row schedule-lunch-times">
+                                        <label className="schedule-time-label">
+                                            <span className="muted small">Начало обеда</span>
+                                            <input type="time" required aria-label={day + ": начало обеда"}
+                                                value={h.break_starts_at ?? ""}
+                                                onChange={e => updateDay(weekday, {break_starts_at: e.target.value})} />
+                                        </label>
+                                        <label className="schedule-time-label">
+                                            <span className="muted small">Конец обеда</span>
+                                            <input type="time" required aria-label={day + ": конец обеда"}
+                                                value={h.break_ends_at ?? ""}
+                                                onChange={e => updateDay(weekday, {break_ends_at: e.target.value})} />
+                                        </label>
+                                    </div>
+                                )}
                             </div>
-                        ) : (
-                            <span className="muted">Выходной</span>
-                        )}
+                        ) : <span className="muted">Выходной</span>}
                     </div>
                 );
             })}
             <button className="primary" disabled={f.processing}>
                 {f.processing ? "Сохраняем…" : "Сохранить расписание"}
             </button>
-            {f.recentlySuccessful && (
-                <p role="status" className="accent">
-                    Расписание сохранено
-                </p>
-            )}
+            {f.recentlySuccessful && <p role="status" className="accent">Расписание сохранено</p>}
         </form>
     );
 }

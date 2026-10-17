@@ -1,12 +1,14 @@
 import { Head, Link, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import { Brand, Errors, Field } from "../Shared";
+import PhoneInput from "../PhoneInput";
 
 export default function Auth({ register }: { register: boolean }) {
     const [smsMode, setSmsMode] = useState(register);
     const [sent, setSent] = useState(false);
+    const [emailLogin, setEmailLogin] = useState(false);
     const f = useForm({
-        name: "", phone: "+996 ", code: "",
+        name: "", phone: "", code: "",
         mode: register ? "register" : "login",
         identifier: "", password: "",
     });
@@ -47,11 +49,20 @@ export default function Auth({ register }: { register: boolean }) {
                 <form onSubmit={submit}>
                     <Errors errors={f.errors} />
                     {!smsMode ? <>
-                        <Field label="Номер телефона или почта">
-                            <input required autoComplete="username" value={f.data.identifier}
-                                onChange={e => f.setData("identifier", e.target.value)}
-                                placeholder="+996 555 123 456" />
+                        <Field label={emailLogin ? "Электронная почта" : "Номер телефона"}>
+                            {emailLogin ? (
+                                <input required type="email" autoComplete="email" value={f.data.identifier}
+                                    onChange={e => f.setData("identifier", e.target.value)} placeholder="mail@example.com" />
+                            ) : (
+                                <PhoneInput required value={f.data.identifier}
+                                    onChange={value => f.setData("identifier", value)} label="Номер телефона для входа" />
+                            )}
                         </Field>
+                        <button type="button" className="ghost" onClick={() => {
+                            setEmailLogin(!emailLogin);
+                            f.setData("identifier", "");
+                            f.clearErrors();
+                        }}>{emailLogin ? "Войти по номеру телефона" : "Войти по электронной почте"}</button>
                         <Field label="Пароль">
                             <input required type="password" autoComplete="current-password"
                                 value={f.data.password}
@@ -72,8 +83,8 @@ export default function Auth({ register }: { register: boolean }) {
                                 onChange={e => f.setData("name", e.target.value)} />
                         </Field>}
                         <Field label="Номер телефона">
-                            <input required type="tel" autoComplete="tel"
-                                value={f.data.phone} onChange={e => f.setData("phone", e.target.value)} />
+                            <PhoneInput required value={f.data.phone}
+                                onChange={value => f.setData("phone", value)} />
                         </Field>
                     </>}
                     <button className="primary wide" disabled={f.processing}>
