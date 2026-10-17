@@ -71,6 +71,37 @@ class AccountSecurityTest extends TestCase
         $this->assertNull($user->email_verified_at);
     }
 
+    public function test_resend_email_verification_generates_signed_link_and_sends_message(): void
+    {
+        config()->set('mail.default', 'smtp');
+        Mail::fake();
+
+        $user = User::factory()->create(['email' => 'resend@example.test', 'email_verified_at' => null]);
+
+        $this->actingAs($user)->post('/security/email/resend')
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        Mail::assertSentCount(1);
+        $this->assertNull($user->fresh()->email_verified_at);
+    }
+
+    public function test_setting_email_generates_signed_link_and_sends_message(): void
+    {
+        config()->set('mail.default', 'smtp');
+        Mail::fake();
+
+        $user = User::factory()->create(['email' => null, 'email_verified_at' => null]);
+
+        $this->actingAs($user)->post('/security/email', ['email' => 'new-master@example.test'])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        Mail::assertSentCount(1);
+        $this->assertSame('new-master@example.test', $user->fresh()->email);
+        $this->assertNull($user->fresh()->email_verified_at);
+    }
+
     public function test_unverified_email_cannot_be_used_to_request_password_reset(): void
     {
         config()->set('mail.default', 'array');
