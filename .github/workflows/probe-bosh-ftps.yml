@@ -2,6 +2,8 @@ name: Check existing FTP access to bosh.kg
 on:
   push:
     branches: [feature/probe-existing-ftps-bosh]
+  pull_request:
+    branches: [main]
 permissions:
   contents: read
 jobs:
