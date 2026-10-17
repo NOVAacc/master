@@ -40,29 +40,37 @@ class AuthController extends Controller
         if ($data['mode'] === 'register' && empty(trim($data['name'] ?? ''))) {
             throw ValidationException::withMessages(['name' => 'Введите имя.']);
         }
-        if (!config('services.nikita.otp_key')) {
+        $login = config('services.nikita.login');
+        $password = config('services.nikita.password');
+        $sender = config('services.nikita.sender');
+        if (!$login || !$password || !$sender) {
             throw ValidationException::withMessages(['phone' => 'Отправка SMS пока не настроена.']);
         }
         if ($request->session()->get('otp_sent_at', 0) > time() - 60) {
             throw ValidationException::withMessages(['phone' => 'Повторная отправка доступна через минуту.']);
         }
-        // Preserve a pending registration only after SMS verification. No user is created here.
-        $transaction = Str::random(24);
+        $code = (string) random_int(100000, 999999);
+        $transaction = strtoupper(Str::random(12));
+        $xmlValue = static fn (string $value): string => htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>'
+            .'<message><login>'.$xmlValue($login).'</login><pwd>'.$xmlValue($password).'</pwd>'
+            .'<id>'.$transaction.'</id><sender>'.$xmlValue($sender).'</sender>'
+            .'<text>'.$xmlValue('BOSH: код входа '.$code.'. Действует 5 минут. Никому не сообщайте код.').'</text>'
+            .'<phones><phone>'.$phone.'</phone></phones></message>';
         try {
-            $response = Http::withHeaders(['X-API-KEY' => config('services.nikita.otp_key')])
-                ->timeout(10)->acceptJson()
-                ->post('https://smspro.nikita.kg/api/otp/send', [
-                    'transaction_id' => $transaction, 'phone' => $phone,
-                ]);
-            $result = $response->json();
+            $response = Http::withBody($xml, 'application/xml')->accept('application/xml')
+                ->timeout(10)->post('https://smspro.nikita.kg/api/message');
+            $parsed = $response->successful()
+                ? simplexml_load_string($response->body(), 'SimpleXMLElement', LIBXML_NONET)
+                : false;
         } catch (\Throwable $e) {
             throw ValidationException::withMessages(['phone' => 'Сервис SMS временно недоступен.']);
         }
-        if (!$response->successful() || (string) ($result['status'] ?? '') !== '0' || empty($result['token'])) {
-            throw ValidationException::withMessages(['phone' => 'Не удалось отправить SMS. Проверьте номер или настройки SMS.']);
+        if ($parsed === false || (string) $parsed->status !== '0' || (string) $parsed->id !== $transaction) {
+            throw ValidationException::withMessages(['phone' => 'Не удалось отправить SMS. Проверьте номер, имя отправителя и настройки SMS.']);
         }
         $request->session()->put('pending_otp', [
-            'token' => encrypt($result['token']),
+            'digest' => hash_hmac('sha256', $code, (string) config('app.key')),
             'phone' => $phone,
             'name' => trim($data['name'] ?? ''),
             'mode' => $data['mode'],
@@ -75,7 +83,7 @@ class AuthController extends Controller
 
     public function verifyCode(Request $request)
     {
-        $data = $request->validate(['code' => ['required', 'string', 'regex:/^[a-zA-Z0-9]{4,10}$/']]);
+        $data = $request->validate(['code' => ['required', 'string', 'regex:/^[0-9]{6}$/']]);
         $pending = $request->session()->get('pending_otp');
         if (!$pending || ($pending['expires_at'] ?? 0) < time()) {
             throw ValidationException::withMessages(['code' => 'Срок действия кода истёк. Запросите новый.']);
@@ -86,16 +94,7 @@ class AuthController extends Controller
         }
         $pending['attempts']++;
         $request->session()->put('pending_otp', $pending);
-        try {
-            $response = Http::withHeaders(['X-API-KEY' => config('services.nikita.otp_key')])
-                ->timeout(10)->acceptJson()->post('https://smspro.nikita.kg/api/otp/verify', [
-                    'token' => decrypt($pending['token']), 'code' => $data['code'],
-                ]);
-            $result = $response->json();
-        } catch (\Throwable $e) {
-            throw ValidationException::withMessages(['code' => 'Проверка SMS временно недоступна.']);
-        }
-        if (!$response->successful() || (string) ($result['status'] ?? '') !== '0') {
+        if (!hash_equals($pending['digest'], hash_hmac('sha256', $data['code'], (string) config('app.key')))) {
             throw ValidationException::withMessages(['code' => 'Неверный или просроченный код.']);
         }
         $user = DB::transaction(function () use ($pending) {
