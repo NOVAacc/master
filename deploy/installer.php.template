@@ -117,7 +117,15 @@ try {
     if (is_dir($base) && !is_file($base.'/.master-managed')) deployFail('unmanaged_application_directory');
     makeDir($base);
     if (!is_file($base.'/.master-managed')) writeFile($base.'/.master-managed', DEPLOY['root']);
-    if (file_get_contents($base.'/.master-managed') !== DEPLOY['root']) deployFail('site_mismatch');
+    // BOSH changes the public document root only. Its private application, database,
+    // encryption key and storage MUST remain exactly those of the original site.
+    $managedRoot = file_get_contents($base.'/.master-managed');
+    $originalRoot = '/home/n66843/public_html/edu.china.kg';
+    $newRoot = '/home/n66843/public_html/bosh.kg';
+    $allowedCutover = $managedRoot === $originalRoot && DEPLOY['root'] === $newRoot
+        && DEPLOY['base'] === '/home/n66843/master-app'
+        && DEPLOY['url'] === 'https://bosh.kg';
+    if ($managedRoot !== DEPLOY['root'] && !$allowedCutover) deployFail('site_mismatch');
     foreach (['releases', 'shared', 'backups', 'deployments'] as $dir) makeDir($base.'/'.$dir);
     $lock = fopen($base.'/deploy.lock', 'c');
     if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) deployFail('deployment_busy');
