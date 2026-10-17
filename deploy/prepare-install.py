@@ -57,6 +57,13 @@ echo json_encode(['key'=>base64_encode($key),'iv'=>base64_encode($iv),'tag'=>bas
     otp_key = os.environ.get('NIKITA_OTP_API_KEY', '')
     if otp_key:
         payload['nikita_otp_api_key'] = otp_key
+    smtp_host = os.environ.get('BOSH_SMTP_HOST', '').strip()
+    smtp_password = os.environ.get('BOSH_SMTP_PASSWORD', '')
+    if bool(smtp_host) != bool(smtp_password):
+        raise ValueError('Set BOTH BOSH_SMTP_HOST and BOSH_SMTP_PASSWORD to enable SMTP')
+    if smtp_host:
+        payload['smtp'] = {'host': smtp_host, 'password': smtp_password}
+
     (args.output / 'request.json').write_text(json.dumps(payload))
     (args.output / 'rollback.json').write_text('{"action":"rollback"}')
     (args.output / 'auth-header.txt').write_text('X-Master-Deploy: ' + token + '\n')
