@@ -1,0 +1,45 @@
+name: BOSH cutover verification
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      FTP_USER: ${{ secrets.BOSH_FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.BOSH_FTP_PASSWORD }}
+    steps:
+      - name: Validate HTTPS and new FTP secret availability
+        shell: bash
+        run: |
+          set -euo pipefail
+          if test -z "$FTP_USER" || test -z "$FTP_PASSWORD"; then
+            echo "FTP_SECRETS_MISSING"
+            exit 1
+          fi
+          echo "FTP_SECRETS_PRESENT"
+          for PAGE in login up; do
+            CODE=$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' "https://bosh.kg/$PAGE") || CODE="unreachable"
+            echo "BOSH_HTTPS_PAGE=$PAGE STATUS=$CODE"
+          done
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          if timeout 30s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 -e "
+             set cmd:fail-exit true;
+             set net:max-retries 1;
+             set net:timeout 15;
+             set ftp:ssl-auth TLS;
+             set ftp:ssl-force true;
+             set ftp:ssl-protect-data true;
+             set ssl:verify-certificate true;
+             cd /;
+             cls -1;
+             bye
+          " >/tmp/bosh-directory-list.txt 2>/dev/null; then
+            echo "BOSH_FTPS_LOGIN_OK"
+          else
+            echo "BOSH_FTPS_LOGIN_FAILED"
+            exit 1
+          fi
