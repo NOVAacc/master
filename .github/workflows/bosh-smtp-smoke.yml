@@ -1,0 +1,78 @@
+name: Verify BOSH mail sending and delivery
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  email-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      BOSH_SMTP_PASSWORD: ${{ secrets.BOSH_SMTP_PASSWORD }}
+    steps:
+      - name: Send one test email and verify it in the mailbox
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import email
+          import imaplib
+          import os
+          import smtplib
+          import ssl
+          import time
+          from email.message import EmailMessage
+
+          host = "mail.bosh.kg"
+          user = "no-reply@bosh.kg"
+          password = os.environ.get("BOSH_SMTP_PASSWORD", "")
+          if not password:
+              raise SystemExit("TEST_FAILED: BOSH_SMTP_PASSWORD secret is empty")
+          marker = "BOSH SMTP test " + os.environ["GITHUB_RUN_ID"]
+          msg = EmailMessage()
+          msg["From"] = user
+          msg["To"] = user
+          msg["Subject"] = marker
+          msg.set_content("Automated BOSH SMTP/IMAP test. No action required.")
+          ctx = ssl.create_default_context()
+          try:
+              with smtplib.SMTP_SSL(host, 465, timeout=25, context=ctx) as smtp:
+                  smtp.login(user, password)
+                  refused = smtp.send_message(msg)
+                  if refused:
+                      raise RuntimeError("SMTP refused recipient")
+              print("SMTP_SEND_ACCEPTED")
+          except Exception as exc:
+              print("SMTP_SEND_FAILED:", type(exc).__name__)
+              raise SystemExit(1)
+
+          try:
+              with imaplib.IMAP4_SSL(host, 993, ssl_context=ctx, timeout=25) as imap:
+                  imap.login(user, password)
+                  status, _ = imap.select("INBOX", readonly=True)
+                  if status != "OK":
+                      raise RuntimeError("Cannot select INBOX")
+                  found = False
+                  for attempt in range(4):
+                      status, data = imap.search(None, 'SUBJECT', '"BOSH SMTP test"')
+                      if status == "OK":
+                          for uid in data[0].split()[-30:]:
+                              fetch_status, records = imap.fetch(uid, "(BODY.PEEK[HEADER.FIELDS (SUBJECT)])")
+                              if fetch_status == "OK" and any(
+                                  isinstance(row, tuple) and marker in str(email.message_from_bytes(row[1])["Subject"])
+                                  for row in records
+                              ):
+                                  found = True
+                                  break
+                      if found:
+                          break
+                      if attempt < 3:
+                          time.sleep(5)
+                  print("IMAP_DELIVERY_CONFIRMED" if found else "IMAP_DELIVERY_NOT_SEEN")
+                  if not found:
+                      raise SystemExit(2)
+          except Exception as exc:
+              print("IMAP_CHECK_FAILED:", type(exc).__name__)
+              raise SystemExit(2)
+          PY
