@@ -1,6 +1,9 @@
 <?php
 return [
-    'nikita' => ['otp_key' => env('NIKITA_OTP_API_KEY')],
+    'nikita' => [
+        'otp_key' => env('NIKITA_OTP_API_KEY'),
+        'sender' => 'SMSPRO.KG', // configured in the Nikita OTP dashboard
+    ],
     'whatsapp' => [
         'enabled' => env('WHATSAPP_ENABLED', false),
         'sender_number' => env('WHATSAPP_SENDER_NUMBER', '996550512233'),
