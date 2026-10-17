@@ -16,6 +16,7 @@ on:
       - 'vite.config.js'
       - 'deploy/**'
       - '.github/workflows/release.yml'
+      - '.github/workflows/deploy-app.yml'
 permissions:
   contents: read
 jobs:
