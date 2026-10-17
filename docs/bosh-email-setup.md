@@ -8,10 +8,11 @@ See [Fornex cPanel mailbox](https://ru.fornex.com/help/creating-mail-cpanel/) an
 ## Add GitHub Actions secrets
 Repository → Settings → Secrets and variables → Actions → New repository secret:
 
-- `BOSH_SMTP_HOST`: **exact outgoing server from cPanel → Connect Devices / Set Up Mail Client**; should match certificate, e.g. a `host####.fornex.org` host. Do not assume the website domain or FTPS endpoint is an authenticated SMTP server.
-- `BOSH_SMTP_PASSWORD`: password for the no-reply@bosh.kg mailbox.
+- `BOSH_SMTP_PASSWORD`: password of the existing `no-reply@bosh.kg` mailbox. Set this secret privately; never paste it into chat or commit it.
 
-No password is stored in tracked files. Production deployment transmits these secrets over the existing authenticated, short-lived HTTPS installer request and writes them to the private `/home/n66843/master-app/shared/.env` with 0600 mode. The installer only activates the SMTP transport if both settings are supplied; old mail settings are preserved on later deploys if secrets are absent. Both secrets must be present together to avoid failed deployment.
+The outgoing SMTP host is already set to `mail.bosh.kg` directly in the deploy workflow based on the mailbox settings from Fornex. The username is `no-reply@bosh.kg`, SMTP port 465, SMTPS. IMAP/POP settings are not used for outgoing verification and recovery emails.
+
+No password is stored in tracked files. Production deployment transmits these secrets over the existing authenticated, short-lived HTTPS installer request and writes them to the private `/home/n66843/master-app/shared/.env` with 0600 mode. The installer only activates the SMTP transport if both settings are supplied; old mail settings are preserved on later deploys if secrets are absent. Only the password secret must be configured; the host is already fixed in the workflow. The installer refuses to enable SMTP without a password.
 
 The deployed config uses SMTP over TLS on port 465 with `MAIL_SCHEME=smtps`, `MAIL_USERNAME=no-reply@bosh.kg`, and `MAIL_FROM_ADDRESS=no-reply@bosh.kg`.
 
