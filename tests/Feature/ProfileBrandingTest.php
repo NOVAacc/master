@@ -103,4 +103,52 @@ class ProfileBrandingTest extends TestCase
         $this->get('/m/profile-photo/image/cover/'.$version)->assertNotFound();
         $this->get('/m/profile-photo/image/avatar/not-a-version')->assertNotFound();
     }
+
+    public function test_upload_allowlist_rejects_disguises_arrays_and_oversized_files_atomically(): void
+    {
+        Storage::fake('local');
+        [$user, $master] = $this->profile();
+        $this->actingAs($user);
+        foreach (['payload.php', 'payload.php.png', 'wrong.jpg', 'file.html'] as $name) {
+            $this->post('/profile', [...$this->fields(), 'display_name' => 'Changed', 'avatar' => $this->image($name)])
+                ->assertSessionHasErrors('avatar');
+        }
+        $this->post('/profile', [...$this->fields(), 'avatar' => UploadedFile::fake()->create('large.png', 2049, 'image/png')])->assertSessionHasErrors('avatar');
+        $this->post('/profile', [...$this->fields(), 'avatar' => [$this->image()]])->assertSessionHasErrors('avatar');
+        $this->post('/profile', [...$this->fields(), 'attachment' => $this->image()])->assertSessionHasErrors('avatar');
+        $this->post('/services', ['attachment' => $this->image()])->assertStatus(422);
+        $this->assertSame('Айзада', $master->fresh()->display_name);
+        $this->assertSame([], Storage::disk('local')->allFiles());
+    }
+
+    public function test_image_delivery_rejects_traversal_and_symlink_even_with_tampered_database_path(): void
+    {
+        Storage::fake('local');
+        [$user, $master] = $this->profile();
+        $disk = Storage::disk('local');
+        $version = str_repeat('a', 40);
+        $disk->put($version.'.png', $this->image()->getContent());
+        $master->update(['avatar_path' => 'profile-images/'.$master->id.'/../../'.$version.'.png']);
+        $this->get($master->avatar_url)->assertNotFound();
+        $disk->makeDirectory('profile-images/'.$master->id);
+        $path = 'profile-images/'.$master->id.'/'.$version.'.png';
+        symlink($disk->path($version.'.png'), $disk->path($path));
+        $master->update(['avatar_path' => $path]);
+        $this->get($master->avatar_url)->assertNotFound();
+        $this->actingAs($user)->post('/profile', [...$this->fields(), 'remove_avatar' => true])->assertSessionHasNoErrors();
+        $disk->assertExists($version.'.png');
+    }
+
+    public function test_upload_requires_authentication_and_profile_requests_are_rate_limited(): void
+    {
+        Storage::fake('local');
+        [$user] = $this->profile();
+        $this->post('/profile', [...$this->fields(), 'avatar' => $this->image()])->assertRedirect('/login');
+        $this->actingAs($user);
+        for ($i = 0; $i < 20; $i++) {
+            $this->post('/profile', $this->fields())->assertSessionHasNoErrors();
+        }
+        $this->post('/profile', [...$this->fields(), 'avatar' => $this->image()])->assertStatus(429);
+        $this->assertSame([], Storage::disk('local')->allFiles());
+    }
 }

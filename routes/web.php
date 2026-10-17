@@ -19,7 +19,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/appointments/{appointment}/whatsapp', [DashboardController::class, 'retryWhatsApp'])->middleware('throttle:5,1');
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/dashboard', [DashboardController::class, 'show'])->name('dashboard');
-    Route::match(['put', 'post'], '/profile', [DashboardController::class, 'profile']);
+    Route::match(['put', 'post'], '/profile', [DashboardController::class, 'profile'])->middleware('throttle:20,1');
     Route::post('/services', [DashboardController::class, 'createService']);
     Route::match(['put', 'post'], '/services/{service}', [DashboardController::class, 'updateService']);
     Route::match(['put', 'post'], '/schedule', [DashboardController::class, 'schedule']);

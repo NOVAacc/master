@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MasterAppointment;
 use App\Models\MasterProfile;
 use App\Models\MasterService;
+use App\Rules\ProfileImage;
 use App\Services\EditAppointment;
 use App\Services\WhatsApp;
 use Carbon\CarbonImmutable;
@@ -84,8 +85,8 @@ class DashboardController extends Controller
             'tagline' => ['nullable', 'string', 'max:160'],
             'instagram_username' => ['nullable', 'string', 'regex:/^(?!\.)(?!.*\.\.)(?!.*\.$)[A-Za-z0-9_.]{1,30}$/'],
             'profile_theme' => ['sometimes', 'in:graphite,sand,sage,lilac'],
-            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=4096,max_height=4096'],
-            'cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=4096,max_height=4096'],
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', new ProfileImage, 'max:2048', 'dimensions:max_width=4096,max_height=4096'],
+            'cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', new ProfileImage, 'max:2048', 'dimensions:max_width=4096,max_height=4096'],
             'remove_avatar' => ['sometimes', 'boolean'],
             'remove_cover' => ['sometimes', 'boolean'],
             'phone' => ['nullable', 'string', 'max:30'],
@@ -117,7 +118,7 @@ class DashboardController extends Controller
                 $values = Arr::except($data, ['avatar', 'cover', 'remove_avatar', 'remove_cover']);
                 foreach (['avatar', 'cover'] as $kind) {
                     if (isset($uploaded[$kind]) || ($data['remove_'.$kind] ?? false)) {
-                        if ($locked->{$kind.'_path'}) {
+                        if ($locked->{$kind.'_path'} && preg_match('~^profile-images/'.$locked->id.'/[A-Za-z0-9]{40}\.(?:jpg|jpeg|png|webp)$~D', $locked->{$kind.'_path'})) {
                             $oldPaths[] = $locked->{$kind.'_path'};
                         }
                         $values[$kind.'_path'] = $uploaded[$kind] ?? null;
