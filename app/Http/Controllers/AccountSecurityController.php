@@ -20,7 +20,7 @@ class AccountSecurityController extends Controller
     {
         $user = $request->user();
         $rules = ['password' => ['required', 'string', 'min:5', 'max:128', 'confirmed']];
-        if ($user->password_initialized_at || $user->email) {
+        if ($user->password_initialized_at) {
             $rules['current_password'] = ['required', 'current_password'];
         }
         $data = $request->validate($rules);
