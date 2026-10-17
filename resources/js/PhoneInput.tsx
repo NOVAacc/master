@@ -1,50 +1,50 @@
 import type { ChangeEvent } from "react";
 
-// The Kyrgyz country code is immutable in the interface. All forms submit
-// the same canonical 12-digit number without a "+" sign.
-export function normalizeKyrgyzPhone(value: string | null | undefined): string {
-    const digits = (value || "").replace(/\D/g, "");
-    if (!digits) return "";
-    if (digits.startsWith("996")) return "996" + digits.slice(3, 12);
-    if (digits.startsWith("0") && digits.length === 10) return "996" + digits.slice(1);
-    return "996" + digits.slice(0, 9);
-}
-
 export default function PhoneInput({
     value,
     onChange,
     required = false,
     label = "Телефон",
     autoComplete = "tel",
+    fixedPrefix = false,
 }: {
     value: string | null | undefined;
     onChange: (value: string) => void;
     required?: boolean;
     label?: string;
     autoComplete?: string;
+    fixedPrefix?: boolean;
 }) {
-    const digits = normalizeKyrgyzPhone(value).slice(3);
+    const digits = (value || "").replace(/\D/g, "");
+    const local = digits.startsWith("996") ? digits.slice(3, 12) : digits.slice(0, 9);
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
         const typed = event.target.value.replace(/\D/g, "");
-        const local = (typed.startsWith("996") && typed.length > 9 ? typed.slice(3) : typed).slice(0, 9);
-        onChange(local ? "996" + local : "");
+        if (fixedPrefix) {
+            const number = typed.startsWith("996") && typed.length > 9
+                ? typed.slice(3, 12)
+                : typed.slice(0, 9);
+            onChange(number ? "996" + number : "");
+        } else {
+            onChange(typed.slice(0, 15));
+        }
     };
+
     return (
-        <div className="phone-number-field">
-            <span className="phone-country-prefix" aria-hidden="true">996</span>
+        <div className={fixedPrefix ? "phone-number-field phone-fixed-prefix" : "phone-number-field"}>
+            {fixedPrefix && <span className="phone-country-prefix" aria-hidden="true">996</span>}
             <input
                 type="tel"
                 inputMode="numeric"
                 autoComplete={autoComplete}
-                aria-label={label + " — после 996 введите девять цифр"}
-                placeholder="555123456"
-                value={digits}
-                maxLength={9}
-                pattern="[0-9]{9}"
+                aria-label={fixedPrefix ? label + ": 9 цифр после 996, без плюса" : label + ": только цифры, без плюса"}
+                placeholder={fixedPrefix ? "555123456" : "996555123456"}
+                value={fixedPrefix ? local : digits}
+                maxLength={fixedPrefix ? 9 : 15}
+                pattern={fixedPrefix ? "[0-9]{9}" : "[0-9]{7,15}"}
                 required={required}
                 onChange={handleChange}
             />
-            <small className="phone-hint">9 цифр после 996, без «+»</small>
+            {!fixedPrefix && <small className="phone-hint">Только цифры, без «+»</small>}
         </div>
     );
 }
