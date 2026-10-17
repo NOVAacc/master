@@ -115,12 +115,16 @@ class AuthController extends Controller
                 'phone_verified_at' => now(),
                 'password' => Hash::make(Str::random(48)),
             ]);
-            $base = strtolower(Str::random(10));
+            // Short, non-sequential public addresses, e.g. bosh.kg/m/k8q2p4z.
+            // Uniqueness is enforced again by the database unique index.
+            do {
+                $slug = strtolower(Str::random(7));
+            } while (MasterProfile::where('slug', $slug)->exists());
             MasterProfile::create([
                 'user_id' => $user->id,
                 'display_name' => $pending['name'],
                 'phone' => '+'.$pending['phone'],
-                'slug' => 'master-'.$user->id.'-'.$base,
+                'slug' => $slug,
             ]);
             return $user;
         });

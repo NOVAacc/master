@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -78,7 +79,13 @@ class DashboardController extends Controller
             }
             $request->merge(['instagram_username' => ltrim($value, '@') ?: null]);
         }
+        $master = $this->master($request);
+        $request->merge(['slug' => strtolower(trim((string) $request->input('slug', $master->slug)))]);
+        $slugRules = $request->input('slug') === $master->slug
+            ? ['required', 'string'] // Keep legacy links unchanged while editing other fields.
+            : ['required', 'string', 'regex:/^[a-z0-9]{3,30}$/', Rule::unique('master_profiles', 'slug')->ignore($master->id)];
         $data = $request->validate([
+            'slug' => $slugRules,
             'display_name' => ['required', 'string', 'max:100'],
             'specialty' => ['nullable', 'string', 'max:150'],
             'bio' => ['nullable', 'string', 'max:2000'],
@@ -99,7 +106,6 @@ class DashboardController extends Controller
         if (($data['whatsapp_notifications'] ?? false) && ! WhatsApp::phone($data['phone'] ?? null)) {
             throw ValidationException::withMessages(['phone' => 'Укажите номер WhatsApp с кодом страны.']);
         }
-        $master = $this->master($request);
         $disk = Storage::disk('local');
         $uploaded = [];
         $oldPaths = [];
