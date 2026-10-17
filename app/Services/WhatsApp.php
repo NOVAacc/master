@@ -36,7 +36,7 @@ final class WhatsApp
         $start = $a->starts_at->copy()->setTimezone($master->timezone);
         $end = $a->ends_at->copy()->setTimezone($master->timezone);
         $services = collect($a->services_snapshot)->pluck('name')->implode(' + ') ?: $a->service_name_snapshot;
-        $state = $a->status === 'confirmed' ? 'Запись подтверждена' : 'Заявка на запись';
+        $state = $a->status === 'confirmed' ? ($a->notification_revision > 1 ? 'Запись изменена и подтверждена' : 'Запись подтверждена') : 'Заявка на запись';
         $lines = ["Master · {$state} №{$a->id}", "Мастер: {$master->display_name}", "Клиент: {$a->client_name}"];
         if ($recipient === 'master') {
             $lines[] = 'Телефон клиента: '.$a->client_phone;
@@ -75,7 +75,7 @@ final class WhatsApp
             if (! $phone) {
                 continue;
             }
-            $notification = MasterNotification::firstOrCreate(['master_appointment_id' => $appointment->id, 'recipient' => $recipient], ['phone' => $phone]);
+            $notification = MasterNotification::firstOrCreate(['master_appointment_id' => $appointment->id, 'recipient' => $recipient, 'revision' => $appointment->notification_revision], ['phone' => $phone]);
             $this->send($notification);
         }
     }
@@ -87,6 +87,9 @@ final class WhatsApp
         }
         $appointment = $notification->appointment;
         if ($appointment->status !== 'confirmed' || $appointment->starts_at->isPast()) {
+            return;
+        }
+        if ((int) $notification->revision !== (int) $appointment->notification_revision) {
             return;
         }
         $master = $appointment->masterProfile;

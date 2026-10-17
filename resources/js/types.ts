@@ -38,6 +38,16 @@ export type Appointment = {
           }[]
         | null;
     status: string;
+    revision: number;
+    notification_revision: number;
+    master_service_id?: number | null;
+    changes?: {
+        id: number;
+        created_at: string;
+        reason: string | null;
+        before: AppointmentSnapshot;
+        after: AppointmentSnapshot;
+    }[];
     whatsapp_link?: string | null;
     notifications?: {
         id: number;
@@ -45,4 +55,15 @@ export type Appointment = {
         status: string;
         error_code?: string | null;
     }[];
+};
+
+export type AppointmentSnapshot = {
+    starts_at: string;
+    ends_at: string;
+    duration_minutes: number;
+    price_som: number;
+    service_name: string;
+    client_name: string;
+    client_phone: string;
+    client_comment: string | null;
 };

@@ -14,6 +14,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 });
 Route::middleware('auth')->group(function () {
+    Route::post('/appointments/{appointment}/edit', [DashboardController::class, 'editAppointment']);
     Route::post('/appointments/{appointment}/whatsapp', [DashboardController::class, 'retryWhatsApp'])->middleware('throttle:5,1');
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/dashboard', [DashboardController::class, 'show'])->name('dashboard');

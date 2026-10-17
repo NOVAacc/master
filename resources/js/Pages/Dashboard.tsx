@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import Icon from "../Icon";
+import EditAppointmentForm from "../EditAppointmentForm";
 import AppointmentCalendar from "../AppointmentCalendar";
 import { Brand, Errors, Field, Notice } from "../Shared";
 import type { Appointment, Hour, Master, Service } from "../types";
@@ -389,6 +390,7 @@ export default function Dashboard({
         );
     const [filter, setFilter] = useState("active");
     const [message, setMessage] = useState("");
+    const [editingId, setEditingId] = useState<number | null>(null);
     const [pending, setPending] = useState<number | null>(null);
     const date = (s: string) =>
         new Intl.DateTimeFormat("ru", {
@@ -418,111 +420,195 @@ export default function Dashboard({
         );
     };
     const renderAppointment = (a: Appointment) => (
-        <article className="appointment" key={a.id}>
-            <div>
-                <span className="accent">{date(a.starts_at)}</span>
-                <h3>{a.client_name}</h3>
-                <p>
-                    {a.services_snapshot?.length
-                        ? a.services_snapshot.map((s) => s.name).join(" + ")
-                        : a.service_name_snapshot}{" "}
-                    · {a.price_som.toLocaleString()} сом
-                </p>
-                <a href={`tel:${a.client_phone.replace(/[^+0-9]/g, "")}`}>
-                    {a.client_phone}
-                </a>
-                {a.client_comment && (
-                    <p className="muted">{a.client_comment}</p>
-                )}
-            </div>
-            <div className="appt-actions">
-                <span className={`badge ${a.status}`}>
-                    {statuses[a.status]}
-                </span>
-                {a.status === "confirmed" && a.whatsapp_link && (
-                    <a
-                        className="ghost"
-                        href={a.whatsapp_link}
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        Сообщить клиенту в WhatsApp ↗
+        <div className="appointment-entry" key={a.id}>
+            <article className="appointment">
+                <div>
+                    <span className="accent">{date(a.starts_at)}</span>
+                    <h3>{a.client_name}</h3>
+                    <p>
+                        {a.services_snapshot?.length
+                            ? a.services_snapshot.map((s) => s.name).join(" + ")
+                            : a.service_name_snapshot}{" "}
+                        · {a.price_som.toLocaleString()} сом ·{" "}
+                        {Math.round(
+                            (Date.parse(a.ends_at) - Date.parse(a.starts_at)) /
+                                60000,
+                        )}{" "}
+                        мин
+                    </p>
+                    <a href={`tel:${a.client_phone.replace(/[^+0-9]/g, "")}`}>
+                        {a.client_phone}
                     </a>
-                )}
-                {a.notifications?.map((n) => (
-                    <small key={n.id}>
-                        WhatsApp{" "}
-                        {n.recipient === "client" ? "клиенту" : "мастеру"}:{" "}
-                        {(
-                            {
-                                recipient_changed:
-                                    "номер изменён — отправка остановлена",
-                                accepted: "принято сервисом",
-                                not_configured: "отправка не подключена",
-                                failed: "ошибка отправки",
-                                unknown:
-                                    "результат неизвестен — проверьте перед повтором",
-                                sending: "передаётся сервису",
-                            } as Record<string, string>
-                        )[n.status] || n.status}
-                    </small>
-                ))}
-                {whatsappAutomatic &&
-                    a.status === "confirmed" &&
-                    a.notifications?.some((n) =>
-                        ["failed", "not_configured"].includes(n.status),
-                    ) && (
-                        <button
-                            type="button"
-                            className="ghost"
-                            onClick={() =>
-                                router.post(
-                                    `/appointments/${a.id}/whatsapp`,
-                                    {},
-                                    {
-                                        preserveScroll: true,
-                                    },
-                                )
-                            }
-                        >
-                            Повторить автоматическую отправку
-                        </button>
+                    {a.client_comment && (
+                        <p className="muted">{a.client_comment}</p>
                     )}
-                {["pending", "confirmed"].includes(a.status) && (
-                    <div className="row wrap">
-                        {a.status === "pending" && (
+                </div>
+                <div className="appt-actions">
+                    <span className={`badge ${a.status}`}>
+                        {statuses[a.status]}
+                    </span>
+                    {a.status === "confirmed" && a.whatsapp_link && (
+                        <a
+                            className="ghost"
+                            href={a.whatsapp_link}
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            {a.notification_revision > 1
+                                ? "Сообщить об изменениях в WhatsApp ↗"
+                                : "Сообщить клиенту в WhatsApp ↗"}
+                        </a>
+                    )}
+                    {a.notifications?.map((n) => (
+                        <small key={n.id}>
+                            WhatsApp{" "}
+                            {n.recipient === "client" ? "клиенту" : "мастеру"}:{" "}
+                            {(
+                                {
+                                    recipient_changed:
+                                        "номер изменён — отправка остановлена",
+                                    accepted: "принято сервисом",
+                                    not_configured: "отправка не подключена",
+                                    failed: "ошибка отправки",
+                                    unknown:
+                                        "результат неизвестен — проверьте перед повтором",
+                                    sending: "передаётся сервису",
+                                } as Record<string, string>
+                            )[n.status] || n.status}
+                        </small>
+                    ))}
+                    {whatsappAutomatic &&
+                        a.status === "confirmed" &&
+                        a.notifications?.some((n) =>
+                            ["failed", "not_configured"].includes(n.status),
+                        ) && (
                             <button
-                                className="primary"
-                                disabled={pending === a.id}
-                                onClick={() => changeStatus(a, "confirmed")}
+                                type="button"
+                                className="ghost"
+                                onClick={() =>
+                                    router.post(
+                                        `/appointments/${a.id}/whatsapp`,
+                                        {},
+                                        {
+                                            preserveScroll: true,
+                                        },
+                                    )
+                                }
                             >
-                                Подтвердить
+                                Повторить автоматическую отправку
                             </button>
                         )}
-                        {a.status === "confirmed" &&
-                            new Date(a.ends_at) <= new Date() && (
+                    {["pending", "confirmed"].includes(a.status) && (
+                        <div className="row wrap">
+                            <button
+                                type="button"
+                                className="ghost"
+                                disabled={pending === a.id}
+                                onClick={() =>
+                                    setEditingId(
+                                        editingId === a.id ? null : a.id,
+                                    )
+                                }
+                            >
+                                Перенести / изменить
+                            </button>
+                            {a.status === "pending" && (
                                 <button
-                                    className="ghost"
+                                    className="primary"
                                     disabled={pending === a.id}
-                                    onClick={() => changeStatus(a, "completed")}
+                                    onClick={() => changeStatus(a, "confirmed")}
                                 >
-                                    Завершить
+                                    Подтвердить
                                 </button>
                             )}
-                        <button
-                            className="ghost"
-                            disabled={pending === a.id}
-                            onClick={() => {
-                                if (confirm("Отменить запись?"))
-                                    changeStatus(a, "cancelled");
-                            }}
-                        >
-                            Отменить
-                        </button>
-                    </div>
-                )}
-            </div>
-        </article>
+                            {a.status === "confirmed" &&
+                                new Date(a.ends_at) <= new Date() && (
+                                    <button
+                                        className="ghost"
+                                        disabled={pending === a.id}
+                                        onClick={() =>
+                                            changeStatus(a, "completed")
+                                        }
+                                    >
+                                        Завершить
+                                    </button>
+                                )}
+                            <button
+                                className="ghost"
+                                disabled={pending === a.id}
+                                onClick={() => {
+                                    if (confirm("Отменить запись?"))
+                                        changeStatus(a, "cancelled");
+                                }}
+                            >
+                                Отменить
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </article>
+            {editingId === a.id && (
+                <EditAppointmentForm
+                    key={`${a.id}-${a.revision}`}
+                    appointment={a}
+                    services={services}
+                    timezone={master.timezone}
+                    onClose={() => setEditingId(null)}
+                />
+            )}
+            {!!a.changes?.length && (
+                <details className="appointment-history">
+                    <summary>История изменений ({a.changes.length})</summary>
+                    {a.changes.map((change) => (
+                        <div key={change.id} className="appointment-change">
+                            <strong>{date(change.created_at)}</strong>
+                            {change.reason && <p>{change.reason}</p>}
+                            <p>
+                                {date(change.before.starts_at)} ·{" "}
+                                {change.before.duration_minutes} мин ·{" "}
+                                {change.before.price_som.toLocaleString(
+                                    "ru-RU",
+                                )}{" "}
+                                сом
+                                <br />→ {date(change.after.starts_at)} ·{" "}
+                                {change.after.duration_minutes} мин ·{" "}
+                                {change.after.price_som.toLocaleString("ru-RU")}{" "}
+                                сом
+                            </p>
+                            {change.before.service_name !==
+                                change.after.service_name && (
+                                <p>
+                                    Услуги: {change.before.service_name} →{" "}
+                                    {change.after.service_name}
+                                </p>
+                            )}
+                            {change.before.client_name !==
+                                change.after.client_name && (
+                                <p>
+                                    Имя: {change.before.client_name} →{" "}
+                                    {change.after.client_name}
+                                </p>
+                            )}
+                            {change.before.client_phone !==
+                                change.after.client_phone && (
+                                <p>
+                                    Телефон: {change.before.client_phone} →{" "}
+                                    {change.after.client_phone}
+                                </p>
+                            )}
+                            {change.before.client_comment !==
+                                change.after.client_comment && (
+                                <p>
+                                    Комментарий:{" "}
+                                    {change.before.client_comment || "—"} →{" "}
+                                    {change.after.client_comment || "—"}
+                                </p>
+                            )}
+                        </div>
+                    ))}
+                </details>
+            )}
+        </div>
     );
     return (
         <div className="shell">

@@ -1669,3 +1669,39 @@ h2 {
         padding: 14px;
     }
 }
+
+.appointment-entry {
+    min-width: 0;
+}
+.appointment-edit-form {
+    padding: 22px;
+    border: 1px solid #ddd;
+    border-radius: 14px;
+    background: white;
+    margin: 14px 0 24px;
+}
+.appointment-history {
+    margin: 10px 0 24px;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 12px;
+}
+.appointment-history summary {
+    cursor: pointer;
+    color: #737373;
+}
+.appointment-change {
+    border-top: 1px solid #eee;
+    padding: 14px 0 4px;
+    margin-top: 12px;
+    overflow-wrap: anywhere;
+}
+.appointment-change p {
+    font-size: 12px;
+}
+@container (max-width: 700px) {
+    .appointment-edit-form {
+        padding: 16px 12px;
+    }
+}
