@@ -45,6 +45,37 @@ jobs:
               curl --silent --show-error --max-time 15 -o /dev/null -w 'ttfb=%{time_starttransfer} total=%{time_total}\n' "https://bosh.kg$ENDPOINT" || true
             done
           done
+      - name: Time one public master booking page without making a reservation
+        shell: bash
+        run: |
+          set -euo pipefail
+          MASTER_SLUG=$(python3 - <<'PY'
+          from html.parser import HTMLParser
+          from urllib.request import urlopen
+          import json
+          class AppParser(HTMLParser):
+              app = None
+              def handle_starttag(self, tag, attrs):
+                  if tag == 'div':
+                      attributes = dict(attrs)
+                      if attributes.get('id') == 'app':
+                          self.app = attributes.get('data-page')
+          p = AppParser()
+          with urlopen('https://bosh.kg/', timeout=15) as response:
+              p.feed(response.read().decode('utf-8'))
+          data = json.loads(p.app or '{}')
+          props = data.get('props', {})
+          profiles = props.get('newMasters', []) or props.get('topMasters', [])
+          slug = profiles[0].get('slug', '') if profiles else ''
+          print(slug if isinstance(slug, str) and slug.isalnum() else '')
+          PY
+          )
+          if [ -n "$MASTER_SLUG" ]; then
+            echo '==== Public booking page ===='
+            curl --silent --show-error --max-time 20 -o /dev/null -w 'status=%{http_code} ttfb=%{time_starttransfer} total=%{time_total} bytes=%{size_download}\n' "https://bosh.kg/m/$MASTER_SLUG"
+          else
+            echo 'NO_PUBLIC_MASTER_FOR_BOOKING_TIMING'
+          fi
       - name: Inspect duplicate constraint coverage and risky patterns
         run: |
           echo '==== unique and index declarations ===='
