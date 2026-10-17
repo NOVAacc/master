@@ -47,7 +47,8 @@ def run(args):
                        '--revision', args.revision, '--release', f'{args.revision}-999-{attempt}',
                        '--php', args.php, '--site-root', str(site), '--private-root', str(private), '--url', url,
                        '--db-host', args.db_host, '--db-name', args.db_name, '--db-user', args.db_user]
-                subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL)
+                subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL,
+                               env={**os.environ, 'NIKITA_OTP_API_KEY': 'inert-test-otp-key-1234567890'})
                 names = json.loads((out / 'names.json').read_text())
                 for name in names.values():
                     shutil.copy2(out / name, site / name)
@@ -74,6 +75,7 @@ def run(args):
             first = (private / 'current').resolve()
             first_env = (private / 'shared/.env').read_text()
             assert 'APP_KEY=' in first_env and 'APP_DEBUG="false"' in first_env
+            assert 'NIKITA_OTP_API_KEY="inert-test-otp-key-1234567890"' in first_env
             assert (private / 'shared/.env').stat().st_mode & 0o777 == 0o600
             assert request(names, token, payload)[0] == 500, 'Repeated install was accepted'
             with urllib.request.urlopen(url + '/index.php/login') as response:
