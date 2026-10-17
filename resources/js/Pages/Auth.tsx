@@ -3,10 +3,26 @@ import { useState } from "react";
 import { Brand, Errors, Field } from "../Shared";
 
 export default function Auth({ register }: { register: boolean }) {
-    const [legacy, setLegacy] = useState(false);
+    const [smsMode, setSmsMode] = useState(register);
     const [sent, setSent] = useState(false);
-    const f = useForm({ name: "", phone: "+996 ", code: "", mode: register ? "register" : "login", email: "", password: "" });
-    const codeSent = sent;
+    const f = useForm({
+        name: "", phone: "+996 ", code: "",
+        mode: register ? "register" : "login",
+        identifier: "", password: "",
+    });
+    function submit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+        if (!smsMode) {
+            f.transform(d => ({ identifier: d.identifier, password: d.password }));
+            f.post("/login");
+        } else if (sent) {
+            f.transform(d => ({ code: d.code }));
+            f.post("/auth/verify-code");
+        } else {
+            f.transform(d => ({ name: d.name, phone: d.phone, mode: d.mode }));
+            f.post("/auth/send-code", { onSuccess: () => setSent(true) });
+        }
+    }
     return (
         <main className="auth-wrap">
             <section className="auth-intro">
@@ -15,7 +31,7 @@ export default function Auth({ register }: { register: boolean }) {
                 <p>Услуги, расписание и запись клиентов — в одном кабинете.</p>
                 <div className="intro-card">
                     <span>Всё по плану</span>
-                    <h2>Ваш следующий клиент<br/>уже выбирает время.</h2>
+                    <h2>Ваш следующий клиент<br />уже выбирает время.</h2>
                     <p>Начните принимать записи за пару минут.</p>
                 </div>
             </section>
@@ -23,31 +39,57 @@ export default function Auth({ register }: { register: boolean }) {
                 <Head title={register ? "Регистрация" : "Вход"} />
                 <p className="eyebrow">BOSH · КАБИНЕТ МАСТЕРА</p>
                 <h1>{register ? "Создать аккаунт" : "Войти в BOSH"}</h1>
-                <p className="muted">{codeSent && !legacy ? "Введите 5-значный код из SMS. Он действует 3 минуты." : register ? "Только имя и номер телефона." : "Введите номер телефона, чтобы получить код."}</p>
-                <form onSubmit={e => {
-                    e.preventDefault();
-                    if (legacy) { f.transform(data => ({ email: data.email, password: data.password })); f.post("/login"); return; }
-                    if (codeSent) { f.transform(data => ({ code: data.code })); f.post("/auth/verify-code"); return; }
-                    f.transform(data => ({ name: data.name, phone: data.phone, mode: register ? "register" : "login" }));
-                    f.post("/auth/send-code", { onSuccess: () => setSent(true) });
-                }}>
+                <p className="muted">
+                    {!smsMode ? "Введите номер телефона и постоянный пароль." :
+                     sent ? "Введите пятизначный код из SMS. Он действует 3 минуты." :
+                     "Подтвердите телефон через SMS один раз, а затем установите постоянный пароль."}
+                </p>
+                <form onSubmit={submit}>
                     <Errors errors={f.errors} />
-                    {legacy ? <>
-                        <Field label="Email"><input type="email" required value={f.data.email} onChange={e => f.setData("email", e.target.value)} autoComplete="username" /></Field>
-                        <Field label="Пароль"><input type="password" required value={f.data.password} onChange={e => f.setData("password", e.target.value)} autoComplete="current-password" /></Field>
-                    </> : codeSent ? <>
-                        <Field label="Код подтверждения"><input autoComplete="one-time-code" inputMode="numeric" autoFocus required minLength={5} maxLength={5} pattern="[0-9]{5}" placeholder="5-значный код" value={f.data.code} onChange={e => f.setData("code", e.target.value.replace(/\D/g, "").slice(0, 5))} /></Field>
-                        <p className="muted">SMS отправлено на {f.data.phone}.</p>
+                    {!smsMode ? <>
+                        <Field label="Номер телефона или почта">
+                            <input required autoComplete="username" value={f.data.identifier}
+                                onChange={e => f.setData("identifier", e.target.value)}
+                                placeholder="+996 555 123 456" />
+                        </Field>
+                        <Field label="Пароль">
+                            <input required type="password" autoComplete="current-password"
+                                value={f.data.password}
+                                onChange={e => f.setData("password", e.target.value)} />
+                        </Field>
+                        <p className="muted"><Link href="/forgot-password">Забыли пароль?</Link></p>
+                    </> : sent ? <>
+                        <Field label="Код подтверждения">
+                            <input autoFocus required inputMode="numeric" autoComplete="one-time-code"
+                                minLength={5} maxLength={5} pattern="[0-9]{5}"
+                                value={f.data.code}
+                                onChange={e => f.setData("code", e.target.value.replace(/\D/g, "").slice(0, 5))} />
+                        </Field>
+                        <p className="muted">Код отправлен на {f.data.phone}.</p>
                     </> : <>
-                        {register && <Field label="Ваше имя"><input autoComplete="name" required maxLength={100} value={f.data.name} onChange={e => f.setData("name", e.target.value)} placeholder="Как к вам обращаться" /></Field>}
-                        <Field label="Номер телефона"><input autoComplete="tel" type="tel" inputMode="tel" required value={f.data.phone} onChange={e => f.setData("phone", e.target.value)} placeholder="+996 555 123 456" /></Field>
+                        {register && <Field label="Ваше имя">
+                            <input required maxLength={100} autoComplete="name" value={f.data.name}
+                                onChange={e => f.setData("name", e.target.value)} />
+                        </Field>}
+                        <Field label="Номер телефона">
+                            <input required type="tel" autoComplete="tel"
+                                value={f.data.phone} onChange={e => f.setData("phone", e.target.value)} />
+                        </Field>
                     </>}
-                    <button className="primary wide" disabled={f.processing}>{f.processing ? "Подождите…" : legacy ? "Войти" : codeSent ? "Подтвердить" : "Получить SMS-код"}</button>
+                    <button className="primary wide" disabled={f.processing}>
+                        {f.processing ? "Подождите…" : !smsMode ? "Войти" : sent ? "Подтвердить" : "Получить SMS"}
+                    </button>
                 </form>
-                {codeSent && !legacy && <button type="button" className="secondary wide" onClick={() => { setSent(false); f.clearErrors(); }}>Изменить номер / отправить код повторно</button>}
-                {!register && <button type="button" className="secondary wide" onClick={() => { setLegacy(!legacy); setSent(false); f.clearErrors(); }}>{legacy ? "Войти по SMS" : "Войти по email и паролю"}</button>}
-                <p className="muted">{register ? "Уже зарегистрированы?" : "Первый раз здесь?"}{" "}<Link href={register ? "/login" : "/register"}>{register ? "Войти" : "Создать аккаунт"}</Link></p>
-                {register && <small className="muted">Продолжая, вы подтверждаете согласие с условиями сервиса и обработкой номера для входа.</small>}
+                {sent && smsMode && <button type="button" className="secondary wide"
+                    onClick={() => { setSent(false); f.clearErrors(); }}>Изменить номер / отправить повторно</button>}
+                {!register && <button type="button" className="secondary wide"
+                    onClick={() => { setSmsMode(!smsMode); setSent(false); f.clearErrors(); }}>
+                    {smsMode ? "Войти по паролю" : "Первый вход после SMS-регистрации"}
+                </button>}
+                <p className="muted">
+                    {register ? "Уже зарегистрированы?" : "Первый раз здесь?"}{" "}
+                    <Link href={register ? "/login" : "/register"}>{register ? "Войти" : "Создать аккаунт"}</Link>
+                </p>
             </section>
         </main>
     );
