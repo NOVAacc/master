@@ -5,7 +5,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit && node --experimental-strip-types --test tests/calendar-layout.test.mjs"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",

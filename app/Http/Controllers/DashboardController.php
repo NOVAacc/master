@@ -6,6 +6,7 @@ use App\Models\MasterAppointment;
 use App\Models\MasterProfile;
 use App\Models\MasterService;
 use App\Services\WhatsApp;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -22,7 +23,29 @@ class DashboardController extends Controller
     {
         $master = $this->master($request);
 
+        $today = CarbonImmutable::now($master->timezone)->startOfDay();
+        $data = $request->validate(['calendar_date' => ['nullable', 'date_format:Y-m-d',
+            'after_or_equal:'.$today->subYears(5)->toDateString(), 'before_or_equal:'.$today->addYears(5)->toDateString()]]);
+        $calendarDate = $data['calendar_date'] ?? $today->toDateString();
+        $calendarStart = CarbonImmutable::parse($calendarDate, $master->timezone)->startOfWeek();
+        $calendarEnd = $calendarStart->addWeek();
+        $presentAppointment = function ($appointment) use ($master) {
+            $appointment->setRelation('masterProfile', $master);
+            $appointment->setAttribute('whatsapp_link', app(WhatsApp::class)->link($appointment->client_phone, app(WhatsApp::class)->message($appointment, 'client')));
+            $appointment->unsetRelation('masterProfile');
+
+            return $appointment;
+        };
+
         return Inertia::render('Dashboard', [
+            'calendarDate' => $calendarDate,
+            'calendarAppointments' => $master->appointments()->where('starts_at', '<', $calendarEnd->utc())
+                ->where('ends_at', '>', $calendarStart->utc())
+                ->with('notifications:id,master_appointment_id,recipient,status,error_code')->orderBy('starts_at')->get()->map($presentAppointment),
+            'calendarBlocks' => DB::table('master_time_blocks')->where('master_profile_id', $master->id)
+                ->where('starts_at', '<', $calendarEnd->utc())->where('ends_at', '>', $calendarStart->utc())->get()
+                ->map(fn ($block) => ['id' => $block->id, 'starts_at' => CarbonImmutable::parse($block->starts_at, 'UTC')->toIso8601String(),
+                    'ends_at' => CarbonImmutable::parse($block->ends_at, 'UTC')->toIso8601String(), 'reason' => $block->reason]),
             'master' => $master,
             'services' => $master->services()->orderBy('sort_order')->get(),
             'hours' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->orderBy('weekday')->get()
@@ -32,14 +55,7 @@ class DashboardController extends Controller
                     'ends_at' => substr($hour->ends_at, 0, 5),
                 ]),
             'appointments' => $master->appointments()->where('ends_at', '>=', now('UTC')->subDays(30))
-                ->with('notifications:id,master_appointment_id,recipient,status,error_code')->orderBy('starts_at')->limit(200)->get()->map(function ($appointment) use ($master) {
-                    $appointment->setRelation('masterProfile', $master);
-                    $appointment->setAttribute('whatsapp_link', app(WhatsApp::class)->link($appointment->client_phone, app(WhatsApp::class)->message($appointment, 'client')));
-
-                    $appointment->unsetRelation('masterProfile');
-
-                    return $appointment;
-                }),
+                ->with('notifications:id,master_appointment_id,recipient,status,error_code')->orderBy('starts_at')->limit(200)->get()->map($presentAppointment),
             'whatsappAutomatic' => app(WhatsApp::class)->configured(),
             'publicUrl' => route('public.master', $master->slug),
         ]);

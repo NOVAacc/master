@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import Icon from "../Icon";
+import AppointmentCalendar from "../AppointmentCalendar";
 import { Brand, Errors, Field, Notice } from "../Shared";
 import type { Appointment, Hour, Master, Service } from "../types";
 const days = [
@@ -342,6 +343,9 @@ export default function Dashboard({
     appointments,
     publicUrl,
     whatsappAutomatic,
+    calendarDate,
+    calendarAppointments,
+    calendarBlocks,
 }: {
     master: Master;
     services: Service[];
@@ -349,8 +353,40 @@ export default function Dashboard({
     appointments: Appointment[];
     publicUrl: string;
     whatsappAutomatic: boolean;
+    calendarDate: string;
+    calendarAppointments: Appointment[];
+    calendarBlocks: {
+        id: number;
+        starts_at: string;
+        ends_at: string;
+        reason: string | null;
+    }[];
 }) {
     const [tab, setTab] = useState("appointments");
+    const [appointmentView, setAppointmentView] = useState<"calendar" | "list">(
+        "calendar",
+    );
+    const [calendarLoading, setCalendarLoading] = useState(false);
+    const navigateCalendar = (date: string) =>
+        router.get(
+            "/dashboard",
+            { calendar_date: date },
+            {
+                only: [
+                    "calendarDate",
+                    "calendarAppointments",
+                    "calendarBlocks",
+                ],
+                preserveState: true,
+                preserveScroll: true,
+                onStart: () => setCalendarLoading(true),
+                onFinish: () => setCalendarLoading(false),
+                onError: () =>
+                    setMessage(
+                        "Не удалось загрузить календарь. Повторите переход.",
+                    ),
+            },
+        );
     const [filter, setFilter] = useState("active");
     const [message, setMessage] = useState("");
     const [pending, setPending] = useState<number | null>(null);
@@ -381,6 +417,113 @@ export default function Dashboard({
             },
         );
     };
+    const renderAppointment = (a: Appointment) => (
+        <article className="appointment" key={a.id}>
+            <div>
+                <span className="accent">{date(a.starts_at)}</span>
+                <h3>{a.client_name}</h3>
+                <p>
+                    {a.services_snapshot?.length
+                        ? a.services_snapshot.map((s) => s.name).join(" + ")
+                        : a.service_name_snapshot}{" "}
+                    · {a.price_som.toLocaleString()} сом
+                </p>
+                <a href={`tel:${a.client_phone.replace(/[^+0-9]/g, "")}`}>
+                    {a.client_phone}
+                </a>
+                {a.client_comment && (
+                    <p className="muted">{a.client_comment}</p>
+                )}
+            </div>
+            <div className="appt-actions">
+                <span className={`badge ${a.status}`}>
+                    {statuses[a.status]}
+                </span>
+                {a.status === "confirmed" && a.whatsapp_link && (
+                    <a
+                        className="ghost"
+                        href={a.whatsapp_link}
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        Сообщить клиенту в WhatsApp ↗
+                    </a>
+                )}
+                {a.notifications?.map((n) => (
+                    <small key={n.id}>
+                        WhatsApp{" "}
+                        {n.recipient === "client" ? "клиенту" : "мастеру"}:{" "}
+                        {(
+                            {
+                                recipient_changed:
+                                    "номер изменён — отправка остановлена",
+                                accepted: "принято сервисом",
+                                not_configured: "отправка не подключена",
+                                failed: "ошибка отправки",
+                                unknown:
+                                    "результат неизвестен — проверьте перед повтором",
+                                sending: "передаётся сервису",
+                            } as Record<string, string>
+                        )[n.status] || n.status}
+                    </small>
+                ))}
+                {whatsappAutomatic &&
+                    a.status === "confirmed" &&
+                    a.notifications?.some((n) =>
+                        ["failed", "not_configured"].includes(n.status),
+                    ) && (
+                        <button
+                            type="button"
+                            className="ghost"
+                            onClick={() =>
+                                router.post(
+                                    `/appointments/${a.id}/whatsapp`,
+                                    {},
+                                    {
+                                        preserveScroll: true,
+                                    },
+                                )
+                            }
+                        >
+                            Повторить автоматическую отправку
+                        </button>
+                    )}
+                {["pending", "confirmed"].includes(a.status) && (
+                    <div className="row wrap">
+                        {a.status === "pending" && (
+                            <button
+                                className="primary"
+                                disabled={pending === a.id}
+                                onClick={() => changeStatus(a, "confirmed")}
+                            >
+                                Подтвердить
+                            </button>
+                        )}
+                        {a.status === "confirmed" &&
+                            new Date(a.ends_at) <= new Date() && (
+                                <button
+                                    className="ghost"
+                                    disabled={pending === a.id}
+                                    onClick={() => changeStatus(a, "completed")}
+                                >
+                                    Завершить
+                                </button>
+                            )}
+                        <button
+                            className="ghost"
+                            disabled={pending === a.id}
+                            onClick={() => {
+                                if (confirm("Отменить запись?"))
+                                    changeStatus(a, "cancelled");
+                            }}
+                        >
+                            Отменить
+                        </button>
+                    </div>
+                )}
+            </div>
+        </article>
+    );
     return (
         <div className="shell">
             <Head title="Кабинет" />
@@ -494,228 +637,107 @@ export default function Dashboard({
                             }
                         </h2>
                         {tab === "appointments" && (
-                            <select
-                                aria-label="Фильтр записей"
-                                value={filter}
-                                onChange={(e) => setFilter(e.target.value)}
-                            >
-                                <option value="active">Активные</option>
-                                <option value="all">
-                                    Все за последние 30 дней и будущие
-                                </option>
-                            </select>
+                            <div className="row wrap appointment-view-controls">
+                                <div
+                                    className="display-switch"
+                                    role="group"
+                                    aria-label="Вид записей"
+                                >
+                                    <button
+                                        type="button"
+                                        aria-pressed={
+                                            appointmentView === "calendar"
+                                        }
+                                        onClick={() =>
+                                            setAppointmentView("calendar")
+                                        }
+                                    >
+                                        Календарь
+                                    </button>
+                                    <button
+                                        type="button"
+                                        aria-pressed={
+                                            appointmentView === "list"
+                                        }
+                                        onClick={() =>
+                                            setAppointmentView("list")
+                                        }
+                                    >
+                                        Список
+                                    </button>
+                                </div>
+                                <select
+                                    aria-label="Фильтр записей"
+                                    value={filter}
+                                    onChange={(e) => setFilter(e.target.value)}
+                                >
+                                    <option value="active">Активные</option>
+                                    <option value="all">Все статусы</option>
+                                </select>
+                            </div>
                         )}
                     </div>
                     {tab === "appointments" && (
                         <>
-                            <p className="muted">
-                                Последние 200 записей. Время указано в часовом
-                                поясе мастера.
-                            </p>
-                            <div className="appointment-list">
-                                {appointments
-                                    .filter(
+                            {appointmentView === "calendar" ? (
+                                <AppointmentCalendar
+                                    appointments={calendarAppointments.filter(
                                         (a) =>
                                             filter === "all" ||
                                             ["pending", "confirmed"].includes(
                                                 a.status,
                                             ),
-                                    )
-                                    .map((a) => (
-                                        <article
-                                            className="appointment"
-                                            key={a.id}
-                                        >
-                                            <div>
-                                                <span className="accent">
-                                                    {date(a.starts_at)}
-                                                </span>
-                                                <h3>{a.client_name}</h3>
-                                                <p>
-                                                    {a.services_snapshot?.length
-                                                        ? a.services_snapshot
-                                                              .map(
-                                                                  (s) => s.name,
-                                                              )
-                                                              .join(" + ")
-                                                        : a.service_name_snapshot}{" "}
-                                                    ·{" "}
-                                                    {a.price_som.toLocaleString()}{" "}
-                                                    сом
-                                                </p>
-                                                <a
-                                                    href={`tel:${a.client_phone.replace(/[^+0-9]/g, "")}`}
-                                                >
-                                                    {a.client_phone}
-                                                </a>
-                                                {a.client_comment && (
-                                                    <p className="muted">
-                                                        {a.client_comment}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <div className="appt-actions">
-                                                <span
-                                                    className={`badge ${a.status}`}
-                                                >
-                                                    {statuses[a.status]}
-                                                </span>
-                                                {a.status === "confirmed" &&
-                                                    a.whatsapp_link && (
-                                                        <a
-                                                            className="ghost"
-                                                            href={
-                                                                a.whatsapp_link
-                                                            }
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                        >
-                                                            Сообщить клиенту в
-                                                            WhatsApp ↗
-                                                        </a>
-                                                    )}
-                                                {a.notifications?.map((n) => (
-                                                    <small key={n.id}>
-                                                        WhatsApp{" "}
-                                                        {n.recipient ===
-                                                        "client"
-                                                            ? "клиенту"
-                                                            : "мастеру"}
-                                                        :{" "}
-                                                        {(
-                                                            {
-                                                                recipient_changed:
-                                                                    "номер изменён — отправка остановлена",
-                                                                accepted:
-                                                                    "принято сервисом",
-                                                                not_configured:
-                                                                    "отправка не подключена",
-                                                                failed: "ошибка отправки",
-                                                                unknown:
-                                                                    "результат неизвестен — проверьте перед повтором",
-                                                                sending:
-                                                                    "передаётся сервису",
-                                                            } as Record<
-                                                                string,
-                                                                string
-                                                            >
-                                                        )[n.status] || n.status}
-                                                    </small>
-                                                ))}
-                                                {whatsappAutomatic &&
-                                                    a.status === "confirmed" &&
-                                                    a.notifications?.some((n) =>
-                                                        [
-                                                            "failed",
-                                                            "not_configured",
-                                                        ].includes(n.status),
-                                                    ) && (
-                                                        <button
-                                                            type="button"
-                                                            className="ghost"
-                                                            onClick={() =>
-                                                                router.post(
-                                                                    `/appointments/${a.id}/whatsapp`,
-                                                                    {},
-                                                                    {
-                                                                        preserveScroll: true,
-                                                                    },
-                                                                )
-                                                            }
-                                                        >
-                                                            Повторить
-                                                            автоматическую
-                                                            отправку
-                                                        </button>
-                                                    )}
-                                                {[
-                                                    "pending",
-                                                    "confirmed",
-                                                ].includes(a.status) && (
-                                                    <div className="row wrap">
-                                                        {a.status ===
-                                                            "pending" && (
-                                                            <button
-                                                                className="primary"
-                                                                disabled={
-                                                                    pending ===
-                                                                    a.id
-                                                                }
-                                                                onClick={() =>
-                                                                    changeStatus(
-                                                                        a,
-                                                                        "confirmed",
-                                                                    )
-                                                                }
-                                                            >
-                                                                Подтвердить
-                                                            </button>
-                                                        )}
-                                                        {a.status ===
-                                                            "confirmed" &&
-                                                            new Date(
-                                                                a.ends_at,
-                                                            ) <= new Date() && (
-                                                                <button
-                                                                    className="ghost"
-                                                                    disabled={
-                                                                        pending ===
-                                                                        a.id
-                                                                    }
-                                                                    onClick={() =>
-                                                                        changeStatus(
-                                                                            a,
-                                                                            "completed",
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    Завершить
-                                                                </button>
-                                                            )}
-                                                        <button
-                                                            className="ghost"
-                                                            disabled={
-                                                                pending === a.id
-                                                            }
-                                                            onClick={() => {
-                                                                if (
-                                                                    confirm(
-                                                                        "Отменить запись?",
-                                                                    )
-                                                                )
-                                                                    changeStatus(
-                                                                        a,
-                                                                        "cancelled",
-                                                                    );
-                                                            }}
-                                                        >
-                                                            Отменить
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </article>
-                                    ))}
-                            </div>
-                            {!appointments.some(
-                                (a) =>
-                                    filter === "all" ||
-                                    ["pending", "confirmed"].includes(a.status),
-                            ) && (
-                                <div className="empty">
-                                    <h3>Здесь появятся ваши записи</h3>
-                                    <p>
-                                        Добавьте услуги, настройте расписание и
-                                        поделитесь ссылкой на страницу.
+                                    )}
+                                    blocks={calendarBlocks}
+                                    hours={hours}
+                                    timezone={master.timezone}
+                                    date={calendarDate}
+                                    loading={calendarLoading}
+                                    onNavigate={navigateCalendar}
+                                    renderDetails={renderAppointment}
+                                />
+                            ) : (
+                                <>
+                                    <p className="muted">
+                                        Последние 200 записей. Время указано в
+                                        часовом поясе мастера.
                                     </p>
-                                    <a
-                                        href={publicUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                    >
-                                        {publicUrl}
-                                    </a>
-                                </div>
+                                    <div className="appointment-list">
+                                        {appointments
+                                            .filter(
+                                                (a) =>
+                                                    filter === "all" ||
+                                                    [
+                                                        "pending",
+                                                        "confirmed",
+                                                    ].includes(a.status),
+                                            )
+                                            .map(renderAppointment)}
+                                    </div>
+                                    {!appointments.some(
+                                        (a) =>
+                                            filter === "all" ||
+                                            ["pending", "confirmed"].includes(
+                                                a.status,
+                                            ),
+                                    ) && (
+                                        <div className="empty">
+                                            <h3>Здесь появятся ваши записи</h3>
+                                            <p>
+                                                Добавьте услуги, настройте
+                                                расписание и поделитесь ссылкой
+                                                на страницу.
+                                            </p>
+                                            <a
+                                                href={publicUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                {publicUrl}
+                                            </a>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </>
                     )}

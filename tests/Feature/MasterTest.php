@@ -83,6 +83,34 @@ class MasterTest extends TestCase
         $this->get('/dashboard')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Dashboard')->has('master'));
     }
 
+    public function test_calendar_loads_a_complete_local_week_without_leaking_other_masters(): void
+    {
+        [$user, $master, $service] = $this->master();
+        [, $other, $otherService] = $this->master('calendar-other');
+        $selected = app(BookAppointment::class)->create($master, $service,
+            CarbonImmutable::parse('2026-10-19 04:00:00', 'UTC'), 'Calendar Client', '+996555123456');
+        app(BookAppointment::class)->create($other, $otherService,
+            CarbonImmutable::parse('2026-10-19 04:00:00', 'UTC'), 'Other Private Client', '+996555999888');
+        DB::table('master_time_blocks')->insert(['master_profile_id' => $master->id,
+            'starts_at' => '2026-10-20 04:00:00', 'ends_at' => '2026-10-20 05:00:00', 'reason' => 'Перерыв']);
+        $this->actingAs($user)->get('/dashboard?calendar_date=2026-10-19')->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('calendarDate', '2026-10-19')
+                ->has('calendarAppointments', 1)->where('calendarAppointments.0.id', $selected->id)
+                ->has('calendarBlocks', 1)->where('calendarBlocks.0.starts_at', '2026-10-20T04:00:00+00:00'))
+            ->assertDontSee('Other Private Client')->assertDontSee('+996555999888');
+        DB::table('master_appointments')->insert(array_fill(0, 201, [
+            'master_profile_id' => $master->id, 'master_service_id' => $service->id,
+            'client_name' => 'Archived cancellation', 'client_phone' => '+996555123456',
+            'starts_at' => '2026-10-19 04:00:00', 'ends_at' => '2026-10-19 05:00:00',
+            'price_som' => 800, 'service_name_snapshot' => 'Стрижка', 'status' => 'cancelled',
+        ]));
+        $this->get('/dashboard?calendar_date=2026-10-19')->assertInertia(fn (Assert $page) => $page
+            ->has('calendarAppointments', 202)->has('appointments', 200));
+        $this->get('/dashboard?calendar_date=2026-10-26')->assertInertia(fn (Assert $page) => $page
+            ->has('calendarAppointments', 0)->has('calendarBlocks', 0));
+        $this->get('/dashboard?calendar_date=invalid')->assertSessionHasErrors('calendar_date');
+    }
+
     public function test_guests_cannot_access_cabinet(): void
     {
         $this->get('/dashboard')->assertRedirect('/login');
