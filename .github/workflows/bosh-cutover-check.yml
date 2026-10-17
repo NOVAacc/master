@@ -21,6 +21,9 @@ jobs:
             exit 1
           fi
           echo "FTP_SECRETS_PRESENT"
+          echo "DNS_BOSH_A=$(getent ahostsv4 bosh.kg | awk 'NR==1 {print $1}')"
+          echo "DNS_OLD_A=$(getent ahostsv4 edu.china.kg | awk 'NR==1 {print $1}')"
+          curl -sSLI --max-time 15 https://bosh.kg/ | grep -Ei '^(HTTP/|server:|location:)' || true
           for PAGE in login up; do
             CODE=$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' "https://bosh.kg/$PAGE") || CODE="unreachable"
             echo "BOSH_HTTPS_PAGE=$PAGE STATUS=$CODE"
