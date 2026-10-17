@@ -1705,3 +1705,216 @@ h2 {
         padding: 16px 12px;
     }
 }
+
+.services-summary {
+    margin: 16px 0;
+}
+.services-tools {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 150px 155px;
+    gap: 10px;
+    margin: 18px 0;
+}
+.services-tools input,
+.services-tools select {
+    font-size: 12px;
+}
+.services-table-scroll {
+    max-height: 540px;
+    overflow: auto;
+    border: 1px solid #e6e6e6;
+    border-radius: 14px;
+}
+.services-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 12px;
+    table-layout: fixed;
+}
+.services-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #fafafa;
+    border-bottom: 1px solid #e6e6e6;
+    text-align: left;
+    color: #858585;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 12px 14px;
+}
+.services-table th:first-child {
+    width: 40%;
+}
+.services-table th:last-child {
+    width: 108px;
+}
+.services-table td {
+    border-bottom: 1px solid #eee;
+    padding: 14px;
+    vertical-align: middle;
+}
+.services-table tr:last-child td {
+    border-bottom: 0;
+}
+.services-table tbody tr:hover {
+    background: #fcfcfc;
+}
+.service-name-cell strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+.service-name-cell p {
+    color: #858585;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin: 5px 0 0;
+    font-size: 11px;
+}
+.service-duration-cell,
+.service-price-cell {
+    white-space: nowrap;
+}
+.service-price-cell {
+    font-weight: 600;
+}
+.service-action-cell .ghost {
+    font-size: 11px;
+    padding: 8px 12px;
+}
+.services-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 16px;
+}
+.services-pagination .ghost {
+    padding: 8px 12px;
+    font-size: 12px;
+}
+.services-pagination button:disabled {
+    cursor: default;
+    opacity: 0.4;
+}
+.service-dialog {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: min(640px, calc(100% - 32px));
+    max-height: 85vh;
+    max-height: 85svh;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: 0;
+    background: white;
+    color: #252525;
+    box-shadow: 0 24px 80px #00000025;
+}
+.service-dialog::backdrop {
+    background: #16161665;
+}
+.service-dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 20px 24px;
+    background: white;
+    border-bottom: 1px solid #eee;
+}
+.service-dialog-header h2 {
+    margin: 0;
+    font-size: 19px;
+}
+.service-dialog .service-editor {
+    padding: 4px 24px 24px;
+    margin: 0;
+    border-bottom: 0;
+}
+@container (max-width: 950px) {
+    .services-tools {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .services-tools input {
+        grid-column: 1 / -1;
+    }
+}
+@container (max-width: 700px) {
+    .services-summary .primary {
+        width: 100%;
+    }
+    .services-table-scroll {
+        max-height: 520px;
+    }
+    .services-table,
+    .services-table tbody {
+        display: block;
+    }
+    .services-table thead {
+        display: none;
+    }
+    .services-table tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        padding: 14px;
+        gap: 8px 12px;
+        border-bottom: 1px solid #eee;
+    }
+    .services-table tr:last-child {
+        border-bottom: 0;
+    }
+    .services-table td {
+        display: block;
+        border: 0;
+        padding: 0;
+    }
+    .service-name-cell {
+        grid-column: 1 / -1;
+        min-width: 0;
+    }
+    .service-duration-cell {
+        grid-column: 1;
+        grid-row: 2;
+        color: #858585;
+        font-size: 11px;
+    }
+    .service-price-cell {
+        grid-column: 2;
+        grid-row: 2;
+        text-align: right;
+    }
+    .service-status-cell {
+        grid-column: 1;
+        grid-row: 3;
+        align-self: center;
+    }
+    .service-action-cell {
+        grid-column: 2;
+        grid-row: 3;
+        text-align: right;
+    }
+    .services-pagination {
+        justify-content: center;
+    }
+}
+.services-table {
+    min-width: 650px;
+}
+@container (max-width: 700px) {
+    .services-table {
+        min-width: 0;
+    }
+    .service-dialog {
+        width: min(390px, calc(100% - 24px));
+    }
+}

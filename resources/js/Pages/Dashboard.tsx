@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import Icon from "../Icon";
+import ServicesPanel from "../ServicesPanel";
 import EditAppointmentForm from "../EditAppointmentForm";
 import AppointmentCalendar from "../AppointmentCalendar";
 import { Brand, Errors, Field, Notice } from "../Shared";
@@ -21,88 +22,6 @@ const statuses: Record<string, string> = {
     completed: "Завершена",
     no_show: "Не пришёл",
 };
-function ServiceEditor({ service }: { service?: Service }) {
-    const f = useForm({
-        name: service?.name ?? "",
-        description: service?.description ?? "",
-        duration_minutes: service?.duration_minutes ?? 60,
-        price_som: service?.price_som ?? 0,
-        is_active: service?.is_active ?? true,
-    });
-    return (
-        <form
-            className="service-editor"
-            onSubmit={(e) => {
-                e.preventDefault();
-                if (service) f.post(`/services/${service.id}`);
-                else f.post("/services", { onSuccess: () => f.reset() });
-            }}
-        >
-            <Errors errors={f.errors} />
-            <div className="form-grid">
-                <Field label="Название">
-                    <input
-                        required
-                        maxLength={150}
-                        value={f.data.name}
-                        onChange={(e) => f.setData("name", e.target.value)}
-                    />
-                </Field>
-                <Field label="Описание">
-                    <input
-                        maxLength={2000}
-                        value={f.data.description}
-                        onChange={(e) =>
-                            f.setData("description", e.target.value)
-                        }
-                    />
-                </Field>
-                <Field label="Длительность, минут">
-                    <input
-                        required
-                        type="number"
-                        min={5}
-                        max={720}
-                        value={f.data.duration_minutes}
-                        onChange={(e) =>
-                            f.setData(
-                                "duration_minutes",
-                                Number(e.target.value),
-                            )
-                        }
-                    />
-                </Field>
-                <Field label="Цена, сом">
-                    <input
-                        required
-                        type="number"
-                        min={0}
-                        max={10000000}
-                        value={f.data.price_som}
-                        onChange={(e) =>
-                            f.setData("price_som", Number(e.target.value))
-                        }
-                    />
-                </Field>
-            </div>
-            <div className="row between">
-                <label className="check">
-                    <input
-                        type="checkbox"
-                        checked={f.data.is_active}
-                        onChange={(e) =>
-                            f.setData("is_active", e.target.checked)
-                        }
-                    />
-                    Доступна для записи
-                </label>
-                <button className="primary" disabled={f.processing}>
-                    {service ? "Сохранить" : "Добавить услугу"}
-                </button>
-            </div>
-        </form>
-    );
-}
 function Schedule({ hours }: { hours: Hour[] }) {
     const f = useForm({
         hours: hours.map((h) => ({
@@ -828,13 +747,7 @@ export default function Dashboard({
                         </>
                     )}
                     {tab === "services" && (
-                        <>
-                            {services.map((s) => (
-                                <ServiceEditor key={s.id} service={s} />
-                            ))}
-                            <h3>Новая услуга</h3>
-                            <ServiceEditor />
-                        </>
+                        <ServicesPanel services={services} />
                     )}
                     {tab === "schedule" && <Schedule hours={hours} />}
                     {tab === "profile" && (
