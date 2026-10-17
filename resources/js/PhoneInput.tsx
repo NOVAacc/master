@@ -25,7 +25,8 @@ export default function PhoneInput({
 }) {
     const digits = normalizeKyrgyzPhone(value).slice(3);
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const local = event.target.value.replace(/\D/g, "").slice(0, 9);
+        const typed = event.target.value.replace(/\D/g, "");
+        const local = (typed.startsWith("996") && typed.length > 9 ? typed.slice(3) : typed).slice(0, 9);
         onChange(local ? "996" + local : "");
     };
     return (
@@ -36,13 +37,14 @@ export default function PhoneInput({
                 inputMode="numeric"
                 autoComplete={autoComplete}
                 aria-label={label + " — после 996 введите девять цифр"}
-                placeholder="555 123 456"
+                placeholder="555123456"
                 value={digits}
                 maxLength={9}
                 pattern="[0-9]{9}"
                 required={required}
                 onChange={handleChange}
             />
+            <small className="phone-hint">9 цифр после 996, без «+»</small>
         </div>
     );
 }
