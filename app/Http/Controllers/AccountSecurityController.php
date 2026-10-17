@@ -45,7 +45,7 @@ class AccountSecurityController extends Controller
     {
         $this->ensureMailer();
         $url = URL::temporarySignedRoute('security.email.verify', now()->addMinutes(60), [
-            'id' => $user->id,
+            'user' => $user->id,
             'hash' => sha1((string) $user->email),
         ]);
         Mail::raw("Подтвердите адрес электронной почты для BOSH. Ссылка действует 60 минут:\n".$url, function ($message) use ($user) {
