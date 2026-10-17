@@ -773,20 +773,18 @@ textarea {
     letter-spacing: -0.8px;
 }
 .brand-mark {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     display: grid;
     place-items: center;
-    border-radius: 50%;
-    background: linear-gradient(#161616, #555);
-    box-shadow: inset 0 1px 1px #ffffff30;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: #202321;
+    box-shadow: inset 0 1px 1px #ffffff20;
 }
-.brand-mark i {
-    width: 8px;
-    height: 8px;
-    border: 2px solid white;
-    border-radius: 50%;
-}
+.brand .brand-mark { color: #fff; }
+.brand-mark svg { width: 26px; height: 26px; }
+.brand { letter-spacing: -1px; }
 .panel,
 .metric {
     box-shadow: 0 1px 2px #00000005;

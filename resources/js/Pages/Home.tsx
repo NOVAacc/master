@@ -91,7 +91,7 @@ export default function Home({
             </header>
             <main>
                 <section className="catalog-hero panel">
-                    <p className="eyebrow">ОНЛАЙН-ЗАПИСЬ · MASTER</p>
+                    <p className="eyebrow">ОНЛАЙН-ЗАПИСЬ · BOSH</p>
                     <h1>
                         Найдите своего мастера.
                         <br />
@@ -122,7 +122,7 @@ export default function Home({
                     <p className="eyebrow">НОВЫЕ ЗНАКОМСТВА</p>
                     <h2 id="new-title">Новые мастера</h2>
                     <p className="muted">
-                        Специалисты, которые недавно присоединились к Master.
+                        Специалисты, которые недавно присоединились к BOSH.
                     </p>
                     {newMasters.length ? (
                         <div className="masters-grid">
@@ -148,7 +148,7 @@ export default function Home({
                     <p className="eyebrow">ВЫБОР КЛИЕНТОВ</p>
                     <h2 id="top-title">Популярные мастера</h2>
                     <p className="muted">
-                        По количеству завершённых записей через Master.
+                        По количеству завершённых записей через BOSH.
                     </p>
                     {topMasters.length ? (
                         <div className="masters-grid">

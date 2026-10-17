@@ -167,10 +167,11 @@ try {
     saveState($state);
     $existing = $state['env_existed'] ? Dotenv\Dotenv::parse(file_get_contents($envPath)) : [];
     $appKey = $existing['APP_KEY'] ?? ('base64:'.base64_encode(random_bytes(32)));
-    $env = ['APP_NAME' => 'Master', 'APP_ENV' => 'production', 'APP_KEY' => $appKey, 'APP_DEBUG' => 'false',
+    $env = ['APP_NAME' => 'BOSH', 'APP_ENV' => 'production', 'APP_KEY' => $appKey, 'APP_DEBUG' => 'false',
         'APP_URL' => DEPLOY['url'], 'APP_LOCALE' => 'ru', 'APP_FALLBACK_LOCALE' => 'en', 'DB_CONNECTION' => 'mysql',
         'DB_HOST' => DEPLOY['db_host'], 'DB_PORT' => (string) DEPLOY['db_port'], 'DB_DATABASE' => DEPLOY['db_name'],
         'DB_USERNAME' => DEPLOY['db_user'], 'DB_PASSWORD' => $input['db_password'], 'SESSION_DRIVER' => 'file',
+        'SESSION_COOKIE' => $existing['SESSION_COOKIE'] ?? (Illuminate\Support\Str::slug($existing['APP_NAME'] ?? 'Master').'-session'),
         'SESSION_SECURE_COOKIE' => DEPLOY['secure_cookies'] ? 'true' : 'false', 'CACHE_STORE' => 'file',
         'QUEUE_CONNECTION' => 'sync', 'LOG_CHANNEL' => 'single', 'LOG_LEVEL' => 'warning'];
     $text = ''; foreach ($env as $name => $value) $text .= $name.'='.envValue($value)."\n";
@@ -199,7 +200,7 @@ try {
     $http->terminate($request, $response);
     $phase = 'activation';
     copyAssets($release.'/public/build', __DIR__.'/build');
-    foreach (['favicon.ico', 'robots.txt'] as $file) if (is_file($release.'/public/'.$file)) writeFile(__DIR__.'/'.$file, file_get_contents($release.'/public/'.$file), 0644);
+    foreach (['favicon.ico', 'favicon.svg', 'robots.txt'] as $file) if (is_file($release.'/public/'.$file)) writeFile(__DIR__.'/'.$file, file_get_contents($release.'/public/'.$file), 0644);
     $baseLiteral = var_export($base, true);
     $launcher = '<?php'."\n".'declare(strict_types=1);'."\n".'ini_set(\'display_errors\', \'0\');'."\n".
         'define(\'LARAVEL_START\', microtime(true));'."\n".'$base = '.$baseLiteral.';'."\n".

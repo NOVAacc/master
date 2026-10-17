@@ -38,7 +38,7 @@ export default function DisplayModeFooter() {
     }
     return (
         <footer className="site-footer">
-            <p className="muted small">Master — время для вашего дела.</p>
+            <p className="muted small">BOSH — время для вашего дела.</p>
             <div
                 className="display-switch"
                 role="group"

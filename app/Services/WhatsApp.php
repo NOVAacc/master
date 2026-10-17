@@ -37,7 +37,7 @@ final class WhatsApp
         $end = $a->ends_at->copy()->setTimezone($master->timezone);
         $services = collect($a->services_snapshot)->pluck('name')->implode(' + ') ?: $a->service_name_snapshot;
         $state = $a->status === 'confirmed' ? ($a->notification_revision > 1 ? 'Запись изменена и подтверждена' : 'Запись подтверждена') : 'Заявка на запись';
-        $lines = ["Master · {$state} №{$a->id}", "Мастер: {$master->display_name}", "Клиент: {$a->client_name}"];
+        $lines = ["BOSH · {$state} №{$a->id}", "Мастер: {$master->display_name}", "Клиент: {$a->client_name}"];
         if ($recipient === 'master') {
             $lines[] = 'Телефон клиента: '.$a->client_phone;
         }
