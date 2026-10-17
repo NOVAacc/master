@@ -74,7 +74,10 @@ class AccountSecurityTest extends TestCase
     public function test_resend_email_verification_generates_signed_link_and_sends_message(): void
     {
         config()->set('mail.default', 'smtp');
-        Mail::fake();
+        Mail::shouldReceive('raw')->once()->withArgs(function (string $body, $callback): bool {
+            return str_contains($body, '/security/email/verify/')
+                && str_contains($body, 'signature=');
+        });
 
         $user = User::factory()->create(['email' => 'resend@example.test', 'email_verified_at' => null]);
 
@@ -82,14 +85,16 @@ class AccountSecurityTest extends TestCase
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
-        Mail::assertSentCount(1);
         $this->assertNull($user->fresh()->email_verified_at);
     }
 
     public function test_setting_email_generates_signed_link_and_sends_message(): void
     {
         config()->set('mail.default', 'smtp');
-        Mail::fake();
+        Mail::shouldReceive('raw')->once()->withArgs(function (string $body, $callback): bool {
+            return str_contains($body, '/security/email/verify/')
+                && str_contains($body, 'signature=');
+        });
 
         $user = User::factory()->create(['email' => null, 'email_verified_at' => null]);
 
@@ -97,7 +102,6 @@ class AccountSecurityTest extends TestCase
             ->assertRedirect()
             ->assertSessionHasNoErrors();
 
-        Mail::assertSentCount(1);
         $this->assertSame('new-master@example.test', $user->fresh()->email);
         $this->assertNull($user->fresh()->email_verified_at);
     }
