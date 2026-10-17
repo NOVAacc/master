@@ -1,13 +1,12 @@
-import { Head, Link, useForm, usePage } from "@inertiajs/react";
+import { Head, Link, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import { Brand, Errors, Field } from "../Shared";
 
 export default function Auth({ register }: { register: boolean }) {
     const [legacy, setLegacy] = useState(false);
     const [sent, setSent] = useState(false);
-    const { flash } = usePage<{ flash?: { otp_sent?: boolean } }>().props;
     const f = useForm({ name: "", phone: "+996 ", code: "", mode: register ? "register" : "login", email: "", password: "" });
-    const codeSent = sent || !!flash?.otp_sent;
+    const codeSent = sent;
     return (
         <main className="auth-wrap">
             <section className="auth-intro">
@@ -27,8 +26,8 @@ export default function Auth({ register }: { register: boolean }) {
                 <p className="muted">{codeSent && !legacy ? "Введите код из SMS." : register ? "Только имя и номер телефона." : "Введите номер телефона, чтобы получить код."}</p>
                 <form onSubmit={e => {
                     e.preventDefault();
-                    if (legacy) { f.post("/login"); return; }
-                    if (codeSent) { f.post("/auth/verify-code"); return; }
+                    if (legacy) { f.transform(data => ({ email: data.email, password: data.password })).post("/login"); return; }
+                    if (codeSent) { f.transform(data => ({ code: data.code })).post("/auth/verify-code"); return; }
                     f.transform(data => ({ name: data.name, phone: data.phone, mode: register ? "register" : "login" }))
                       .post("/auth/send-code", { onSuccess: () => setSent(true) });
                 }}>
