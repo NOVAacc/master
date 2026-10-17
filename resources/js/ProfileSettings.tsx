@@ -46,6 +46,7 @@ function instagram(value: string) {
 export default function ProfileSettings({ master }: { master: Master }) {
     const [uploadKey, setUploadKey] = useState({ avatar: 0, cover: 0 });
     const f = useForm({
+        slug: master.slug,
         display_name: master.display_name,
         specialty: master.specialty || "",
         bio: master.bio || "",
@@ -228,6 +229,32 @@ export default function ProfileSettings({ master }: { master: Master }) {
                                 f.setData("display_name", e.target.value)
                             }
                         />
+                    </Field>
+                    <Field label="Адрес вашей страницы">
+                        <div className="input-prefix">
+                            <span>/m/</span>
+                            <input
+                                required
+                                minLength={3}
+                                maxLength={30}
+                                pattern="[a-z0-9]{3,30}"
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                spellCheck={false}
+                                value={f.data.slug}
+                                onChange={(e) =>
+                                    f.setData("slug", e.target.value.toLowerCase())
+                                }
+                                aria-label="Уникальный адрес публичной страницы"
+                            />
+                        </div>
+                        <small>От 3 до 30 символов: только латинские буквы и цифры. Адрес должен быть свободен.</small>
+                        {f.data.slug !== master.slug && (
+                            <small>После смены адреса прежняя ссылка перестанет работать. Поделитесь новой ссылкой с клиентами.</small>
+                        )}
+                        {/^[a-z0-9]{3,30}$/.test(f.data.slug) && (
+                            <small>Новый адрес: {typeof window !== "undefined" ? window.location.origin : "https://bosh.kg"}/m/{f.data.slug}</small>
+                        )}
                     </Field>
                     <Field label="Специализация">
                         <input
