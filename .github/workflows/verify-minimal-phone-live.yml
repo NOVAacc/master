@@ -1,0 +1,24 @@
+name: Verify minimalist phone release
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check latest deployment and HTTP health
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/actions/runs?branch=main&per_page=8" --jq '.workflow_runs[] | [.id,.name,.status,.conclusion,.head_sha] | @tsv'
+          for URL in / /login /register /up; do
+            STATUS=$(curl -sS --max-time 20 -o /dev/null -w '%{http_code}' "https://bosh.kg$URL")
+            echo "BOSH $URL HTTP $STATUS"
+          done
