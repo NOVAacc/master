@@ -72,7 +72,7 @@ jobs:
           original = open('/tmp/bosh-edu.china.kg.html').read()
           canonical = open('/tmp/bosh-bosh.kg.html').read()
           def assets(html):
-              return sorted(set(re.findall(r'/build/assets/[^"\\s<>]+', html)))
+              return sorted(set(re.findall(r'/build/assets/[^"<> ]+', html)))
           # A different build indicates the domains do not currently share a web root.
           assert assets(original) and assets(original) == assets(canonical), (
               'bosh.kg must serve the existing edu.china.kg application before switching canonical URL'
@@ -86,7 +86,7 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           python3 deploy/prepare-install.py /tmp/release/master-server.zip /tmp/master-install \
             --revision '${{ steps.source.outputs.sha }}' \
-            --release '${{ steps.source.outputs.sha }}-${{ github.run_id }}-${{ github.run_attempt }}' \\
+            --release '${{ steps.source.outputs.sha }}-${{ github.run_id }}-${{ github.run_attempt }}' \
             --url https://bosh.kg
           python3 - <<'PY'
           import json, os
