@@ -23,7 +23,7 @@ class PhoneOtpAuthTest extends TestCase
         $receivedCode = null;
         Http::fake(function ($request) use (&$receivedCode) {
             $body = $request->body();
-            preg_match('/код входа (\\d{6})/u', $body, $match);
+            preg_match('/код входа (\\d{5})/u', $body, $match);
             $receivedCode = $match[1] ?? null;
             preg_match('/<id>([A-Z0-9]{12})<\\/id>/', $body, $matchId);
             $id = $matchId[1] ?? '';
@@ -35,7 +35,7 @@ class PhoneOtpAuthTest extends TestCase
         ])->assertSessionHasNoErrors();
         $this->assertNotNull($receivedCode);
         $this->assertDatabaseCount('users', 0);
-        $this->post('/auth/verify-code', ['code' => '000000' === $receivedCode ? '111111' : '000000'])
+        $this->post('/auth/verify-code', ['code' => '00000' === $receivedCode ? '11111' : '00000'])
             ->assertSessionHasErrors('code');
         $this->assertDatabaseCount('users', 0);
         $this->post('/auth/verify-code', ['code' => $receivedCode])->assertRedirect('/dashboard');
@@ -72,7 +72,7 @@ class PhoneOtpAuthTest extends TestCase
 
     public function test_code_cannot_be_verified_without_sms_request(): void
     {
-        $this->post('/auth/verify-code', ['code' => '123456'])->assertSessionHasErrors('code');
+        $this->post('/auth/verify-code', ['code' => '12345'])->assertSessionHasErrors('code');
         $this->assertGuest();
     }
 
