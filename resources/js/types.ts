@@ -25,7 +25,7 @@ export type Master = {
     instagram_url?: string | null;
     profile_theme?: string | null;
 };
-export type Hour = { weekday: number; starts_at: string; ends_at: string };
+export type Hour = { weekday: number; starts_at: string; ends_at: string; break_starts_at: string | null; break_ends_at: string | null };
 export type Appointment = {
     id: number;
     client_name: string;
