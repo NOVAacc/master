@@ -53,6 +53,11 @@ class DashboardController extends Controller
                 ->map(fn ($block) => ['id' => $block->id, 'starts_at' => CarbonImmutable::parse($block->starts_at, 'UTC')->toIso8601String(),
                     'ends_at' => CarbonImmutable::parse($block->ends_at, 'UTC')->toIso8601String(), 'reason' => $block->reason]),
             'master' => $master,
+            'security' => [
+                'email' => $request->user()->email,
+                'emailVerified' => $request->user()->email_verified_at !== null,
+                'passwordSet' => $request->user()->password_initialized_at !== null,
+            ],
             'services' => $master->services()->orderBy('sort_order')->get(),
             'hours' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->orderBy('weekday')->get()
                 ->map(fn ($hour) => [
