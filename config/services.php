@@ -14,6 +14,16 @@ return [
     |
     */
 
+    'whatsapp' => [
+        'enabled' => env('WHATSAPP_ENABLED', false),
+        'token' => env('WHATSAPP_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'version' => env('WHATSAPP_API_VERSION'),
+        'language' => env('WHATSAPP_LANGUAGE', 'ru'),
+        'client_template' => env('WHATSAPP_CLIENT_TEMPLATE', 'master_booking_client'),
+        'master_template' => env('WHATSAPP_MASTER_TEMPLATE', 'master_booking_master'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

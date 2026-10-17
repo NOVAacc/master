@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\MasterAppointment;
 use App\Models\MasterProfile;
 use App\Models\MasterService;
+use App\Services\WhatsApp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -30,7 +32,15 @@ class DashboardController extends Controller
                     'ends_at' => substr($hour->ends_at, 0, 5),
                 ]),
             'appointments' => $master->appointments()->where('ends_at', '>=', now('UTC')->subDays(30))
-                ->orderBy('starts_at')->limit(200)->get(),
+                ->with('notifications:id,master_appointment_id,recipient,status,error_code')->orderBy('starts_at')->limit(200)->get()->map(function ($appointment) use ($master) {
+                    $appointment->setRelation('masterProfile', $master);
+                    $appointment->setAttribute('whatsapp_link', app(WhatsApp::class)->link($appointment->client_phone, app(WhatsApp::class)->message($appointment, 'client')));
+
+                    $appointment->unsetRelation('masterProfile');
+
+                    return $appointment;
+                }),
+            'whatsappAutomatic' => app(WhatsApp::class)->configured(),
             'publicUrl' => route('public.master', $master->slug),
         ]);
     }
@@ -46,7 +56,11 @@ class DashboardController extends Controller
             'timezone' => ['required', 'timezone'],
             'booking_enabled' => ['required', 'boolean'],
             'auto_confirm' => ['required', 'boolean'],
+            'whatsapp_notifications' => ['sometimes', 'boolean'],
         ]);
+        if (($data['whatsapp_notifications'] ?? false) && ! WhatsApp::phone($data['phone'] ?? null)) {
+            throw ValidationException::withMessages(['phone' => 'Укажите номер WhatsApp с кодом страны.']);
+        }
         $master = $this->master($request);
         DB::transaction(function () use ($master, $data) {
             MasterProfile::whereKey($master->id)->lockForUpdate()->firstOrFail()->update($data);
@@ -111,6 +125,17 @@ class DashboardController extends Controller
         return back()->with('success', 'Расписание сохранено.');
     }
 
+    public function retryWhatsApp(Request $request, MasterAppointment $appointment)
+    {
+        abort_unless($appointment->master_profile_id === $this->master($request)->id, 404);
+        abort_unless($appointment->status === 'confirmed', 422);
+        foreach ($appointment->notifications as $notification) {
+            app(WhatsApp::class)->send($notification);
+        }
+
+        return back()->with('success', 'Статусы WhatsApp обновлены. Проверьте результат в записи.');
+    }
+
     public function status(Request $request, MasterAppointment $appointment)
     {
         $master = $this->master($request);
@@ -126,6 +151,8 @@ class DashboardController extends Controller
             }
             $appointment->update($data);
         });
+
+        app(WhatsApp::class)->confirmed($appointment->fresh());
 
         return back()->with('success', 'Статус записи изменён.');
     }

@@ -21,7 +21,8 @@ final class BookAppointment
         CarbonImmutable $startsAtUtc,
         string $clientName,
         string $clientPhone,
-        ?string $comment = null
+        ?string $comment = null,
+        bool $whatsappConsent = false
     ): MasterAppointment {
         $selected = is_array($service) ? $service : [$service];
         if (count($selected) < 1 || count($selected) > 20 ||
@@ -37,7 +38,7 @@ final class BookAppointment
             throw ValidationException::withMessages(['starts_at' => 'Выберите будущее время.']);
         }
 
-        return DB::transaction(function () use ($master, $ids, $startsAtUtc, $clientName, $clientPhone, $comment) {
+        $appointment = DB::transaction(function () use ($master, $ids, $startsAtUtc, $clientName, $clientPhone, $comment, $whatsappConsent) {
             $lockedMaster = MasterProfile::query()->whereKey($master->id)->lockForUpdate()->firstOrFail();
 
             $services = MasterService::query()
@@ -85,6 +86,7 @@ final class BookAppointment
                 'client_name' => $clientName,
                 'client_phone' => $clientPhone,
                 'client_comment' => $comment,
+                'whatsapp_consent' => $whatsappConsent,
                 'starts_at' => $startsAtUtc->format('Y-m-d H:i:s'),
                 'ends_at' => $endsAtUtc->format('Y-m-d H:i:s'),
                 'price_som' => $services->sum('price_som'),
@@ -92,5 +94,8 @@ final class BookAppointment
                 'status' => $lockedMaster->auto_confirm ? 'confirmed' : 'pending',
             ]);
         }, 3);
+        app(WhatsApp::class)->confirmed($appointment);
+
+        return $appointment;
     }
 }

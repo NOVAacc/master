@@ -12,6 +12,13 @@ type Props = {
     minDate: string;
     maxDate: string;
     slots: { value: string; label: string }[];
+    whatsappAutomatic: boolean;
+    bookingReceipt: {
+        status: string;
+        text: string;
+        masterLink: string | null;
+        automaticStatus: string | null;
+    } | null;
 };
 export default function Booking(p: Props) {
     const f = useForm({
@@ -21,6 +28,7 @@ export default function Booking(p: Props) {
         client_phone: "",
         client_comment: "",
         consent: false,
+        whatsapp_consent: false,
     });
     const [chosenDate, setChosenDate] = useState(p.date);
     const [loading, setLoading] = useState(false);
@@ -81,6 +89,61 @@ export default function Booking(p: Props) {
                     <p className="eyebrow">ОНЛАЙН-ЗАПИСЬ</p>
                     <h1>Выберите удобное время</h1>
                     <Notice />
+                    {p.bookingReceipt && (
+                        <section
+                            className="booking-receipt"
+                            aria-label="Итог записи"
+                        >
+                            <h2>
+                                {p.bookingReceipt.status === "confirmed"
+                                    ? "Вы записаны"
+                                    : "Заявка отправлена мастеру"}
+                            </h2>
+                            <p className="receipt-text">
+                                {p.bookingReceipt.text}
+                            </p>
+                            {p.bookingReceipt.status !== "confirmed" && (
+                                <p className="muted small">
+                                    Запись пока ожидает подтверждения мастера.
+                                </p>
+                            )}
+                            {p.bookingReceipt.automaticStatus === "accepted" ? (
+                                <p className="muted small">
+                                    Уведомление принято сервисом WhatsApp.
+                                    Доставка ещё не подтверждена.
+                                </p>
+                            ) : (
+                                p.bookingReceipt.automaticStatus && (
+                                    <p className="muted small">
+                                        Автоматическое сообщение пока не
+                                        отправлено или его результат неизвестен.
+                                        При необходимости свяжитесь с мастером.
+                                    </p>
+                                )
+                            )}
+                            {p.bookingReceipt.masterLink ? (
+                                <>
+                                    <a
+                                        className="primary"
+                                        href={p.bookingReceipt.masterLink}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        Отправить мастеру в WhatsApp ↗
+                                    </a>
+                                    <p className="muted small">
+                                        Откроется WhatsApp с готовым сообщением.
+                                        Для отправки нажмите кнопку в WhatsApp.
+                                    </p>
+                                </>
+                            ) : (
+                                <p className="muted small">
+                                    Мастер пока не указал номер WhatsApp. Заявка
+                                    уже сохранена в его кабинете.
+                                </p>
+                            )}
+                        </section>
+                    )}
                     {!p.master.booking_enabled ? (
                         <p className="empty">
                             Мастер временно отключил онлайн-запись.
@@ -295,6 +358,22 @@ export default function Booking(p: Props) {
                                 этому мастеру для оформления записи и связи со
                                 мной.
                             </label>
+                            {p.whatsappAutomatic && (
+                                <label className="check">
+                                    <input
+                                        type="checkbox"
+                                        checked={f.data.whatsapp_consent}
+                                        onChange={(e) =>
+                                            f.setData(
+                                                "whatsapp_consent",
+                                                e.target.checked,
+                                            )
+                                        }
+                                    />
+                                    Получать подтверждение этой записи в
+                                    WhatsApp на указанный номер
+                                </label>
+                            )}
                             <button
                                 className="primary wide"
                                 disabled={

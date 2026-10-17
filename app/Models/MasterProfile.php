@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MasterProfile extends Model
 {
-    protected $fillable = ['user_id', 'slug', 'display_name', 'specialty', 'bio', 'phone', 'address', 'timezone', 'booking_enabled', 'auto_confirm'];
+    protected $fillable = ['user_id', 'slug', 'display_name', 'specialty', 'bio', 'phone', 'address', 'timezone', 'booking_enabled', 'auto_confirm', 'whatsapp_notifications'];
 
-    protected $casts = ['booking_enabled' => 'boolean', 'auto_confirm' => 'boolean'];
+    protected $casts = ['booking_enabled' => 'boolean', 'auto_confirm' => 'boolean', 'whatsapp_notifications' => 'boolean'];
 
     public function user(): BelongsTo
     {

@@ -17,6 +17,7 @@ export type Master = {
     timezone: string;
     booking_enabled: boolean;
     auto_confirm: boolean;
+    whatsapp_notifications: boolean;
 };
 export type Hour = { weekday: number; starts_at: string; ends_at: string };
 export type Appointment = {
@@ -37,4 +38,11 @@ export type Appointment = {
           }[]
         | null;
     status: string;
+    whatsapp_link?: string | null;
+    notifications?: {
+        id: number;
+        recipient: string;
+        status: string;
+        error_code?: string | null;
+    }[];
 };

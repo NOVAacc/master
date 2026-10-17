@@ -223,6 +223,7 @@ function Profile({ master }: { master: Master }) {
         timezone: master.timezone,
         booking_enabled: master.booking_enabled,
         auto_confirm: master.auto_confirm,
+        whatsapp_notifications: master.whatsapp_notifications ?? false,
     });
     return (
         <form
@@ -312,6 +313,22 @@ function Profile({ master }: { master: Master }) {
                 />
                 Подтверждать записи автоматически
             </label>
+            <label className="check">
+                <input
+                    type="checkbox"
+                    checked={f.data.whatsapp_notifications}
+                    onChange={(e) =>
+                        f.setData("whatsapp_notifications", e.target.checked)
+                    }
+                />
+                Получать подтверждённые записи в WhatsApp на указанный выше
+                телефон
+            </label>
+            <p className="muted small">
+                Автоматические уведомления начнут работать после подключения
+                отправки. Для связи с клиентом уже доступна кнопка WhatsApp в
+                записи.
+            </p>
             <button className="primary" disabled={f.processing}>
                 Сохранить профиль
             </button>
@@ -324,12 +341,14 @@ export default function Dashboard({
     hours,
     appointments,
     publicUrl,
+    whatsappAutomatic,
 }: {
     master: Master;
     services: Service[];
     hours: Hour[];
     appointments: Appointment[];
     publicUrl: string;
+    whatsappAutomatic: boolean;
 }) {
     const [tab, setTab] = useState("appointments");
     const [filter, setFilter] = useState("active");
@@ -424,6 +443,13 @@ export default function Dashboard({
                     </div>
                 </header>
                 <Notice />
+                {!whatsappAutomatic && (
+                    <p className="integration-note">
+                        WhatsApp: автоматическая отправка ещё не подключена.
+                        Кнопка в записи откроет готовое сообщение — отправьте
+                        его в WhatsApp вручную.
+                    </p>
+                )}
                 {message && (
                     <div className="errors" role="alert">
                         {message}
@@ -534,6 +560,72 @@ export default function Dashboard({
                                                 >
                                                     {statuses[a.status]}
                                                 </span>
+                                                {a.status === "confirmed" &&
+                                                    a.whatsapp_link && (
+                                                        <a
+                                                            className="ghost"
+                                                            href={
+                                                                a.whatsapp_link
+                                                            }
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                        >
+                                                            Сообщить клиенту в
+                                                            WhatsApp ↗
+                                                        </a>
+                                                    )}
+                                                {a.notifications?.map((n) => (
+                                                    <small key={n.id}>
+                                                        WhatsApp{" "}
+                                                        {n.recipient ===
+                                                        "client"
+                                                            ? "клиенту"
+                                                            : "мастеру"}
+                                                        :{" "}
+                                                        {(
+                                                            {
+                                                                accepted:
+                                                                    "принято сервисом",
+                                                                not_configured:
+                                                                    "отправка не подключена",
+                                                                failed: "ошибка отправки",
+                                                                unknown:
+                                                                    "результат неизвестен — проверьте перед повтором",
+                                                                sending:
+                                                                    "передаётся сервису",
+                                                            } as Record<
+                                                                string,
+                                                                string
+                                                            >
+                                                        )[n.status] || n.status}
+                                                    </small>
+                                                ))}
+                                                {whatsappAutomatic &&
+                                                    a.status === "confirmed" &&
+                                                    a.notifications?.some((n) =>
+                                                        [
+                                                            "failed",
+                                                            "not_configured",
+                                                        ].includes(n.status),
+                                                    ) && (
+                                                        <button
+                                                            type="button"
+                                                            className="ghost"
+                                                            onClick={() =>
+                                                                router.post(
+                                                                    `/appointments/${a.id}/whatsapp`,
+                                                                    {},
+                                                                    {
+                                                                        preserveScroll: true,
+                                                                    },
+                                                                )
+                                                            }
+                                                        >
+                                                            Повторить
+                                                            автоматическую
+                                                            отправку
+                                                        </button>
+                                                    )}
                                                 {[
                                                     "pending",
                                                     "confirmed",

@@ -1356,3 +1356,39 @@ h2 {
         font-size: 11px;
     }
 }
+
+.integration-note {
+    border: 1px solid #e6e6e6;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: white;
+    color: #737373;
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 20px 0;
+}
+.booking-receipt {
+    border: 1px solid #cce5d5;
+    background: #f6fcf8;
+    border-radius: 16px;
+    padding: 22px;
+    margin: 24px 0;
+}
+.booking-receipt h2 {
+    font-size: 20px;
+}
+.receipt-text {
+    white-space: pre-line;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+.appt-actions small {
+    max-width: 230px;
+    line-height: 1.5;
+    text-align: right;
+}
+@container (max-width: 700px) {
+    .appt-actions small {
+        text-align: left;
+    }
+}
