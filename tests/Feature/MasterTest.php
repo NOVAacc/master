@@ -73,14 +73,16 @@ class MasterTest extends TestCase
         $this->get('/')->assertInertia(fn (Assert $page) => $page->has('topMasters', 0));
     }
 
-    public function test_registration_creates_private_cabinet_and_profile(): void
+    public function test_old_registration_endpoint_is_disabled_and_sms_profiles_have_private_cabinets(): void
     {
         $this->post('/register', ['name' => 'Айзада', 'email' => 'aizada@example.test',
-            'password' => 'safe-test-password', 'password_confirmation' => 'safe-test-password', 'slug' => 'aizada'])
-            ->assertRedirect('/dashboard');
-        $this->assertAuthenticated();
-        $this->assertDatabaseHas('master_profiles', ['slug' => 'aizada']);
-        $this->get('/dashboard')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Dashboard')->has('master'));
+            'password' => 'safe-test-password', 'password_confirmation' => 'safe-test-password',
+            'slug' => 'aizada'])->assertMethodNotAllowed();
+        $this->assertGuest();
+        $this->assertDatabaseCount('users', 0);
+        [$user] = $this->master();
+        $this->actingAs($user)->get('/dashboard')->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('Dashboard')->has('master'));
     }
 
     public function test_calendar_loads_a_complete_local_week_without_leaking_other_masters(): void
