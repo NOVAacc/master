@@ -51,7 +51,13 @@ echo json_encode(['key'=>base64_encode($key),'iv'=>base64_encode($iv),'tag'=>bas
               'upload': upload, 'sha256': hashlib.sha256(encrypted.read_bytes()).hexdigest()}
     template = (ROOT / 'installer.php.template').read_text()
     (args.output / installer).write_text(template.replace('__DEPLOY_CONFIG__', php_literal(config)))
-    (args.output / 'request.json').write_text(json.dumps({'action': 'install', **crypto, 'db_password': password}))
+    payload = {'action': 'install', **crypto, 'db_password': password}
+    # This is a short-lived, chmod 0600 local HTTPS request, not part of the release archive.
+    # GitHub Actions injects this secret from the nikita_api repository secret.
+    otp_key = os.environ.get('NIKITA_OTP_API_KEY', '')
+    if otp_key:
+        payload['nikita_otp_api_key'] = otp_key
+    (args.output / 'request.json').write_text(json.dumps(payload))
     (args.output / 'rollback.json').write_text('{"action":"rollback"}')
     (args.output / 'auth-header.txt').write_text('X-Master-Deploy: ' + token + '\n')
     (args.output / 'names.json').write_text(json.dumps({'installer': installer, 'upload': upload}))
