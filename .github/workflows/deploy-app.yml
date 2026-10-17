@@ -56,6 +56,28 @@ jobs:
           php-version: '8.3'
           extensions: openssl
           coverage: none
+      - name: Preflight BOSH domain and shared application root
+        run: |
+          set -euo pipefail
+          # The domain must already point to the SAME document root as edu.china.kg.
+          # Refuse the cutover rather than creating a second application or database.
+          for DOMAIN in edu.china.kg bosh.kg; do
+            curl --fail --silent --show-error --max-time 25 "https://$DOMAIN/login" -o "/tmp/bosh-$DOMAIN.html"
+            curl --fail --silent --show-error --max-time 25 "https://$DOMAIN/up" -o /dev/null
+            grep -q '/build/assets/' "/tmp/bosh-$DOMAIN.html"
+            grep -q 'Auth' "/tmp/bosh-$DOMAIN.html"
+          done
+          python3 - <<'PY'
+          import re
+          original = open('/tmp/bosh-edu.china.kg.html').read()
+          canonical = open('/tmp/bosh-bosh.kg.html').read()
+          def assets(html):
+              return sorted(set(re.findall(r'/build/assets/[^"\\s<>]+', html)))
+          # A different build indicates the domains do not currently share a web root.
+          assert assets(original) and assets(original) == assets(canonical), (
+              'bosh.kg must serve the existing edu.china.kg application before switching canonical URL'
+          )
+          PY
       - name: Prepare encrypted, expiring installation
         run: |
           set -euo pipefail
@@ -64,7 +86,8 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           python3 deploy/prepare-install.py /tmp/release/master-server.zip /tmp/master-install \
             --revision '${{ steps.source.outputs.sha }}' \
-            --release '${{ steps.source.outputs.sha }}-${{ github.run_id }}-${{ github.run_attempt }}'
+            --release '${{ steps.source.outputs.sha }}-${{ github.run_id }}-${{ github.run_attempt }}' \\
+            --url https://bosh.kg
           python3 - <<'PY'
           import json, os
           n = json.load(open('/tmp/master-install/names.json'))
@@ -103,6 +126,23 @@ jobs:
           assert json.load(open('/tmp/install-result.json'))['status'] == 'activated'
           PY
           echo 'APP_ACTIVATED=true' >> "$GITHUB_ENV"
+      - name: Verify canonical BOSH URL after activation
+        run: |
+          set -euo pipefail
+          for PAGE in login register up; do
+            curl --fail --silent --show-error --max-time 30 "https://bosh.kg/$PAGE" -o "/tmp/bosh-new-$PAGE.html"
+          done
+          grep -q '/build/assets/' /tmp/bosh-new-login.html
+          grep -q 'Auth' /tmp/bosh-new-login.html
+          # Absolute links must now use the new canonical domain, not the old hostname.
+          if grep -q 'https://edu.china.kg/m/' /tmp/bosh-new-login.html; then
+            echo 'Old canonical hostname remains in generated links' >&2
+            exit 1
+          fi
+          for PRIVATE in .env vendor/autoload.php storage/logs/laravel.log; do
+            CODE=$(curl --silent --show-error --max-time 30 -o /dev/null -w '%{http_code}' "https://bosh.kg/$PRIVATE")
+            test "$CODE" = 403 || test "$CODE" = 404
+          done
       - name: Verify application and private-file protection
         run: |
           set -euo pipefail
