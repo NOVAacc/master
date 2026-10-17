@@ -19,16 +19,16 @@ final class WorkingHours
         return DB::table('master_working_hours')
             ->where('master_profile_id', $master->id)
             ->where('weekday', $localStart->isoWeekday())
-            ->where('starts_at', '<=', $localStart->format('H:i:s'))
-            ->where('ends_at', '>=', $localEnd->format('H:i:s'))
+            ->where('starts_at', '<=', $localStart->format('H:i'))
+            ->where('ends_at', '>=', $localEnd->format('H:i'))
             // An appointment must not overlap the recurring lunch interval.
             // An appointment ending exactly when lunch starts (or starting
             // when lunch ends) remains available.
             ->where(function ($query) use ($localStart, $localEnd) {
                 $query->whereNull('break_starts_at')
                     ->orWhereNull('break_ends_at')
-                    ->orWhere('break_starts_at', '>=', $localEnd->format('H:i:s'))
-                    ->orWhere('break_ends_at', '<=', $localStart->format('H:i:s'));
+                    ->orWhere('break_starts_at', '>=', $localEnd->format('H:i'))
+                    ->orWhere('break_ends_at', '<=', $localStart->format('H:i'));
             })
             ->exists();
     }
