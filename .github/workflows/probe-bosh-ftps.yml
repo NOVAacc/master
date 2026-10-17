@@ -1,0 +1,41 @@
+name: Check existing FTP access to bosh.kg
+on:
+  push:
+    branches: [feature/probe-existing-ftps-bosh]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FTP_USER: ${{ secrets.MASTER_FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.MASTER_FTP_PASSWORD }}
+    steps:
+      - name: Read-only Fornex FTPS path checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$FTP_USER" && test -n "$FTP_PASSWORD"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
+          FOUND=0
+          for TARGET in /public_html/bosh.kg /bosh.kg bosh.kg ../bosh.kg /home/n66843/public_html/bosh.kg; do
+            if timeout 20s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 -e "
+              set cmd:fail-exit true;
+              set net:max-retries 1;
+              set net:timeout 10;
+              set ftp:ssl-auth TLS;
+              set ftp:ssl-force true;
+              set ftp:ssl-protect-data true;
+              set ssl:verify-certificate true;
+              cd $TARGET;
+              bye
+            " >/dev/null 2>&1; then
+              echo "FTP_ACCESSIBLE_DIRECTORY=$TARGET"
+              FOUND=1
+            fi
+          done
+          if [ "$FOUND" -eq 0 ]; then
+            echo "NO_ACCESS_TO_BOSH_PATH_WITH_EXISTING_FTP"
+          fi
