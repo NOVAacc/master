@@ -20,6 +20,7 @@ jobs:
       FTP_USER: ${{ secrets.MASTER_FTP_USER }}
       FTP_PASSWORD: ${{ secrets.MASTER_FTP_PASSWORD }}
       MASTER_DB_PASSWORD: ${{ secrets.MASTER_DB_PASSWORD }}
+      NIKITA_OTP_API_KEY: ${{ secrets.nikita_api }}
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
     steps:
@@ -30,6 +31,7 @@ jobs:
           test -n "$FTP_USER"
           test -n "$FTP_PASSWORD"
           test -n "$MASTER_DB_PASSWORD"
+          test -n "$NIKITA_OTP_API_KEY"
           RUN_ID='${{ github.event.workflow_run.id }}'
           if test -z "$RUN_ID"; then
             RUN_ID=$(gh run list --workflow release.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
