@@ -7,50 +7,130 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class AuthController extends Controller
 {
-    public function loginPage()
+    public function loginPage() { return Inertia::render('Auth', ['register' => false]); }
+    public function registerPage() { return Inertia::render('Auth', ['register' => true]); }
+
+    private function phone(string $raw): string
     {
-        return Inertia::render('Auth', ['register' => false]);
+        $digits = preg_replace('/\D+/', '', $raw);
+        if (strlen($digits) === 9 && str_starts_with($digits, '0')) $digits = '996'.substr($digits, 1);
+        if (strlen($digits) === 9) $digits = '996'.$digits;
+        if (!preg_match('/^996\d{9}$/', $digits)) {
+            throw ValidationException::withMessages(['phone' => 'Введите номер Кыргызстана в формате +996 XXX XXX XXX.']);
+        }
+        return $digits;
     }
 
-    public function registerPage()
-    {
-        return Inertia::render('Auth', ['register' => true]);
-    }
-
-    public function register(Request $request)
+    public function sendCode(Request $request)
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Password::min(10)],
-            'slug' => ['required', 'regex:/^[a-z][a-z0-9-]{2,59}$/', 'unique:master_profiles'],
+            'phone' => ['required', 'string', 'max:32'],
+            'name' => ['nullable', 'string', 'min:2', 'max:100'],
+            'mode' => ['required', 'in:login,register'],
         ]);
-        $user = DB::transaction(function () use ($data) {
-            $user = User::create($data);
-            MasterProfile::create(['user_id' => $user->id, 'display_name' => $data['name'], 'slug' => $data['slug']]);
+        $phone = $this->phone($data['phone']);
+        if ($data['mode'] === 'register' && empty(trim($data['name'] ?? ''))) {
+            throw ValidationException::withMessages(['name' => 'Введите имя.']);
+        }
+        if (!config('services.nikita.otp_key')) {
+            throw ValidationException::withMessages(['phone' => 'Отправка SMS пока не настроена.']);
+        }
+        if ($request->session()->get('otp_sent_at', 0) > time() - 60) {
+            throw ValidationException::withMessages(['phone' => 'Повторная отправка доступна через минуту.']);
+        }
+        // Preserve a pending registration only after SMS verification. No user is created here.
+        $transaction = Str::random(24);
+        try {
+            $response = Http::withHeaders(['X-API-KEY' => config('services.nikita.otp_key')])
+                ->timeout(10)->acceptJson()
+                ->post('https://smspro.nikita.kg/api/otp/send', [
+                    'transaction_id' => $transaction, 'phone' => $phone,
+                ]);
+            $result = $response->json();
+        } catch (\Throwable $e) {
+            throw ValidationException::withMessages(['phone' => 'Сервис SMS временно недоступен.']);
+        }
+        if (!$response->successful() || (string) ($result['status'] ?? '') !== '0' || empty($result['token'])) {
+            throw ValidationException::withMessages(['phone' => 'Не удалось отправить SMS. Проверьте номер или настройки SMS.']);
+        }
+        $request->session()->put('pending_otp', [
+            'token' => encrypt($result['token']),
+            'phone' => $phone,
+            'name' => trim($data['name'] ?? ''),
+            'mode' => $data['mode'],
+            'expires_at' => time() + 300,
+            'attempts' => 0,
+        ]);
+        $request->session()->put('otp_sent_at', time());
+        return back()->with('otp_sent', true);
+    }
 
+    public function verifyCode(Request $request)
+    {
+        $data = $request->validate(['code' => ['required', 'string', 'regex:/^[a-zA-Z0-9]{4,10}$/']]);
+        $pending = $request->session()->get('pending_otp');
+        if (!$pending || ($pending['expires_at'] ?? 0) < time()) {
+            throw ValidationException::withMessages(['code' => 'Срок действия кода истёк. Запросите новый.']);
+        }
+        if (($pending['attempts'] ?? 0) >= 5) {
+            $request->session()->forget('pending_otp');
+            throw ValidationException::withMessages(['code' => 'Слишком много попыток. Запросите новый код.']);
+        }
+        $pending['attempts']++;
+        $request->session()->put('pending_otp', $pending);
+        try {
+            $response = Http::withHeaders(['X-API-KEY' => config('services.nikita.otp_key')])
+                ->timeout(10)->acceptJson()->post('https://smspro.nikita.kg/api/otp/verify', [
+                    'token' => decrypt($pending['token']), 'code' => $data['code'],
+                ]);
+            $result = $response->json();
+        } catch (\Throwable $e) {
+            throw ValidationException::withMessages(['code' => 'Проверка SMS временно недоступна.']);
+        }
+        if (!$response->successful() || (string) ($result['status'] ?? '') !== '0') {
+            throw ValidationException::withMessages(['code' => 'Неверный или просроченный код.']);
+        }
+        $user = DB::transaction(function () use ($pending) {
+            $user = User::where('phone', $pending['phone'])->lockForUpdate()->first();
+            if ($user) return $user;
+            if ($pending['mode'] !== 'register') {
+                throw ValidationException::withMessages(['code' => 'Аккаунт не найден. Сначала зарегистрируйтесь.']);
+            }
+            $user = User::create([
+                'name' => $pending['name'],
+                'phone' => $pending['phone'],
+                'phone_verified_at' => now(),
+                'password' => Hash::make(Str::random(48)),
+            ]);
+            $base = strtolower(Str::random(10));
+            MasterProfile::create([
+                'user_id' => $user->id,
+                'display_name' => $pending['name'],
+                'phone' => '+'.$pending['phone'],
+                'slug' => 'master-'.$user->id.'-'.$base,
+            ]);
             return $user;
         });
+        $request->session()->forget(['pending_otp', 'otp_sent_at']);
         Auth::login($user);
         $request->session()->regenerate();
-
         return redirect()->route('dashboard');
     }
 
+    // Existing email/password accounts remain accessible via the legacy sign-in form.
     public function login(Request $request)
     {
         $data = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string']]);
-        if (! Auth::attempt($data)) {
-            throw ValidationException::withMessages(['email' => 'Неверный email или пароль.']);
-        }
+        if (!Auth::attempt($data)) throw ValidationException::withMessages(['email' => 'Неверный email или пароль.']);
         $request->session()->regenerate();
-
         return redirect()->intended(route('dashboard'));
     }
 
@@ -59,7 +139,6 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
         return redirect()->route('login');
     }
 }
