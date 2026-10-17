@@ -1,3 +1,4 @@
+import PhoneInput from "./PhoneInput";
 import { useForm } from "@inertiajs/react";
 import { Errors, Field } from "./Shared";
 import type { Appointment, Service } from "./types";
@@ -179,15 +180,7 @@ export default function EditAppointmentForm({
                     />
                 </Field>
                 <Field label="Телефон клиента">
-                    <input
-                        type="tel"
-                        required
-                        maxLength={30}
-                        value={f.data.client_phone}
-                        onChange={(e) =>
-                            f.setData("client_phone", e.target.value)
-                        }
-                    />
+                    <PhoneInput required value={f.data.client_phone} onChange={value => f.setData("client_phone", value)} label="Телефон клиента" />
                 </Field>
             </div>
             <Field label="Комментарий к записи">
