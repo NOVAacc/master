@@ -1,0 +1,53 @@
+name: BOSH non-destructive security and performance audit
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom, pdo_sqlite, pdo_mysql
+      - name: Dependencies security report
+        continue-on-error: true
+        run: |
+          echo '==== COMPOSER AUDIT ===='
+          composer audit --locked --no-interaction --format=summary || true
+          echo '==== NPM PRODUCTION DEPENDENCIES ===='
+          npm audit --omit=dev --audit-level=moderate || true
+          echo '==== NPM DEVELOPMENT DEPENDENCIES ===='
+          npm audit --audit-level=high || true
+      - name: Read-only public checks, headers and response time
+        shell: bash
+        run: |
+          set -euo pipefail
+          for ENDPOINT in / /login /register /forgot-password /up /robots.txt /.env /.git/config /vendor/autoload.php /storage/logs/laravel.log; do
+            URL="https://bosh.kg$ENDPOINT"
+            echo "==== $ENDPOINT ===="
+            curl --silent --show-error --max-time 15 -o /dev/null -w 'status=%{http_code} dns=%{time_namelookup} connect=%{time_connect} tls=%{time_appconnect} ttfb=%{time_starttransfer} total=%{time_total} bytes=%{size_download}\n' "$URL" || echo "CURL_ERROR"
+          done
+          echo '==== Headers: GET / ===='
+          curl --silent --show-error --max-time 15 -D - -o /dev/null https://bosh.kg/ | grep -Ei '^(HTTP/|server:|content-type:|cache-control:|strict-transport-security:|content-security-policy:|x-frame-options:|x-content-type-options:|referrer-policy:|permissions-policy:|set-cookie:)' | sed -E 's/(set-cookie:)[^;]*/\1 [REDACTED]/I'
+          echo '==== HTML asset tags count ===='
+          curl --silent --show-error --max-time 15 https://bosh.kg/ | grep -oE '<(script|link)\b' | sort | uniq -c || true
+          for ENDPOINT in / /login /; do
+            echo "==== repeat $ENDPOINT ===="
+            for N in 1 2 3; do
+              curl --silent --show-error --max-time 15 -o /dev/null -w 'ttfb=%{time_starttransfer} total=%{time_total}\n' "https://bosh.kg$ENDPOINT" || true
+            done
+          done
+      - name: Inspect duplicate constraint coverage and risky patterns
+        run: |
+          echo '==== unique and index declarations ===='
+          grep -R -nE -- '(->unique\(|->index\(|unique\()' database/migrations | head -110 || true
+          echo '==== raw SQL, bypass and logging patterns ===='
+          grep -R -nE -- '(DB::raw|whereRaw|orderByRaw|unserialize\(|eval\(|exec\(|shell_exec\(|base64_decode\(|APP_DEBUG|Log::.*(password|token)|->withoutMiddleware|forceFill\()' app routes config | head -85 || true
