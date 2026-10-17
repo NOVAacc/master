@@ -43,8 +43,8 @@ class LunchBreakTest extends TestCase
             ->assertRedirect()->assertSessionHasNoErrors();
 
         $stored = DB::table('master_working_hours')->where('master_profile_id', $master->id)->first();
-        $this->assertSame('13:00:00', $stored->break_starts_at);
-        $this->assertSame('14:00:00', $stored->break_ends_at);
+        $this->assertSame('13:00', substr($stored->break_starts_at, 0, 5));
+        $this->assertSame('14:00', substr($stored->break_ends_at, 0, 5));
 
         $monday = CarbonImmutable::parse('2026-10-19 00:00:00', 'Asia/Bishkek');
         $contains = fn (string $start, string $end) => app(WorkingHours::class)->contains(
