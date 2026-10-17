@@ -253,6 +253,10 @@ try {
         'require $base.\'/current/vendor/autoload.php\';'."\n".'$app = require $base.\'/current/bootstrap/app.php\';'."\n".
         '$app->handleRequest(Illuminate\\Http\\Request::capture());'."\n";
     $originalHtaccess = $state['root_files']['.htaccess'] ? file_get_contents($backup.'/root-.htaccess') : '';
+    // The new BOSH directory may lack the PHP 8.3 handler used by the existing domain.
+    if ($allowedCutover && !str_contains($originalHtaccess, 'application/x-httpd-ea-php83___lsphp')) {
+        $originalHtaccess .= "\nAddHandler application/x-httpd-ea-php83___lsphp .php .phtml\n";
+    }
     $originalHtaccess = preg_replace('/\n?# MASTER MANAGED BEGIN.*?# MASTER MANAGED END\n?/s', '', $originalHtaccess);
     $managed = "\n# MASTER MANAGED BEGIN\nOptions -Indexes\nDirectoryIndex index.php index.html\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteRule ^ index.php [L]\n</IfModule>\n<FilesMatch \"^(\\.env|composer\\.(json|lock)|artisan|.*\\.sql)$\">\nRequire all denied\n</FilesMatch>\n# MASTER MANAGED END\n";
     switchRelease($release);
