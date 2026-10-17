@@ -1,3 +1,4 @@
+import PhoneInput from "../PhoneInput";
 import { Head, router, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import ProfileIdentity from "../ProfileIdentity";
@@ -315,20 +316,7 @@ export default function Booking(p: Props) {
                                     />
                                 </Field>
                                 <Field label="Телефон">
-                                    <input
-                                        required
-                                        type="tel"
-                                        maxLength={30}
-                                        placeholder="+996"
-                                        value={f.data.client_phone}
-                                        onChange={(e) =>
-                                            f.setData(
-                                                "client_phone",
-                                                e.target.value,
-                                            )
-                                        }
-                                        autoComplete="tel"
-                                    />
+                                    <PhoneInput required value={f.data.client_phone} onChange={value => f.setData("client_phone", value)} label="Телефон клиента" />
                                 </Field>
                             </div>
                             <Field label="Комментарий (необязательно)">
