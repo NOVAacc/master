@@ -26,10 +26,10 @@ export default function Auth({ register }: { register: boolean }) {
                 <p className="muted">{codeSent && !legacy ? "Введите 5-значный код из SMS. Он действует 3 минуты." : register ? "Только имя и номер телефона." : "Введите номер телефона, чтобы получить код."}</p>
                 <form onSubmit={e => {
                     e.preventDefault();
-                    if (legacy) { f.transform(data => ({ email: data.email, password: data.password })).post("/login"); return; }
-                    if (codeSent) { f.transform(data => ({ code: data.code })).post("/auth/verify-code"); return; }
-                    f.transform(data => ({ name: data.name, phone: data.phone, mode: register ? "register" : "login" }))
-                      .post("/auth/send-code", { onSuccess: () => setSent(true) });
+                    if (legacy) { f.transform(data => ({ email: data.email, password: data.password })); f.post("/login"); return; }
+                    if (codeSent) { f.transform(data => ({ code: data.code })); f.post("/auth/verify-code"); return; }
+                    f.transform(data => ({ name: data.name, phone: data.phone, mode: register ? "register" : "login" }));
+                    f.post("/auth/send-code", { onSuccess: () => setSent(true) });
                 }}>
                     <Errors errors={f.errors} />
                     {legacy ? <>
