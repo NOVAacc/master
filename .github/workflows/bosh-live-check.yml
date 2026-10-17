@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Inspect latest main release and production deployment runs
         run: |
-          gh api "repos/$GH_REPO/actions/runs?branch=main&per_page=12" --jq '.workflow_runs[] | "RECENT_RUN id=\\(.id) name=\\(.name) status=\\(.status) conclusion=\\(.conclusion) sha=\\(.head_sha)"'
+          gh api "repos/$GH_REPO/actions/runs?branch=main&per_page=12" --jq '.workflow_runs[] | [.id,.name,.status,.conclusion,.head_sha] | @tsv'
       - name: Verify BOSH frontend and health endpoint
         run: |
           set -euo pipefail
