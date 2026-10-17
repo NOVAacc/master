@@ -1,0 +1,47 @@
+name: Probe BOSH HTTP vs HTTPS roots
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      FTP_USER: ${{ secrets.BOSH_FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.BOSH_FTP_PASSWORD }}
+    steps:
+      - name: Upload harmless probe and compare HTTP to HTTPS
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$FTP_USER" && test -n "$FTP_PASSWORD"
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          PROBE="bosh-http-probe-$(openssl rand -hex 14).txt"
+          VALUE=$(openssl rand -hex 32)
+          printf '%s' "$VALUE" > "/tmp/$PROBE"
+          cleanup() {
+            timeout 40s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 -e "set ftp:ssl-auth TLS; set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate true; cd /; rm -f $PROBE; bye" >/dev/null 2>&1 || true
+            rm -f "/tmp/$PROBE"
+          }
+          trap cleanup EXIT
+          timeout 40s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 -e "
+            set cmd:fail-exit true;
+            set ftp:ssl-auth TLS;
+            set ftp:ssl-force true;
+            set ftp:ssl-protect-data true;
+            set ssl:verify-certificate true;
+            cd /;
+            put /tmp/$PROBE -o $PROBE;
+            bye
+          " >/dev/null
+          for SCHEME in http https; do
+            CODE=$(curl --silent --show-error --max-time 20 -o "/tmp/result-$SCHEME" -w '%{http_code}' "$SCHEME://bosh.kg/$PROBE" || true)
+            BODY=$(cat "/tmp/result-$SCHEME" 2>/dev/null || true)
+            if test "$BODY" = "$VALUE"; then
+              echo "BOSH_$SCHEME WEBROOT_MATCH=YES STATUS=$CODE"
+            else
+              echo "BOSH_$SCHEME WEBROOT_MATCH=NO STATUS=$CODE"
+            fi
+          done
