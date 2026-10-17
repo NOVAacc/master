@@ -59,10 +59,12 @@ class AccountSecurityController extends Controller
             'email' => ['required', 'email:rfc', 'max:255', Rule::unique('users', 'email')->ignore($request->user()->id)],
         ]);
         $email = strtolower(trim($data['email']));
-        $this->ensureMailer();
         $user = $request->user();
         if ($user->email !== $email) {
             $user->forceFill(['email' => $email, 'email_verified_at' => null])->save();
+        }
+        if (in_array(config('mail.default'), ['log', 'array'], true)) {
+            return back()->with('success', 'Почта сохранена. Подтверждение станет доступно после подключения почтового сервера.');
         }
         $this->sendVerification($user);
         return back()->with('success', 'На указанную почту отправлена ссылка подтверждения.');
