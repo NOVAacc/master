@@ -1,0 +1,25 @@
+name: BOSH production verification
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Verify BOSH frontend and health endpoint
+        run: |
+          set -euo pipefail
+          for PAGE in / /login /register /up; do
+            CODE=$(curl --silent --show-error --max-time 20 -o /tmp/bosh-page -w '%{http_code}' "https://bosh.kg$PAGE" || true)
+            echo "BOSH_PAGE=$PAGE HTTP_STATUS=$CODE"
+            if test "$PAGE" = "/login"; then
+              if grep -q '/build/assets/' /tmp/bosh-page && grep -q Auth /tmp/bosh-page; then
+                echo "BOSH_LOGIN_APPLICATION_FOUND"
+              else
+                echo "BOSH_LOGIN_APPLICATION_NOT_FOUND"
+              fi
+            fi
+          done
