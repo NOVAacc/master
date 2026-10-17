@@ -40,6 +40,14 @@ const paths: Record<string, ReactNode> = {
             <path d="M8 21h8m-4-4v4" />
         </>
     ),
+    devices: (
+        <>
+            <rect x="2" y="5" width="15" height="11" rx="2" />
+            <path d="M5 19h9m-4-3v3" />
+            <rect x="17" y="9" width="5" height="11" rx="1.2" />
+            <path d="M19 18h1" />
+        </>
+    ),
     phone: (
         <>
             <rect x="6" y="2" width="12" height="20" rx="3" />
