@@ -237,7 +237,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
                                 required
                                 minLength={3}
                                 maxLength={30}
-                                pattern="[a-z0-9]{3,30}"
+                                pattern={f.data.slug === master.slug ? undefined : "[a-z0-9]{3,30}"}
                                 autoCapitalize="none"
                                 autoCorrect="off"
                                 spellCheck={false}
