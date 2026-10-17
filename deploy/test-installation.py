@@ -84,6 +84,11 @@ def run(args):
 
             # An upgrade preserves the application key and persistent storage, and can roll back to its predecessor.
             (private / 'shared/storage/app/private/retained.txt').write_text('persistent data')
+            # Inert test values: never contact Meta or use real credentials during installation tests.
+            first_env = first_env.replace('WHATSAPP_TOKEN=""', 'WHATSAPP_TOKEN="test-token-keep-private"')
+            first_env = first_env.replace('WHATSAPP_SENDER_NUMBER="996550512233"', 'WHATSAPP_SENDER_NUMBER="996555000001"')
+            first_env = first_env.replace('WHATSAPP_CLIENT_TEMPLATE="bosh_booking_client"', 'WHATSAPP_CLIENT_TEMPLATE="custom_booking_client"')
+            (private / 'shared/.env').write_text(first_env)
             out2, names2, token2 = prepare(2)
             code, result = request(names2, token2, json.loads((out2 / 'request.json').read_text()))
             assert code == 200 and result.get('status') == 'activated', (result, (private / 'deployments/errors.log').read_text() if (private / 'deployments/errors.log').exists() else '')

@@ -16,12 +16,13 @@ return [
 
     'whatsapp' => [
         'enabled' => env('WHATSAPP_ENABLED', false),
+        'sender_number' => env('WHATSAPP_SENDER_NUMBER', '996550512233'),
         'token' => env('WHATSAPP_TOKEN'),
         'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
         'version' => env('WHATSAPP_API_VERSION'),
         'language' => env('WHATSAPP_LANGUAGE', 'ru'),
-        'client_template' => env('WHATSAPP_CLIENT_TEMPLATE', 'master_booking_client'),
-        'master_template' => env('WHATSAPP_MASTER_TEMPLATE', 'master_booking_master'),
+        'client_template' => env('WHATSAPP_CLIENT_TEMPLATE', 'bosh_booking_client'),
+        'master_template' => env('WHATSAPP_MASTER_TEMPLATE', 'bosh_booking_master'),
     ],
 
     'postmark' => [

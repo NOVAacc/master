@@ -174,6 +174,12 @@ try {
         'SESSION_COOKIE' => $existing['SESSION_COOKIE'] ?? (Illuminate\Support\Str::slug($existing['APP_NAME'] ?? 'Master').'-session'),
         'SESSION_SECURE_COOKIE' => DEPLOY['secure_cookies'] ? 'true' : 'false', 'CACHE_STORE' => 'file',
         'QUEUE_CONNECTION' => 'sync', 'LOG_CHANNEL' => 'single', 'LOG_LEVEL' => 'warning'];
+    // Preserve only supported channel settings. Secrets stay in the private .env and backups.
+    $channelDefaults = ['WHATSAPP_ENABLED' => 'false', 'WHATSAPP_SENDER_NUMBER' => '996550512233',
+        'WHATSAPP_TOKEN' => '', 'WHATSAPP_PHONE_NUMBER_ID' => '', 'WHATSAPP_API_VERSION' => '',
+        'WHATSAPP_LANGUAGE' => 'ru', 'WHATSAPP_CLIENT_TEMPLATE' => 'bosh_booking_client',
+        'WHATSAPP_MASTER_TEMPLATE' => 'bosh_booking_master'];
+    foreach ($channelDefaults as $name => $default) $env[$name] = $existing[$name] ?? $default;
     $text = ''; foreach ($env as $name => $value) $text .= $name.'='.envValue($value)."\n";
     // Verify lossless encoding of passwords containing punctuation before saving.
     if (Dotenv\Dotenv::parse($text)['DB_PASSWORD'] !== $input['db_password']) deployFail('environment_encoding_failed');
