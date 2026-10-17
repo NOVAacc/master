@@ -43,24 +43,31 @@ jobs:
             echo "BOSH_FTPS_LOGIN_FAILED"
             exit 1
           fi
-          # Verify that FTP / is exactly the public bosh.kg web root.
+          # Map existing FTP chroot to the public BOSH document root using
+          # ephemeral probes, always cleaned up.
           PROBE="bosh-probe-$(openssl rand -hex 12).txt"
           VALUE=$(openssl rand -hex 24)
           printf '%s' "$VALUE" > "/tmp/$PROBE"
-          cleanup() {
-            timeout 40s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 -e "set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate true; rm -f $PROBE; bye" >/dev/null 2>&1 || true
-            rm -f "/tmp/$PROBE"
-          }
-          trap cleanup EXIT
-          timeout 40s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 -e "
-            set cmd:fail-exit true;
-            set ftp:ssl-auth TLS;
-            set ftp:ssl-force true;
-            set ftp:ssl-protect-data true;
-            set ssl:verify-certificate true;
-            cd /;
-            put /tmp/$PROBE -o $PROBE;
-            bye
-          " >/dev/null 2>&1
-          RESULT=$(curl --fail --silent --show-error --max-time 20 "https://bosh.kg/$PROBE" || true)
-          if test "$RESULT" = "$VALUE"; then echo "BOSH_FTPS_WEBROOT_CONFIRMED"; else echo "BOSH_FTPS_WEBROOT_MISMATCH"; exit 1; fi
+          FOUND=""
+          for TARGET in / /bosh.kg /public_html/bosh.kg /public_html /home/n66843/public_html/bosh.kg bosh.kg ../bosh.kg; do
+            if timeout 25s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 -e "
+              set cmd:fail-exit true; set net:max-retries 1; set net:timeout 10;
+              set ftp:ssl-auth TLS; set ftp:ssl-force true;
+              set ftp:ssl-protect-data true; set ssl:verify-certificate true;
+              cd $TARGET; put /tmp/$PROBE -o $PROBE; bye
+            " >/dev/null 2>&1; then
+              RECEIVED=$(curl --silent --show-error --max-time 15 "https://bosh.kg/$PROBE" || true)
+              timeout 25s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 -e "
+                set ftp:ssl-auth TLS; set ftp:ssl-force true;
+                set ftp:ssl-protect-data true; set ssl:verify-certificate true;
+                cd $TARGET; rm -f $PROBE; bye
+              " >/dev/null 2>&1 || true
+              if test "$RECEIVED" = "$VALUE"; then
+                echo "BOSH_FTPS_WEBROOT_CONFIRMED=$TARGET"
+                FOUND="$TARGET"
+                break
+              fi
+            fi
+          done
+          rm -f "/tmp/$PROBE"
+          if test -z "$FOUND"; then echo "BOSH_FTPS_WEBROOT_MISMATCH_ALL_CANDIDATES"; exit 1; fi
