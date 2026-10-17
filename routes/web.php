@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', HomeController::class)->name('home');
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'loginPage'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1');
     Route::get('/register', [AuthController::class, 'registerPage'])->name('register');
     Route::post('/auth/send-code', [AuthController::class, 'sendCode'])->middleware('throttle:5,10');
     Route::post('/auth/verify-code', [AuthController::class, 'verifyCode'])->middleware('throttle:10,10');
