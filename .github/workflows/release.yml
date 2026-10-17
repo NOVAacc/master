@@ -15,6 +15,7 @@ on:
       - 'package*.json'
       - 'vite.config.js'
       - 'deploy/**'
+      - 'tests/**'
       - '.github/workflows/release.yml'
       - '.github/workflows/deploy-app.yml'
 permissions:
