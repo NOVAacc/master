@@ -85,6 +85,35 @@ class MasterTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->component('Dashboard')->has('master'));
     }
 
+    public function test_master_can_change_public_address_only_to_a_free_alphanumeric_slug(): void
+    {
+        [$user, $master] = $this->master('old-profile');
+        [, $other] = $this->master('taken123');
+        $payload = [
+            'display_name' => 'Айзада',
+            'timezone' => 'Asia/Bishkek',
+            'booking_enabled' => true,
+            'auto_confirm' => false,
+        ];
+
+        $this->actingAs($user)->post('/profile', [...$payload, 'slug' => 'taken123'])
+            ->assertSessionHasErrors('slug');
+        $this->post('/profile', [...$payload, 'slug' => 'name-with-dash'])
+            ->assertSessionHasErrors('slug');
+        $this->post('/profile', [...$payload, 'slug' => 'Айзада'])
+            ->assertSessionHasErrors('slug');
+        $this->assertDatabaseHas('master_profiles', ['id' => $master->id, 'slug' => 'old-profile']);
+
+        // Existing legacy addresses remain valid for unrelated profile edits.
+        $this->post('/profile', $payload)->assertSessionHasNoErrors();
+
+        $this->post('/profile', [...$payload, 'slug' => 'Aizada2026'])
+            ->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('master_profiles', ['id' => $master->id, 'slug' => 'aizada2026']);
+        $this->get('/m/aizada2026')->assertOk();
+        $this->get('/m/old-profile')->assertNotFound();
+    }
+
     public function test_calendar_loads_a_complete_local_week_without_leaking_other_masters(): void
     {
         [$user, $master, $service] = $this->master();
