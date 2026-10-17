@@ -24,7 +24,7 @@ class AuthController extends Controller
         if (strlen($digits) === 10 && str_starts_with($digits, '0')) $digits = '996'.substr($digits, 1);
         if (strlen($digits) === 9) $digits = '996'.$digits;
         if (!preg_match('/^996\d{9}$/', $digits)) {
-            throw ValidationException::withMessages(['phone' => 'Введите номер Кыргызстана в формате +996 XXX XXX XXX.']);
+            throw ValidationException::withMessages(['phone' => 'Введите номер Кыргызстана в формате 996XXXXXXXXX, без знака «+».']);
         }
         return $digits;
     }
@@ -128,7 +128,7 @@ class AuthController extends Controller
             MasterProfile::create([
                 'user_id' => $user->id,
                 'display_name' => $pending['name'],
-                'phone' => '+'.$pending['phone'],
+                'phone' => $pending['phone'],
                 'slug' => $slug,
             ]);
             return $user;
