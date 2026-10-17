@@ -18,6 +18,32 @@ class PhoneOtpAuthTest extends TestCase
         config()->set('services.nikita.sender', 'BOSH');
     }
 
+    public function test_valid_sms_code_creates_master_and_logs_user_in(): void
+    {
+        $receivedCode = null;
+        Http::fake(function ($request) use (&$receivedCode) {
+            $body = $request->body();
+            preg_match('/код входа (\\d{6})/u', $body, $match);
+            $receivedCode = $match[1] ?? null;
+            preg_match('/<id>([A-Z0-9]{12})<\\/id>/', $body, $matchId);
+            $id = $matchId[1] ?? '';
+            return Http::response('<response><id>'.$id.'</id><status>0</status></response>', 200);
+        });
+
+        $this->post('/auth/send-code', [
+            'name' => 'Айзада', 'phone' => '+996 555 123 456', 'mode' => 'register',
+        ])->assertSessionHasNoErrors();
+        $this->assertNotNull($receivedCode);
+        $this->assertDatabaseCount('users', 0);
+        $this->post('/auth/verify-code', ['code' => '000000' === $receivedCode ? '111111' : '000000'])
+            ->assertSessionHasErrors('code');
+        $this->assertDatabaseCount('users', 0);
+        $this->post('/auth/verify-code', ['code' => $receivedCode])->assertRedirect('/dashboard');
+        $this->assertDatabaseHas('users', ['name' => 'Айзада', 'phone' => '996555123456']);
+        $this->assertDatabaseCount('master_profiles', 1);
+        $this->assertAuthenticated();
+    }
+
     public function test_registration_does_not_create_a_user_when_sms_gateway_rejects(): void
     {
         Http::fake(['smspro.nikita.kg/api/message' =>
