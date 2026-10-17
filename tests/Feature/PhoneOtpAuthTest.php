@@ -33,6 +33,9 @@ class PhoneOtpAuthTest extends TestCase
         $this->post('/auth/verify-code', ['code' => '12345'])->assertRedirect('/dashboard');
         $this->assertDatabaseHas('users', ['name' => 'Айзада', 'phone' => '996555123456']);
         $this->assertDatabaseCount('master_profiles', 1);
+        $slug = \App\Models\MasterProfile::firstOrFail()->slug;
+        $this->assertMatchesRegularExpression('/^[a-z0-9]{7}$/', $slug);
+        $this->get('/m/'.$slug)->assertOk();
         $this->assertAuthenticated();
         Http::assertSent(fn ($req) => $req->url() === 'https://smspro.nikita.kg/api/otp/send'
             && $req['phone'] === '996555123456' && $req->hasHeader('X-API-KEY', 'test-otp-key'));
