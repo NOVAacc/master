@@ -21,7 +21,7 @@ class AuthController extends Controller
     private function phone(string $raw): string
     {
         $digits = preg_replace('/\D+/', '', $raw);
-        if (strlen($digits) === 9 && str_starts_with($digits, '0')) $digits = '996'.substr($digits, 1);
+        if (strlen($digits) === 10 && str_starts_with($digits, '0')) $digits = '996'.substr($digits, 1);
         if (strlen($digits) === 9) $digits = '996'.$digits;
         if (!preg_match('/^996\d{9}$/', $digits)) {
             throw ValidationException::withMessages(['phone' => 'Введите номер Кыргызстана в формате +996 XXX XXX XXX.']);
@@ -49,13 +49,13 @@ class AuthController extends Controller
         if ($request->session()->get('otp_sent_at', 0) > time() - 60) {
             throw ValidationException::withMessages(['phone' => 'Повторная отправка доступна через минуту.']);
         }
-        $code = (string) random_int(100000, 999999);
+        $code = (string) random_int(10000, 99999);
         $transaction = strtoupper(Str::random(12));
         $xmlValue = static fn (string $value): string => htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'
             .'<message><login>'.$xmlValue($login).'</login><pwd>'.$xmlValue($password).'</pwd>'
             .'<id>'.$transaction.'</id><sender>'.$xmlValue($sender).'</sender>'
-            .'<text>'.$xmlValue('BOSH: код входа '.$code.'. Действует 5 минут. Никому не сообщайте код.').'</text>'
+            .'<text>'.$xmlValue('BOSH: код входа '.$code.'. Действует 3 минуты. Никому не сообщайте код.').'</text>'
             .'<phones><phone>'.$phone.'</phone></phones></message>';
         try {
             $response = Http::withBody($xml, 'application/xml')->accept('application/xml')
@@ -74,7 +74,7 @@ class AuthController extends Controller
             'phone' => $phone,
             'name' => trim($data['name'] ?? ''),
             'mode' => $data['mode'],
-            'expires_at' => time() + 300,
+            'expires_at' => time() + 180,
             'attempts' => 0,
         ]);
         $request->session()->put('otp_sent_at', time());
@@ -83,7 +83,7 @@ class AuthController extends Controller
 
     public function verifyCode(Request $request)
     {
-        $data = $request->validate(['code' => ['required', 'string', 'regex:/^[0-9]{6}$/']]);
+        $data = $request->validate(['code' => ['required', 'string', 'regex:/^[0-9]{5}$/']]);
         $pending = $request->session()->get('pending_otp');
         if (!$pending || ($pending['expires_at'] ?? 0) < time()) {
             throw ValidationException::withMessages(['code' => 'Срок действия кода истёк. Запросите новый.']);
