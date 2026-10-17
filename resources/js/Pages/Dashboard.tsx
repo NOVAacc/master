@@ -2,6 +2,8 @@ import { Head, Link, router, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import Icon from "../Icon";
 import ProfileSettings from "../ProfileSettings";
+import AccountSecurity from "../AccountSecurity";
+import type { SecurityStatus } from "../AccountSecurity";
 import { MasterAvatar } from "../ProfileIdentity";
 import ServicesPanel from "../ServicesPanel";
 import EditAppointmentForm from "../EditAppointmentForm";
@@ -138,6 +140,7 @@ function Schedule({ hours }: { hours: Hour[] }) {
 }
 export default function Dashboard({
     master,
+    security,
     services,
     hours,
     appointments,
@@ -148,6 +151,7 @@ export default function Dashboard({
     calendarBlocks,
 }: {
     master: Master;
+    security: SecurityStatus;
     services: Service[];
     hours: Hour[];
     appointments: Appointment[];
@@ -469,6 +473,9 @@ export default function Dashboard({
                     <MasterAvatar master={master} />
                 </header>
                 <Notice />
+                {(!security.emailVerified || !security.passwordSet) && (
+                    <AccountSecurity status={security} />
+                )}
                 {!whatsappAutomatic && (
                     <p className="integration-note">
                         WhatsApp: автоматическая отправка ещё не подключена.
@@ -640,6 +647,9 @@ export default function Dashboard({
                                 </a>
                             </p>
                             <ProfileSettings master={master} />
+                            {security.emailVerified && security.passwordSet && (
+                                <AccountSecurity status={security} />
+                            )}
                         </>
                     )}
                 </section>
