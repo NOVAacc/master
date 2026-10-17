@@ -136,6 +136,14 @@ try {
         if (!isset($input[$field]) || !is_string($input[$field]) || strlen($input[$field]) > 4096) deployFail('missing_install_data');
     }
     if ($input['db_password'] === '') deployFail('missing_database_password');
+    if (isset($input['smtp'])) {
+        if (!is_array($input['smtp']) ||
+            !is_string($input['smtp']['host'] ?? null) ||
+            !preg_match('/^[A-Za-z0-9.-]{4,253}$/D', $input['smtp']['host']) ||
+            !is_string($input['smtp']['password'] ?? null) ||
+            strlen($input['smtp']['password']) < 8 ||
+            strlen($input['smtp']['password']) > 1024) deployFail('invalid_smtp_settings');
+    }
     if (isset($input['nikita_otp_api_key']) &&
         (!is_string($input['nikita_otp_api_key']) ||
          !preg_match('/^[A-Za-z0-9_-]{16,256}$/', $input['nikita_otp_api_key']))) deployFail('invalid_otp_key');
@@ -189,13 +197,24 @@ try {
         'MAIL_SCHEME' => '', 'MAIL_USERNAME' => '', 'MAIL_PASSWORD' => '',
         'MAIL_FROM_ADDRESS' => '', 'MAIL_FROM_NAME' => 'BOSH'];
     foreach ($mailDefaults as $name => $default) $env[$name] = $existing[$name] ?? $default;
+    $env['MAIL_FROM_ADDRESS'] = 'no-reply@bosh.kg';
+    $env['MAIL_FROM_NAME'] = 'BOSH';
+    // Do not enable mail unless BOTH secrets are configured; keeps recovery tokens out of logs.
+    if (isset($input['smtp'])) {
+        $env['MAIL_MAILER'] = 'smtp';
+        $env['MAIL_HOST'] = $input['smtp']['host'];
+        $env['MAIL_PORT'] = '465';
+        $env['MAIL_SCHEME'] = 'smtps';
+        $env['MAIL_USERNAME'] = 'no-reply@bosh.kg';
+        $env['MAIL_PASSWORD'] = $input['smtp']['password'];
+    }
     // Preserve OTP credentials across releases. When present, update from the
     // short-lived authenticated HTTPS install payload, never from source files.
     $env['NIKITA_OTP_API_KEY'] = $input['nikita_otp_api_key'] ?? ($existing['NIKITA_OTP_API_KEY'] ?? '');
     $text = ''; foreach ($env as $name => $value) $text .= $name.'='.envValue($value)."\n";
     // Verify lossless encoding of passwords containing punctuation before saving.
     if (Dotenv\Dotenv::parse($text)['DB_PASSWORD'] !== $input['db_password']) deployFail('environment_encoding_failed');
-    writeFile($envPath, $text); unset($input['db_password'], $input['nikita_otp_api_key'], $env, $text);
+    writeFile($envPath, $text); unset($input['db_password'], $input['nikita_otp_api_key'], $input['smtp'], $env, $text);
     if (!symlink($envPath, $release.'/.env')) deployFail('env_link_failed');
     $storage = $base.'/shared/storage';
     foreach (['app/private','app/public','framework/cache/data','framework/sessions','framework/views','logs'] as $dir) makeDir($storage.'/'.$dir);
