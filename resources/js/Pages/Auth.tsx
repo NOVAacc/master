@@ -83,7 +83,7 @@ export default function Auth({ register }: { register: boolean }) {
                                 onChange={e => f.setData("name", e.target.value)} />
                         </Field>}
                         <Field label="Номер телефона">
-                            <PhoneInput required value={f.data.phone}
+                            <PhoneInput required fixedPrefix={register} value={f.data.phone}
                                 onChange={value => f.setData("phone", value)} />
                         </Field>
                     </>}
