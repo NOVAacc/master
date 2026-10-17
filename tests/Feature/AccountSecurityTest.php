@@ -60,6 +60,17 @@ class AccountSecurityTest extends TestCase
         $this->assertTrue(Hash::check('new-pass', $user->fresh()->password));
     }
 
+    public function test_email_is_saved_as_unverified_when_smtp_is_not_configured(): void
+    {
+        config()->set('mail.default', 'log');
+        $user = User::factory()->create(['email' => null, 'email_verified_at' => null]);
+        $this->actingAs($user)->post('/security/email', ['email' => 'master@example.test'])
+            ->assertSessionHasNoErrors();
+        $user->refresh();
+        $this->assertSame('master@example.test', $user->email);
+        $this->assertNull($user->email_verified_at);
+    }
+
     public function test_unverified_email_cannot_be_used_to_request_password_reset(): void
     {
         config()->set('mail.default', 'array');
