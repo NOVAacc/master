@@ -183,6 +183,12 @@ try {
         'WHATSAPP_LANGUAGE' => 'ru', 'WHATSAPP_CLIENT_TEMPLATE' => 'bosh_booking_client',
         'WHATSAPP_MASTER_TEMPLATE' => 'bosh_booking_master'];
     foreach ($channelDefaults as $name => $default) $env[$name] = $existing[$name] ?? $default;
+    // Mail transport must be configured privately before email verification
+    // or password recovery can send. Never silently fall back to logging reset tokens.
+    $mailDefaults = ['MAIL_MAILER' => 'log', 'MAIL_HOST' => '', 'MAIL_PORT' => '587',
+        'MAIL_SCHEME' => '', 'MAIL_USERNAME' => '', 'MAIL_PASSWORD' => '',
+        'MAIL_FROM_ADDRESS' => '', 'MAIL_FROM_NAME' => 'BOSH'];
+    foreach ($mailDefaults as $name => $default) $env[$name] = $existing[$name] ?? $default;
     // Preserve OTP credentials across releases. When present, update from the
     // short-lived authenticated HTTPS install payload, never from source files.
     $env['NIKITA_OTP_API_KEY'] = $input['nikita_otp_api_key'] ?? ($existing['NIKITA_OTP_API_KEY'] ?? '');
