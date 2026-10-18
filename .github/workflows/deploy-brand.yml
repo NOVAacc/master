@@ -29,16 +29,6 @@ jobs:
           test -n "$FTP_USER" && test -n "$FTP_PASSWORD"
           sudo apt-get update -qq
           sudo apt-get install -y -qq lftp
-          timeout 30s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
-          set net:timeout 15
-          set net:max-retries 1
-          set ftp:ssl-auth TLS
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          set ssl:verify-certificate true
-          quote SITE QUOTA
-          bye
-          EOF
           timeout 120s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
           set cmd:fail-exit true
           set net:timeout 20
@@ -64,7 +54,7 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          for ASSET in brand/bosh-mark.svg brand/bosh-social.png brand/bosh-icon-192.png brand/bosh-icon-512.png favicon.svg favicon.ico favicon-16.png favicon-32.png apple-touch-icon.png site.webmanifest; do
+          for ASSET in brand/bosh-mark.svg brand/bosh-mark-v2.svg brand/bosh-social.png brand/bosh-icon-192.png brand/bosh-icon-512.png brand/bosh-icon-1024.png favicon.svg favicon.ico favicon-16.png favicon-32.png apple-touch-icon.png site.webmanifest; do
             curl --fail --silent --show-error --max-time 30 "https://bosh.kg/$ASSET?verify=$GITHUB_SHA" -o /tmp/bosh-brand-check
             cmp "public/$ASSET" /tmp/bosh-brand-check
           done
