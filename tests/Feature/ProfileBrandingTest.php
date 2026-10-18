@@ -37,7 +37,7 @@ class ProfileBrandingTest extends TestCase
         Storage::fake('local');
         [$user, $master] = $this->profile();
         $this->actingAs($user)->post('/profile', [...$this->fields(), 'avatar' => $this->image(), 'cover' => $this->image('cover.png'),
-            'tagline' => 'Внимание к деталям', 'instagram_username' => 'https://www.instagram.com/aizada.lashes/?igsh=example', 'profile_theme' => 'sage'])
+            'phone' => '996550123456', 'instagram_username' => 'https://www.instagram.com/aizada.lashes/?igsh=example', 'profile_theme' => 'sage'])
             ->assertSessionHasNoErrors();
         $master->refresh();
         Storage::disk('local')->assertExists($master->avatar_path);
@@ -49,7 +49,8 @@ class ProfileBrandingTest extends TestCase
         $this->get($master->cover_url)->assertOk();
         $this->get('/m/profile-photo')->assertInertia(fn (Assert $page) => $page
             ->where('master.avatar_url', $master->avatar_url)->where('master.cover_url', $master->cover_url)
-            ->where('master.instagram_url', 'https://www.instagram.com/aizada.lashes/')->where('master.tagline', 'Внимание к деталям')
+            ->where('master.instagram_url', 'https://www.instagram.com/aizada.lashes/')->where('master.phone', '996550123456')
+            ->missing('master.tagline')
             ->missing('master.avatar_path')->missing('master.cover_path'));
     }
 
