@@ -1,4 +1,5 @@
 import PhoneInput from "../PhoneInput";
+import WorkGallery from "../WorkGallery";
 import Icon from "../Icon";
 import { Head, router, useForm } from "@inertiajs/react";
 import { useState } from "react";
@@ -89,6 +90,7 @@ export default function Booking(p: Props) {
                                 </div>
                             </div>
                         )}
+                        <WorkGallery images={[p.master.work1_url, p.master.work2_url, p.master.work3_url]} />
                         <hr />
                         <small>
                             Время указано для часового пояса

@@ -8,13 +8,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MasterProfile extends Model
 {
-    protected $fillable = ['user_id', 'slug', 'display_name', 'specialty', 'bio', 'phone', 'address', 'address_url', 'timezone', 'booking_enabled', 'auto_confirm', 'whatsapp_notifications', 'avatar_path', 'cover_path', 'tagline', 'instagram_username', 'profile_theme'];
+    protected $fillable = ['user_id', 'slug', 'display_name', 'specialty', 'bio', 'phone', 'address', 'address_url', 'timezone', 'booking_enabled', 'auto_confirm', 'whatsapp_notifications', 'avatar_path', 'cover_path', 'work1_path', 'work2_path', 'work3_path', 'tagline', 'instagram_username', 'profile_theme'];
 
     protected $casts = ['booking_enabled' => 'boolean', 'auto_confirm' => 'boolean', 'whatsapp_notifications' => 'boolean'];
 
-    protected $hidden = ['avatar_path', 'cover_path'];
+    protected $hidden = ['avatar_path', 'cover_path', 'work1_path', 'work2_path', 'work3_path'];
 
-    protected $appends = ['avatar_url', 'cover_url', 'instagram_url'];
+    protected $appends = ['avatar_url', 'cover_url', 'instagram_url', 'work1_url', 'work2_url', 'work3_url'];
 
     public function getAvatarUrlAttribute(): ?string
     {
@@ -24,6 +24,21 @@ class MasterProfile extends Model
     public function getCoverUrlAttribute(): ?string
     {
         return $this->cover_path ? route('master.image', ['master' => $this->slug, 'kind' => 'cover', 'version' => pathinfo($this->cover_path, PATHINFO_FILENAME)]) : null;
+    }
+
+    public function getWork1UrlAttribute(): ?string
+    {
+        return $this->work1_path ? route('master.image', ['master' => $this->slug, 'kind' => 'work1', 'version' => pathinfo($this->work1_path, PATHINFO_FILENAME)]) : null;
+    }
+
+    public function getWork2UrlAttribute(): ?string
+    {
+        return $this->work2_path ? route('master.image', ['master' => $this->slug, 'kind' => 'work2', 'version' => pathinfo($this->work2_path, PATHINFO_FILENAME)]) : null;
+    }
+
+    public function getWork3UrlAttribute(): ?string
+    {
+        return $this->work3_path ? route('master.image', ['master' => $this->slug, 'kind' => 'work3', 'version' => pathinfo($this->work3_path, PATHINFO_FILENAME)]) : null;
     }
 
     public function getInstagramUrlAttribute(): ?string

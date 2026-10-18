@@ -10,7 +10,8 @@ class MasterImageController extends Controller
     public function __invoke(MasterProfile $master, string $kind, string $version)
     {
         $path = match ($kind) {
-            'avatar' => $master->avatar_path, 'cover' => $master->cover_path, default => null
+            'avatar' => $master->avatar_path, 'cover' => $master->cover_path,
+            'work1' => $master->work1_path, 'work2' => $master->work2_path, 'work3' => $master->work3_path, default => null
         };
         abort_unless($path && preg_match('~^profile-images/'.$master->id.'/[A-Za-z0-9]{40}\.(?:jpg|jpeg|png|webp)$~D', $path) && pathinfo($path, PATHINFO_FILENAME) === $version, 404);
         $disk = Storage::disk('local');

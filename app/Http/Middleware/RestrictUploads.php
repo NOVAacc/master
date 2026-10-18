@@ -15,8 +15,8 @@ class RestrictUploads
             abort(422, 'Загрузка файлов здесь не поддерживается.');
         }
         foreach ($files as $field => $file) {
-            if (! in_array($field, ['avatar', 'cover'], true) || is_array($file)) {
-                throw ValidationException::withMessages(['avatar' => 'Можно загрузить только один аватар и одну обложку.']);
+            if (! in_array($field, ['avatar', 'cover', 'work1', 'work2', 'work3'], true) || is_array($file)) {
+                throw ValidationException::withMessages(['avatar' => 'Допустимы аватар, обложка и три фотографии работ — по одному файлу в каждом поле.']);
             }
         }
 

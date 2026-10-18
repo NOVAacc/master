@@ -100,6 +100,12 @@ class DashboardController extends Controller
             'profile_theme' => ['sometimes', 'in:graphite,sand,sage,lilac'],
             'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', new ProfileImage, 'max:2048', 'dimensions:max_width=4096,max_height=4096'],
             'cover' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', new ProfileImage, 'max:2048', 'dimensions:max_width=4096,max_height=4096'],
+            'work1' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', new ProfileImage, 'max:2048', 'dimensions:max_width=4096,max_height=4096'],
+            'remove_work1' => ['sometimes', 'boolean'],
+            'work2' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', new ProfileImage, 'max:2048', 'dimensions:max_width=4096,max_height=4096'],
+            'remove_work2' => ['sometimes', 'boolean'],
+            'work3' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', new ProfileImage, 'max:2048', 'dimensions:max_width=4096,max_height=4096'],
+            'remove_work3' => ['sometimes', 'boolean'],
             'remove_avatar' => ['sometimes', 'boolean'],
             'remove_cover' => ['sometimes', 'boolean'],
             'phone' => ['nullable', 'string', 'max:30'],
@@ -131,7 +137,7 @@ class DashboardController extends Controller
         $uploaded = [];
         $oldPaths = [];
         try {
-            foreach (['avatar', 'cover'] as $kind) {
+            foreach (['avatar', 'cover', 'work1', 'work2', 'work3'] as $kind) {
                 if ($request->hasFile($kind)) {
                     $path = $request->file($kind)->store('profile-images/'.$master->id, 'local');
                     if (! $path) {
@@ -142,8 +148,8 @@ class DashboardController extends Controller
             }
             DB::transaction(function () use ($master, $data, $uploaded, &$oldPaths) {
                 $locked = MasterProfile::whereKey($master->id)->lockForUpdate()->firstOrFail();
-                $values = Arr::except($data, ['avatar', 'cover', 'remove_avatar', 'remove_cover']);
-                foreach (['avatar', 'cover'] as $kind) {
+                $values = Arr::except($data, ['avatar', 'cover', 'work1', 'work2', 'work3', 'remove_avatar', 'remove_cover', 'remove_work1', 'remove_work2', 'remove_work3']);
+                foreach (['avatar', 'cover', 'work1', 'work2', 'work3'] as $kind) {
                     if (isset($uploaded[$kind]) || ($data['remove_'.$kind] ?? false)) {
                         if ($locked->{$kind.'_path'} && preg_match('~^profile-images/'.$locked->id.'/[A-Za-z0-9]{40}\.(?:jpg|jpeg|png|webp)$~D', $locked->{$kind.'_path'})) {
                             $oldPaths[] = $locked->{$kind.'_path'};

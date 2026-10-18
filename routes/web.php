@@ -36,4 +36,4 @@ Route::middleware('auth')->group(function () {
 Route::get('/security/email/verify/{user}/{hash}', [AccountSecurityController::class, 'verify'])->middleware('signed')->name('security.email.verify');
 Route::get('/m/{master:slug}', [PublicBookingController::class, 'show'])->name('public.master');
 Route::post('/m/{master:slug}/book', [PublicBookingController::class, 'book'])->middleware('throttle:10,1');
-Route::get('/m/{master:slug}/image/{kind}/{version}', MasterImageController::class)->whereIn('kind', ['avatar', 'cover'])->where('version', '[A-Za-z0-9]{40}')->name('master.image');
+Route::get('/m/{master:slug}/image/{kind}/{version}', MasterImageController::class)->whereIn('kind', ['avatar', 'cover', 'work1', 'work2', 'work3'])->where('version', '[A-Za-z0-9]{40}')->name('master.image');

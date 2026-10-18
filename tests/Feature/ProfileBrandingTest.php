@@ -54,6 +54,34 @@ class ProfileBrandingTest extends TestCase
             ->missing('master.avatar_path')->missing('master.cover_path'));
     }
 
+    public function test_three_portfolio_images_are_private_files_with_public_safe_urls_and_can_be_removed(): void
+    {
+        Storage::fake('local');
+        [$user, $master] = $this->profile();
+        $this->actingAs($user)->post('/profile', [...$this->fields(),
+            'work1' => $this->image('one.png'), 'work2' => $this->image('two.png'), 'work3' => $this->image('three.png')])->assertSessionHasNoErrors();
+        $master->refresh();
+        foreach (['work1', 'work2', 'work3'] as $kind) {
+            Storage::disk('local')->assertExists($master->{$kind.'_path'});
+            $this->assertArrayNotHasKey($kind.'_path', $master->toArray());
+            $this->get($master->{$kind.'_url'})->assertOk()->assertHeader('Content-Type', 'image/png');
+        }
+        $this->get('/m/profile-photo')->assertInertia(fn (Assert $page) => $page
+            ->where('master.work1_url', $master->work1_url)->where('master.work2_url', $master->work2_url)
+            ->where('master.work3_url', $master->work3_url)->missing('master.work1_path'));
+        $old = $master->work1_path;
+        $oldUrl = $master->work1_url;
+        $this->post('/profile', [...$this->fields(), 'work1' => $this->image('replacement.png')])->assertSessionHasNoErrors();
+        Storage::disk('local')->assertMissing($old);
+        $this->get($oldUrl)->assertNotFound();
+        $this->post('/profile', [...$this->fields(), 'work2' => UploadedFile::fake()->createWithContent('attack.svg', '<svg><script>alert(1)</script></svg>')])->assertSessionHasErrors('work2');
+        $this->post('/profile', [...$this->fields(), 'work4' => $this->image()])->assertSessionHasErrors('avatar');
+        $this->post('/profile', [...$this->fields(), 'remove_work1' => true])->assertSessionHasNoErrors();
+        $this->assertNull($master->fresh()->work1_url);
+        Storage::disk('local')->assertExists($master->fresh()->work2_path);
+        Storage::disk('local')->assertExists($master->fresh()->work3_path);
+    }
+
     public function test_replacing_and_removing_images_keeps_other_profile_files_intact(): void
     {
         Storage::fake('local');

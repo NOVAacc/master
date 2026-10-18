@@ -64,7 +64,7 @@ function Schedule({ hours }: { hours: Hour[] }) {
                                 f.setData("hours", e.target.checked
                                     ? [...f.data.hours, {
                                         weekday, starts_at: "09:00", ends_at: "18:00",
-                                        break_starts_at: null, break_ends_at: null,
+                                        break_starts_at: "12:00", break_ends_at: "13:00",
                                     }]
                                     : f.data.hours.filter(x => x.weekday !== weekday));
                             }} />
@@ -86,7 +86,7 @@ function Schedule({ hours }: { hours: Hour[] }) {
                                     <label className="check schedule-lunch-switch">
                                         <input type="checkbox" checked={lunch} onChange={e => updateDay(weekday,
                                             e.target.checked
-                                                ? {break_starts_at: "13:00", break_ends_at: "14:00"}
+                                                ? {break_starts_at: "12:00", break_ends_at: "13:00"}
                                                 : {break_starts_at: null, break_ends_at: null}
                                         )} />
                                         Перерыв
@@ -462,13 +462,6 @@ export default function Dashboard({
                     <MasterAvatar master={master} />
                 </header>
                 <Notice />
-                {!whatsappAutomatic && (
-                    <p className="integration-note">
-                        WhatsApp: автоматическая отправка ещё не подключена.
-                        Кнопка в записи откроет готовое сообщение — отправьте
-                        его в WhatsApp вручную.
-                    </p>
-                )}
                 {message && (
                     <div className="errors" role="alert">
                         {message}

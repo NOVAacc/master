@@ -3,6 +3,7 @@ import { useForm } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import { Errors, Field } from "./Shared";
 import ProfileIdentity from "./ProfileIdentity";
+import WorkGallery from "./WorkGallery";
 import type { Master } from "./types";
 
 function useImagePreview(
@@ -45,7 +46,7 @@ function instagram(value: string) {
         : null;
 }
 export default function ProfileSettings({ master }: { master: Master }) {
-    const [uploadKey, setUploadKey] = useState({ avatar: 0, cover: 0 });
+    const [uploadKey, setUploadKey] = useState({ avatar: 0, cover: 0, work1: 0, work2: 0, work3: 0 });
     const f = useForm({
         slug: master.slug,
         display_name: master.display_name,
@@ -62,6 +63,12 @@ export default function ProfileSettings({ master }: { master: Master }) {
         whatsapp_notifications: master.whatsapp_notifications || false,
         avatar: null as File | null,
         cover: null as File | null,
+        work1: null as File | null,
+        work2: null as File | null,
+        work3: null as File | null,
+        remove_work1: false,
+        remove_work2: false,
+        remove_work3: false,
         remove_avatar: false,
         remove_cover: false,
     });
@@ -75,6 +82,10 @@ export default function ProfileSettings({ master }: { master: Master }) {
         master.cover_url,
         f.data.remove_cover,
     );
+    const work1 = useImagePreview(f.data.work1, master.work1_url, f.data.remove_work1);
+    const work2 = useImagePreview(f.data.work2, master.work2_url, f.data.remove_work2);
+    const work3 = useImagePreview(f.data.work3, master.work3_url, f.data.remove_work3);
+    const images = { avatar, cover, work1, work2, work3 };
     const handle = instagram(f.data.instagram_username);
     const preview = {
         ...master,
@@ -86,7 +97,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
             ? `https://www.instagram.com/${encodeURIComponent(handle)}/`
             : null,
     };
-    function selectFile(kind: "avatar" | "cover", file: File | null) {
+    function selectFile(kind: "avatar" | "cover" | "work1" | "work2" | "work3", file: File | null) {
         if (
             file &&
             (!["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
@@ -114,6 +125,8 @@ export default function ProfileSettings({ master }: { master: Master }) {
                                 ...f.data,
                                 avatar: null,
                                 cover: null,
+                                work1: null, work2: null, work3: null,
+                                remove_work1: false, remove_work2: false, remove_work3: false,
                                 remove_avatar: false,
                                 remove_cover: false,
                             };
@@ -122,6 +135,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
                             setUploadKey((k) => ({
                                 avatar: k.avatar + 1,
                                 cover: k.cover + 1,
+                                work1: k.work1 + 1, work2: k.work2 + 1, work3: k.work3 + 1,
                             }));
                         },
                     });
@@ -147,9 +161,13 @@ export default function ProfileSettings({ master }: { master: Master }) {
                                 "Обложка профиля",
                                 "Рекомендуем 1600 × 600 пикселей",
                             ],
+                            ["work1", "Работа 1", "Вертикальное фото 9:16, рекомендуем 900 × 1600 пикселей"],
+                            ["work2", "Работа 2", "Вертикальное фото 9:16"],
+                            ["work3", "Работа 3", "Вертикальное фото 9:16"],
                         ] as const
                     ).map(([kind, label, hint]) => (
                         <div className="profile-upload" key={kind}>
+                            {kind === "work1" && <h3>Ваши работы · до 3 фото</h3>}
                             <Field label={label}>
                                 <input
                                     key={`${kind}-${uploadKey[kind]}`}
@@ -165,7 +183,10 @@ export default function ProfileSettings({ master }: { master: Master }) {
                                 />
                                 <small>{hint}</small>
                             </Field>
-                            {(kind === "avatar" ? avatar : cover) && (
+                            {images[kind] && (
+                                <img className={`upload-preview${kind.startsWith("work") ? " portrait" : ""}`} src={images[kind] || ""} alt={label} />
+                            )}
+                            {images[kind] && (
                                 <button
                                     type="button"
                                     className="text-button"
@@ -376,11 +397,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
                         />
                         Получать подтверждённые записи в WhatsApp
                     </label>
-                    <p className="muted small">
-                        Автоматические уведомления начнут работать после
-                        подключения отправки. Для связи с клиентом доступна
-                        кнопка WhatsApp в записи.
-                    </p>
+
                 </details>
                 <div className="profile-save-bar">
                     <button className="primary" disabled={f.processing}>
@@ -400,6 +417,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
                 <p className="eyebrow">ПРЕДПРОСМОТР</p>
                 <div className="profile-preview-card">
                     <ProfileIdentity master={preview} />
+                    <WorkGallery images={[work1, work2, work3]} />
                     {f.data.bio && (
                         <p className="profile-preview-bio">{f.data.bio}</p>
                     )}
