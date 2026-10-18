@@ -776,18 +776,9 @@ textarea {
     font-weight: 750;
     letter-spacing: -0.8px;
 }
-.brand-mark {
-    width: 32px;
-    height: 32px;
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    border-radius: 10px;
-    background: #202321;
-    box-shadow: inset 0 1px 1px #ffffff20;
-}
+
 .brand .brand-mark { color: #fff; }
-.brand-mark svg { width: 26px; height: 26px; }
+
 .brand { letter-spacing: -1px; }
 .panel,
 .metric {
@@ -2384,13 +2375,16 @@ h2 {
 .profile-preview-card > .work-gallery { margin: 16px 24px 24px; }
 
 .brand-mark {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
     border-radius: 0;
     background: transparent;
     box-shadow: none;
 }
-.brand-mark img { display: block; width: 36px; height: 36px; }
+.brand-mark svg { display: block; width: 100%; height: 100%; }
 .footer-identity { display: flex; align-items: center; gap: 10px; }
 .footer-identity a { display: inline-flex; flex-shrink: 0; }
 .footer-identity img { display: block; width: 26px; height: 26px; }
