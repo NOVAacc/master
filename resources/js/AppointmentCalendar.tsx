@@ -207,7 +207,7 @@ export default function AppointmentCalendar({
                         : `${dayLabel(first, { day: "numeric", month: "short" })} — ${dayLabel(addDays(first, 6), { day: "numeric", month: "short", year: "numeric" })}`}
                 </h3>
                 <div
-                    className="display-switch"
+                    className="display-switch text-switch"
                     role="group"
                     aria-label="Период календаря"
                 >

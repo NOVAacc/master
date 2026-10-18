@@ -1078,6 +1078,18 @@ h2 {
     justify-content: center;
     gap: 6px;
 }
+.display-switch.text-switch {
+    flex-shrink: 0;
+}
+.display-switch.text-switch button {
+    width: auto;
+    min-width: 64px;
+    flex: 1 0 auto;
+    padding: 0 14px;
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+}
 .display-switch button .icon {
     width: 14px;
     height: 14px;

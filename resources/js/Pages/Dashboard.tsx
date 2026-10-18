@@ -521,7 +521,7 @@ export default function Dashboard({
                         {tab === "appointments" && (
                             <div className="row wrap appointment-view-controls">
                                 <div
-                                    className="display-switch"
+                                    className="display-switch text-switch"
                                     role="group"
                                     aria-label="Вид записей"
                                 >
