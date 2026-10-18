@@ -91,6 +91,12 @@ def run(args):
             with urllib.request.urlopen(url + '/index.php/login') as response:
                 page = response.read().decode()
                 assert '/build/assets/' in page and 'Auth' in page
+            for asset in ['brand/bosh-mark.svg', 'brand/bosh-social.png', 'brand/bosh-icon-192.png',
+                          'brand/bosh-icon-512.png', 'favicon.svg', 'favicon.ico', 'favicon-16.png',
+                          'favicon-32.png', 'apple-touch-icon.png', 'site.webmanifest']:
+                with urllib.request.urlopen(url + '/' + asset) as response:
+                    assert response.status == 200
+                    assert response.read() == (first / 'public' / asset).read_bytes(), asset
             assert not (site / '.env').exists() and not (site / 'vendor').exists()
             assert list((private / 'backups').glob('*/database.sql'))
 

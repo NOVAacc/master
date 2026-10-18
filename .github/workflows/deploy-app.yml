@@ -145,6 +145,9 @@ jobs:
             echo 'Old canonical hostname remains in generated links' >&2
             exit 1
           fi
+          for ASSET in brand/bosh-mark.svg brand/bosh-social.png brand/bosh-icon-192.png brand/bosh-icon-512.png favicon.svg favicon.ico favicon-16.png favicon-32.png apple-touch-icon.png site.webmanifest; do
+            curl --fail --silent --show-error --max-time 30 "https://bosh.kg/$ASSET" -o "/tmp/bosh-$(basename "$ASSET")"
+          done
           for PRIVATE in .env vendor/autoload.php storage/logs/laravel.log; do
             CODE=$(curl --silent --show-error --max-time 30 -o /dev/null -w '%{http_code}' "https://bosh.kg/$PRIVATE")
             test "$CODE" = 403 || test "$CODE" = 404

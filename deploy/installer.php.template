@@ -245,7 +245,8 @@ try {
     $http->terminate($request, $response);
     $phase = 'activation';
     copyAssets($release.'/public/build', __DIR__.'/build');
-    foreach (['favicon.ico', 'favicon.svg', 'robots.txt'] as $file) if (is_file($release.'/public/'.$file)) writeFile(__DIR__.'/'.$file, file_get_contents($release.'/public/'.$file), 0644);
+    if (is_dir($release.'/public/brand')) copyAssets($release.'/public/brand', __DIR__.'/brand');
+    foreach (['favicon.ico', 'favicon.svg', 'favicon-16.png', 'favicon-32.png', 'apple-touch-icon.png', 'site.webmanifest', 'robots.txt'] as $file) if (is_file($release.'/public/'.$file)) writeFile(__DIR__.'/'.$file, file_get_contents($release.'/public/'.$file), 0644);
     $baseLiteral = var_export($base, true);
     $launcher = '<?php'."\n".'declare(strict_types=1);'."\n".'ini_set(\'display_errors\', \'0\');'."\n".
         'define(\'LARAVEL_START\', microtime(true));'."\n".'$base = '.$baseLiteral.';'."\n".
