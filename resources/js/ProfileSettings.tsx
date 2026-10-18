@@ -51,7 +51,6 @@ export default function ProfileSettings({ master }: { master: Master }) {
         display_name: master.display_name,
         specialty: master.specialty || "",
         bio: master.bio || "",
-        tagline: master.tagline || "",
         instagram_username: master.instagram_username || "",
         profile_theme: master.profile_theme || "graphite",
         phone: master.phone || "",
@@ -266,17 +265,6 @@ export default function ProfileSettings({ master }: { master: Master }) {
                                 f.setData("specialty", e.target.value)
                             }
                         />
-                    </Field>
-                    <Field label="Короткий заголовок">
-                        <input
-                            maxLength={160}
-                            placeholder="Естественный взгляд, внимание к деталям"
-                            value={f.data.tagline}
-                            onChange={(e) =>
-                                f.setData("tagline", e.target.value)
-                            }
-                        />
-                        <small>Одна короткая фраза под специализацией.</small>
                     </Field>
                     <Field label="О себе">
                         <textarea
