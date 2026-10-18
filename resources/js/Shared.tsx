@@ -35,9 +35,7 @@ export function Brand() {
     return (
         <Link href="/" className="brand" aria-label="BOSH — главная страница">
             <span className="brand-mark" aria-hidden="true">
-                <svg viewBox="0 0 32 32" fill="none" focusable="false">
-                    <path d="M10 7h7a5 5 0 0 1 0 10h-7V7Zm0 10h8a4 4 0 0 1 0 8h-8V17Z" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-                </svg>
+                <img src="/brand/bosh-mark.svg?v=1" width="36" height="36" alt="" />
             </span>
             BOSH
         </Link>

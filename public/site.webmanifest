@@ -1,0 +1,23 @@
+{
+  "name": "BOSH — онлайн-запись к мастерам",
+  "short_name": "BOSH",
+  "lang": "ru",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#202321",
+  "icons": [
+    {
+      "src": "/brand/bosh-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/bosh-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

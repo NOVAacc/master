@@ -38,7 +38,10 @@ export default function DisplayModeFooter() {
     }
     return (
         <footer className="site-footer">
-            <p className="muted small">BOSH — время для вашего дела.</p>
+            <div className="footer-identity">
+                <a href="/" aria-label="BOSH — главная страница"><img src="/brand/bosh-mark.svg?v=1" width="26" height="26" alt="" /></a>
+                <p className="muted small">BOSH — время для вашего дела.</p>
+            </div>
             <div
                 className="display-switch"
                 role="group"
