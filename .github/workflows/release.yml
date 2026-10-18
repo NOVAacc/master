@@ -1,4 +1,4 @@
-name: Build server release
+name: BOSH — проверка и публикация
 on:
   workflow_dispatch:
   push:
@@ -16,10 +16,13 @@ on:
       - 'vite.config.js'
       - 'deploy/**'
       - 'tests/**'
-      - '.github/workflows/release.yml'
-      - '.github/workflows/deploy-app.yml'
+      - '.github/workflows/**'
 permissions:
   contents: read
+  actions: read
+concurrency:
+  group: bosh-release-pipeline
+  cancel-in-progress: false
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -52,7 +55,16 @@ jobs:
       - run: cp .env.example .env && php artisan key:generate
       - run: npm ci --no-audit --no-fund
       - run: npm run check && npm run build
+      - name: Prepare isolated test database
+        run: php -r '(new PDO("mysql:host=127.0.0.1", "root", "testing"))->exec("CREATE DATABASE master_testing");'
       - run: php artisan test --compact
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: master_testing
+          DB_USERNAME: root
+          DB_PASSWORD: testing
       - name: Install production dependencies
         run: composer install --no-dev --no-interaction --prefer-dist --no-progress --optimize-autoloader
       - name: Build private release archive
@@ -77,3 +89,161 @@ jobs:
           name: master-server-release
           path: /tmp/release/
           retention-days: 14
+
+  publish:
+    needs: release
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      FTP_USER: ${{ secrets.BOSH_FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.BOSH_FTP_PASSWORD }}
+      MASTER_DB_PASSWORD: ${{ secrets.MASTER_DB_PASSWORD }}
+      NIKITA_OTP_API_KEY: ${{ secrets.nikita_api }}
+      BOSH_SMTP_HOST: mail.bosh.kg
+      BOSH_SMTP_PASSWORD: ${{ secrets.BOSH_SMTP_PASSWORD }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Select tested release
+        id: source
+        run: |
+          set -euo pipefail
+          test -n "$FTP_USER"
+          test -n "$FTP_PASSWORD"
+          test -n "$MASTER_DB_PASSWORD"
+          test -n "$NIKITA_OTP_API_KEY"
+          echo "run_id=$GITHUB_RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.source.outputs.sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: master-server-release
+          path: /tmp/release
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: openssl
+          coverage: none
+      - name: Verify new BOSH web root is writable using the dedicated FTP account
+        run: |
+          set -euo pipefail
+          test -n "$FTP_USER" && test -n "$FTP_PASSWORD"
+          # Reject a misconfigured FTP chroot. A random probe must be accessible
+          # from bosh.kg itself, NOT from the old edu.china.kg site.
+          PROBE="bosh-deploy-probe-$(openssl rand -hex 16).txt"
+          VALUE=$(openssl rand -hex 32)
+          printf '%s' "$VALUE" > "/tmp/$PROBE"
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
+          timeout 90s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set net:timeout 20
+          set net:max-retries 1
+          set ftp:ssl-auth TLS
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          put /tmp/$PROBE -o $PROBE
+          bye
+          EOF
+          trap 'timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 -e "set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate true; rm -f $PROBE; bye" || true; rm -f "/tmp/$PROBE"' EXIT
+          RECEIVED=$(curl --fail --silent --show-error --max-time 30 "https://bosh.kg/$PROBE")
+          test "$RECEIVED" = "$VALUE"
+          # Must NOT be the old site directory: keep both deployment roots separate.
+          OLD_CODE=$(curl --silent --show-error --max-time 20 -o /dev/null -w '%{http_code}' "https://edu.china.kg/$PROBE")
+          test "$OLD_CODE" != 200
+      - name: Prepare encrypted, expiring installation
+        run: |
+          set -euo pipefail
+          cd /tmp/release
+          sha256sum --check master-server.zip.sha256
+          cd "$GITHUB_WORKSPACE"
+          python3 deploy/prepare-install.py /tmp/release/master-server.zip /tmp/master-install \
+            --revision '${{ steps.source.outputs.sha }}' \
+            --release '${{ steps.source.outputs.sha }}-${{ github.run_id }}-${{ github.run_attempt }}' \
+            --url https://bosh.kg \
+            --site-root /home/n66843/public_html/bosh.kg
+          python3 - <<'PY'
+          import json, os
+          n = json.load(open('/tmp/master-install/names.json'))
+          with open(os.environ['GITHUB_ENV'], 'a') as f:
+              f.write('INSTALLER_NAME='+n['installer']+'\nUPLOAD_NAME='+n['upload']+'\n')
+          PY
+      - name: Upload encrypted release and one-time installer
+        run: |
+          set -euo pipefail
+          timeout 180s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set net:timeout 30
+          set net:max-retries 1
+          set ftp:ssl-auth TLS
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          put /tmp/master-install/$UPLOAD_NAME -o $UPLOAD_NAME
+          put /tmp/master-install/$INSTALLER_NAME -o $INSTALLER_NAME
+          bye
+          EOF
+      - name: Install privately, back up database, migrate and activate
+        run: |
+          set -euo pipefail
+          CODE=$(curl --silent --show-error --max-time 180 -w '%{http_code}' \
+            -H @/tmp/master-install/auth-header.txt -H 'Content-Type: application/json' \
+            --data-binary @/tmp/master-install/request.json \
+            "https://bosh.kg/$INSTALLER_NAME" -o /tmp/install-result.json)
+          cat /tmp/install-result.json
+          test "$CODE" = 200
+          python3 - <<'PY'
+          import json
+          assert json.load(open('/tmp/install-result.json'))['status'] == 'activated'
+          PY
+          echo 'APP_ACTIVATED=true' >> "$GITHUB_ENV"
+      - name: Verify canonical BOSH URL after activation
+        run: |
+          set -euo pipefail
+          for PAGE in login register up; do
+            curl --fail --silent --show-error --max-time 30 "https://bosh.kg/$PAGE" -o "/tmp/bosh-new-$PAGE.html"
+          done
+          grep -q '/build/assets/' /tmp/bosh-new-login.html
+          grep -q 'Auth' /tmp/bosh-new-login.html
+          # Absolute links must now use the new canonical domain, not the old hostname.
+          if grep -q 'https://edu.china.kg/m/' /tmp/bosh-new-login.html; then
+            echo 'Old canonical hostname remains in generated links' >&2
+            exit 1
+          fi
+          for ASSET in brand/bosh-mark.svg brand/bosh-social.png brand/bosh-icon-192.png brand/bosh-icon-512.png favicon.svg favicon.ico favicon-16.png favicon-32.png apple-touch-icon.png site.webmanifest; do
+            curl --fail --silent --show-error --max-time 30 "https://bosh.kg/$ASSET" -o "/tmp/bosh-$(basename "$ASSET")"
+          done
+          for PRIVATE in .env vendor/autoload.php storage/logs/laravel.log; do
+            CODE=$(curl --silent --show-error --max-time 30 -o /dev/null -w '%{http_code}' "https://bosh.kg/$PRIVATE")
+            test "$CODE" = 403 || test "$CODE" = 404
+          done
+      - name: Roll back application if public verification failed
+        if: failure() && env.APP_ACTIVATED == 'true'
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 120 \
+            -H @/tmp/master-install/auth-header.txt -H 'Content-Type: application/json' \
+            --data-binary @/tmp/master-install/rollback.json "https://bosh.kg/$INSTALLER_NAME"
+      - name: Remove installer and encrypted upload
+        if: always() && env.INSTALLER_NAME != ''
+        run: |
+          set -euo pipefail
+          timeout 90s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set net:timeout 15
+          set net:max-retries 1
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          rm -f $INSTALLER_NAME
+          rm -f $UPLOAD_NAME
+          bye
+          EOF
+          rm -rf /tmp/master-install

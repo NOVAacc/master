@@ -1,9 +1,6 @@
 name: Populate Aizada service profile
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/populate-aizada.yml', '.github/ops/populate-aizada.php.template']
 permissions:
   contents: read
 concurrency:

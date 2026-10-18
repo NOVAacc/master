@@ -1,14 +1,6 @@
 name: Publish BOSH brand assets
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'public/brand/**'
-      - 'public/favicon*'
-      - 'public/apple-touch-icon.png'
-      - 'public/site.webmanifest'
-      - '.github/workflows/deploy-brand.yml'
 permissions:
   contents: read
 concurrency:

@@ -1,9 +1,5 @@
 name: Deploy Master application
 on:
-  workflow_run:
-    workflows: ['Build server release']
-    types: [completed]
-    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
