@@ -430,6 +430,18 @@ export default function Dashboard({
                         </button>
                     ))}
                 </nav>
+                <div className="sidebar-settings">
+                    <button
+                        type="button"
+                        className={tab === "settings" ? "active" : ""}
+                        aria-current={tab === "settings" ? "page" : undefined}
+                        onClick={() => setTab("settings")}
+                    >
+                        <Icon name="settings" />
+                        <span>Настройки профиля</span>
+                        <span className="nav-chevron" aria-hidden="true">›</span>
+                    </button>
+                </div>
                 <div className="sidebar-bottom">
                     <a href={publicUrl} target="_blank" rel="noreferrer">
                         Открыть страницу ↗
@@ -504,7 +516,8 @@ export default function Dashboard({
                                     appointments: "Записи клиентов",
                                     services: "Ваши услуги",
                                     schedule: "Рабочая неделя",
-                                    profile: "Публичная страница",
+                                    profile: "Моя страница",
+                                    settings: "Настройки профиля",
                                 }[tab]
                             }
                         </h2>
@@ -619,6 +632,9 @@ export default function Dashboard({
                     {tab === "schedule" && <Schedule hours={hours} />}
                     {tab === "profile" && (
                         <>
+                            <p className="muted">
+                                Это ссылка на вашу страницу, которую видят клиенты.
+                            </p>
                             <p className="link-box">
                                 <a
                                     href={publicUrl}
@@ -628,6 +644,13 @@ export default function Dashboard({
                                     {publicUrl} ↗
                                 </a>
                             </p>
+                            <button type="button" className="ghost" onClick={() => setTab("settings")}>
+                                Настроить профиль
+                            </button>
+                        </>
+                    )}
+                    {tab === "settings" && (
+                        <>
                             <ProfileSettings master={master} />
                             {security.emailVerified && security.passwordSet && (
                                 <AccountSecurity status={security} />
