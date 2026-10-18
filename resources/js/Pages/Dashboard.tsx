@@ -467,9 +467,6 @@ export default function Dashboard({
                     <MasterAvatar master={master} />
                 </header>
                 <Notice />
-                {(!security.emailVerified || !security.passwordSet) && (
-                    <AccountSecurity status={security} />
-                )}
                 {!whatsappAutomatic && (
                     <p className="integration-note">
                         WhatsApp: автоматическая отправка ещё не подключена.
@@ -644,19 +641,10 @@ export default function Dashboard({
                                     {publicUrl} ↗
                                 </a>
                             </p>
-                            <button type="button" className="ghost" onClick={() => setTab("settings")}>
-                                Настроить профиль
-                            </button>
-                        </>
-                    )}
-                    {tab === "settings" && (
-                        <>
                             <ProfileSettings master={master} />
-                            {security.emailVerified && security.passwordSet && (
-                                <AccountSecurity status={security} />
-                            )}
                         </>
                     )}
+                    {tab === "settings" && <AccountSecurity status={security} />}
                 </section>
             </main>
         </div>
