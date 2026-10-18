@@ -96,7 +96,6 @@ class DashboardController extends Controller
             'display_name' => ['required', 'string', 'max:100'],
             'specialty' => ['nullable', 'string', 'max:150'],
             'bio' => ['nullable', 'string', 'max:2000'],
-            'tagline' => ['nullable', 'string', 'max:160'],
             'instagram_username' => ['nullable', 'string', 'regex:/^(?!\.)(?!.*\.\.)(?!.*\.$)[A-Za-z0-9_.]{1,30}$/'],
             'profile_theme' => ['sometimes', 'in:graphite,sand,sage,lilac'],
             'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', new ProfileImage, 'max:2048', 'dimensions:max_width=4096,max_height=4096'],
