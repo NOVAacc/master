@@ -46,13 +46,13 @@ jobs:
           put public/brand/bosh-mark-v2.svg -o brand/bosh-mark-v2.svg
           put public/brand/bosh-icon-192.png -o brand/bosh-icon-192.png
           put public/brand/bosh-icon-512.png -o brand/bosh-icon-512.png
-          put public/brand/bosh-social.png -o brand/bosh-social.png
           put public/favicon.svg -o favicon.svg
           put public/favicon.ico -o favicon.ico
           put public/favicon-16.png -o favicon-16.png
           put public/favicon-32.png -o favicon-32.png
           put public/apple-touch-icon.png -o apple-touch-icon.png
           put public/site.webmanifest -o site.webmanifest
+          put public/brand/bosh-social.png -o brand/bosh-social.png
           bye
           EOF
       - name: Verify published logo and icons match the repository
