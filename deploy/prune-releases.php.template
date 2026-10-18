@@ -1,0 +1,85 @@
+<?php
+declare(strict_types=1);
+ini_set('display_errors', '0');
+@set_time_limit(180);
+header('Content-Type: application/json');
+header('Cache-Control: no-store');
+const CLEANUP_BASE = '__BASE__';
+const CLEANUP_TOKEN = '__TOKEN_HASH__';
+const CLEANUP_EXPIRES = __EXPIRES__;
+function failCleanup(string $message): never { throw new RuntimeException($message); }
+function releaseName(string $name): bool { return preg_match('/^[a-f0-9]{40}-[0-9]+-[0-9]+$/D', $name) === 1; }
+function releasePath(string $path, string $root): string {
+    $name = basename($path);
+    if (!releaseName($name) || $path !== $root.'/'.$name || is_link($path) || realpath($path) !== $path) failCleanup('unsafe_release_path');
+    return $path;
+}
+function releaseBytes(string $path): int {
+    $bytes = 0;
+    foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS)) as $entry) {
+        if (!$entry->isLink() && $entry->isFile()) $bytes += $entry->getSize();
+    }
+    return $bytes;
+}
+function removeRelease(string $path): void {
+    $walk = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
+    foreach ($walk as $entry) {
+        $ok = $entry->isLink() || !$entry->isDir() ? unlink($entry->getPathname()) : rmdir($entry->getPathname());
+        if (!$ok) failCleanup('release_removal_failed');
+    }
+    if (!rmdir($path)) failCleanup('release_removal_failed');
+}
+$lock = null;
+try {
+    if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || time() > CLEANUP_EXPIRES ||
+        !hash_equals(CLEANUP_TOKEN, hash('sha256', $_SERVER['HTTP_X_BOSH_CLEANUP'] ?? ''))) {
+        http_response_code(403); echo '{"error":"forbidden"}'; exit;
+    }
+    $input = json_decode(file_get_contents('php://input'), true);
+    $action = $input['action'] ?? '';
+    if (!in_array($action, ['inspect', 'prune'], true)) failCleanup('invalid_action');
+    $base = CLEANUP_BASE;
+    if (!is_dir($base)) { echo '{"status":"not_installed"}'; exit; }
+    if (realpath($base) !== $base || !is_file($base.'/.master-managed')) failCleanup('unmanaged_application');
+    $lock = fopen($base.'/deploy.lock', 'c');
+    if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) failCleanup('deployment_busy');
+    $root = $base.'/releases';
+    if (is_link($root) || realpath($root) !== $root || !is_link($base.'/current')) failCleanup('invalid_release_root');
+    $current = realpath($base.'/current');
+    if (!$current) failCleanup('missing_current');
+    releasePath($current, $root);
+    $statePath = $base.'/deployments/'.basename($current).'.json';
+    if (!is_file($statePath) || is_link($statePath)) failCleanup('missing_current_deployment_record');
+    $state = json_decode(file_get_contents($statePath), true);
+    if (!is_array($state) || ($state['status'] ?? '') !== 'activated' || !array_key_exists('previous', $state)) failCleanup('invalid_current_deployment_record');
+    $keep = [$current];
+    if ($state['previous'] !== null) {
+        if (!is_string($state['previous'])) failCleanup('invalid_previous');
+        $keep[] = releasePath($state['previous'], $root);
+    }
+    $candidates = [];
+    foreach (new DirectoryIterator($root) as $entry) {
+        if ($entry->isDot() || $entry->isLink() || !$entry->isDir() || !releaseName($entry->getFilename())) continue;
+        $path = releasePath($entry->getPathname(), $root);
+        if (!in_array($path, $keep, true)) $candidates[] = ['name' => $entry->getFilename(), 'bytes' => releaseBytes($path)];
+    }
+    $removed = [];
+    if ($action === 'prune') {
+        foreach ($candidates as $candidate) {
+            $path = releasePath($root.'/'.$candidate['name'], $root);
+            if (in_array($path, $keep, true) || realpath($base.'/current') !== $current) failCleanup('current_changed');
+            removeRelease($path);
+            $removed[] = $candidate['name'];
+        }
+    }
+    echo json_encode(['status' => $action === 'prune' ? 'pruned' : 'inspected',
+        'kept' => array_map('basename', $keep), 'candidates' => $candidates,
+        'removed_count' => count($removed), 'removed' => $removed,
+        'bytes' => array_sum(array_column($candidates, 'bytes'))], JSON_THROW_ON_ERROR);
+} catch (Throwable $error) {
+    http_response_code(500);
+    $safe = $error instanceof RuntimeException ? $error->getMessage() : 'cleanup_failed';
+    echo json_encode(['error' => $safe]);
+} finally {
+    if (is_resource($lock)) { flock($lock, LOCK_UN); fclose($lock); }
+}

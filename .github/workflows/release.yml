@@ -47,6 +47,8 @@ jobs:
           php-version: '8.3'
           extensions: mbstring, dom, pdo_sqlite, pdo_mysql, zip
           coverage: none
+      - name: Test safe release retention
+        run: python3 deploy/test-prune-releases.py
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -127,6 +129,54 @@ jobs:
           php-version: '8.3'
           extensions: openssl
           coverage: none
+      - name: Inspect and prune obsolete generated releases
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
+          python3 - <<'PY'
+          import hashlib, os, secrets, time
+          from pathlib import Path
+          token = secrets.token_hex(32)
+          name = 'bosh-prune-' + secrets.token_hex(16) + '.php'
+          script = Path('deploy/prune-releases.php.template').read_text()
+          script = script.replace('__BASE__', '/home/n66843/master-app').replace('__TOKEN_HASH__', hashlib.sha256(token.encode()).hexdigest()).replace('__EXPIRES__', str(int(time.time()) + 1800))
+          Path('/tmp/bosh-prune.php').write_text(script)
+          Path('/tmp/bosh-prune-header.txt').write_text('X-Bosh-Cleanup: ' + token)
+          Path('/tmp/bosh-prune-header.txt').chmod(0o600)
+          Path('/tmp/bosh-prune-name.txt').write_text(name)
+          with open(os.environ['GITHUB_ENV'], 'a') as env:
+              env.write('CLEANUP_NAME=' + name + '\n')
+          PY
+          CLEANUP_NAME=$(cat /tmp/bosh-prune-name.txt)
+          timeout 60s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set net:timeout 15
+          set net:max-retries 1
+          set ftp:ssl-auth TLS
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          rm -f brand/bosh-icon-512.png
+          put /tmp/bosh-prune.php -o $CLEANUP_NAME
+          bye
+          EOF
+          curl --fail --silent --show-error --max-time 120 -H @/tmp/bosh-prune-header.txt -H 'Content-Type: application/json' --data '{"action":"inspect"}' "https://bosh.kg/$CLEANUP_NAME" -o /tmp/bosh-prune-plan.json
+          cat /tmp/bosh-prune-plan.json
+          curl --fail --silent --show-error --max-time 180 -H @/tmp/bosh-prune-header.txt -H 'Content-Type: application/json' --data '{"action":"prune"}' "https://bosh.kg/$CLEANUP_NAME" -o /tmp/bosh-prune-result.json
+          cat /tmp/bosh-prune-result.json
+          timeout 60s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set net:timeout 15
+          set net:max-retries 1
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          put public/brand/bosh-icon-512.png -o brand/bosh-icon-512.png
+          bye
+          EOF
       - name: Verify new BOSH web root is writable using the dedicated FTP account
         run: |
           set -euo pipefail
@@ -223,6 +273,11 @@ jobs:
             CODE=$(curl --silent --show-error --max-time 30 -o /dev/null -w '%{http_code}' "https://bosh.kg/$PRIVATE")
             test "$CODE" = 403 || test "$CODE" = 404
           done
+      - name: Keep only active and rollback releases after verification
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 180 -H @/tmp/bosh-prune-header.txt -H 'Content-Type: application/json' --data '{"action":"prune"}' "https://bosh.kg/$CLEANUP_NAME" -o /tmp/bosh-prune-after.json
+          cat /tmp/bosh-prune-after.json
       - name: Roll back application if public verification failed
         if: failure() && env.APP_ACTIVATED == 'true'
         run: |
@@ -247,3 +302,19 @@ jobs:
           bye
           EOF
           rm -rf /tmp/master-install
+      - name: Remove temporary release cleanup endpoint
+        if: always() && env.CLEANUP_NAME != ''
+        run: |
+          set -euo pipefail
+          timeout 60s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          set cmd:fail-exit true
+          set net:timeout 15
+          set net:max-retries 1
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          cd /
+          rm -f $CLEANUP_NAME
+          bye
+          EOF
+          rm -f /tmp/bosh-prune.php /tmp/bosh-prune-header.txt
