@@ -14,6 +14,7 @@ export type Master = {
     bio: string;
     phone: string;
     address: string;
+    address_url?: string | null;
     timezone: string;
     booking_enabled: boolean;
     auto_confirm: boolean;

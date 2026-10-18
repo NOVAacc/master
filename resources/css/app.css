@@ -1225,6 +1225,10 @@ h2 {
     font-weight: 600;
 }
 .booking-service-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
     margin-left: auto;
     flex-shrink: 0;
     font-size: 12px;
@@ -2264,4 +2268,41 @@ h2 {
         padding-top: 8px;
         border-top: 1px solid #e8e8e8;
     }
+}
+
+.booking-service-duration {
+    font-size: 11px;
+    font-weight: 400;
+    color: #737373;
+}
+.profile-address {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 16px;
+    padding: 14px;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    background: #f7f7f7;
+    color: #353535;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+.profile-address > svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.profile-address > div { min-width: 0; }
+.profile-address-label {
+    display: block;
+    margin-bottom: 5px;
+    color: #737373;
+    font-size: 11px;
+}
+.profile-address a { display: block; font-weight: 600; }
+.profile-address-map {
+    display: block;
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 400;
 }

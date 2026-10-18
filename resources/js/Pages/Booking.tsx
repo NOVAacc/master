@@ -1,4 +1,5 @@
 import PhoneInput from "../PhoneInput";
+import Icon from "../Icon";
 import { Head, router, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import ProfileIdentity from "../ProfileIdentity";
@@ -74,7 +75,20 @@ export default function Booking(p: Props) {
                     <ProfileIdentity master={p.master} />
                     <div className="profile-about">
                         <p>{p.master.bio}</p>
-                        <p className="muted">{p.master.address}</p>
+                        {p.master.address && (
+                            <div className="profile-address">
+                                <Icon name="location" />
+                                <div>
+                                    <span className="profile-address-label">Адрес приёма</span>
+                                    {p.master.address_url ? (
+                                        <a href={p.master.address_url} target="_blank" rel="noopener noreferrer">
+                                            {p.master.address}
+                                            <span className="profile-address-map">Открыть в 2ГИС ↗</span>
+                                        </a>
+                                    ) : <span>{p.master.address}</span>}
+                                </div>
+                            </div>
+                        )}
                         <hr />
                         <small>
                             Время указано для часового пояса
@@ -220,15 +234,16 @@ export default function Booking(p: Props) {
                                                     {s.description}
                                                 </span>
                                             )}
-                                            <span className="muted small">
-                                                {s.duration_minutes} мин
-                                            </span>
+
                                         </span>
                                         <span className="booking-service-price">
                                             {s.price_som.toLocaleString(
                                                 "ru-RU",
                                             )}{" "}
                                             сом
+                                            <span className="booking-service-duration">
+                                                {s.duration_minutes} мин
+                                            </span>
                                         </span>
                                     </label>
                                 ))}

@@ -104,6 +104,21 @@ class DashboardController extends Controller
             'remove_cover' => ['sometimes', 'boolean'],
             'phone' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string', 'max:255'],
+            'address_url' => ['nullable', 'string', 'max:2048', 'url:https',
+                function ($attribute, $value, $fail) {
+                    $url = parse_url($value);
+                    $host = strtolower($url['host'] ?? '');
+                    $allowed = false;
+                    foreach (['2gis.kg', '2gis.ru', '2gis.com', '2gis.kz', '2gis.uz', '2gis.ae'] as $domain) {
+                        if ($host === $domain || str_ends_with($host, '.'.$domain)) {
+                            $allowed = true;
+                            break;
+                        }
+                    }
+                    if (! $allowed || isset($url['user']) || isset($url['pass']) || isset($url['port'])) {
+                        $fail('Вставьте ссылку HTTPS из 2ГИС.');
+                    }
+                }],
             'timezone' => ['required', 'timezone'],
             'booking_enabled' => ['required', 'boolean'],
             'auto_confirm' => ['required', 'boolean'],

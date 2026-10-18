@@ -55,6 +55,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
         profile_theme: master.profile_theme || "graphite",
         phone: master.phone || "",
         address: master.address || "",
+        address_url: master.address_url || "",
         timezone: master.timezone,
         booking_enabled: master.booking_enabled,
         auto_confirm: master.auto_confirm,
@@ -304,6 +305,19 @@ export default function ProfileSettings({ master }: { master: Master }) {
                                 f.setData("address", e.target.value)
                             }
                         />
+                    </Field>
+                    <Field label="Ссылка на адрес в 2ГИС">
+                        <input
+                            type="url"
+                            maxLength={2048}
+                            placeholder="https://2gis.kg/…"
+                            autoCapitalize="none"
+                            autoCorrect="off"
+                            spellCheck={false}
+                            value={f.data.address_url}
+                            onChange={(e) => f.setData("address_url", e.target.value)}
+                        />
+                        <small>Вставьте ссылку из 2ГИС — клиент сможет открыть карту нажатием на адрес.</small>
                     </Field>
                 </section>
                 <details className="profile-advanced">

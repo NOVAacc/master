@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MasterProfile extends Model
 {
-    protected $fillable = ['user_id', 'slug', 'display_name', 'specialty', 'bio', 'phone', 'address', 'timezone', 'booking_enabled', 'auto_confirm', 'whatsapp_notifications', 'avatar_path', 'cover_path', 'tagline', 'instagram_username', 'profile_theme'];
+    protected $fillable = ['user_id', 'slug', 'display_name', 'specialty', 'bio', 'phone', 'address', 'address_url', 'timezone', 'booking_enabled', 'auto_confirm', 'whatsapp_notifications', 'avatar_path', 'cover_path', 'tagline', 'instagram_username', 'profile_theme'];
 
     protected $casts = ['booking_enabled' => 'boolean', 'auto_confirm' => 'boolean', 'whatsapp_notifications' => 'boolean'];
 
