@@ -91,12 +91,6 @@ export default function Booking(p: Props) {
                             </div>
                         )}
                         <WorkGallery images={[p.master.work1_url, p.master.work2_url, p.master.work3_url]} />
-                        <hr />
-                        <small>
-                            Время указано для часового пояса
-                            <br />
-                            {p.master.timezone}
-                        </small>
                     </div>
                 </aside>
                 <section className="panel">
