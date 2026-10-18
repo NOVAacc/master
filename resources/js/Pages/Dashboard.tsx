@@ -72,42 +72,37 @@ function Schedule({ hours }: { hours: Hour[] }) {
                         </label>
                         {h ? (
                             <div className="schedule-day-fields">
-                                <div className="row">
-                                    <label className="schedule-time-label">
-                                        <span className="muted small">С</span>
-                                        <input aria-label={day + ": начало"} required type="time"
+                                <div className="schedule-hours-line">
+                                    <span className="schedule-range-label">Приём</span>
+                                    <div className="schedule-time-range">
+                                        <input aria-label={day + ": начало работы"} required type="time"
                                             value={h.starts_at} onChange={e => updateDay(weekday, {starts_at: e.target.value})} />
-                                    </label>
-                                    <label className="schedule-time-label">
-                                        <span className="muted small">До</span>
-                                        <input aria-label={day + ": окончание"} required type="time"
+                                        <span aria-hidden="true">–</span>
+                                        <input aria-label={day + ": окончание работы"} required type="time"
                                             value={h.ends_at} onChange={e => updateDay(weekday, {ends_at: e.target.value})} />
-                                    </label>
+                                    </div>
                                 </div>
-                                <label className="check schedule-lunch-switch">
-                                    <input type="checkbox" checked={lunch} onChange={e => updateDay(weekday,
-                                        e.target.checked
-                                            ? {break_starts_at: "13:00", break_ends_at: "14:00"}
-                                            : {break_starts_at: null, break_ends_at: null}
-                                    )} />
-                                    Обеденный перерыв
-                                </label>
-                                {lunch && (
-                                    <div className="row schedule-lunch-times">
-                                        <label className="schedule-time-label">
-                                            <span className="muted small">Начало обеда</span>
-                                            <input type="time" required aria-label={day + ": начало обеда"}
+                                <div className="schedule-break-line">
+                                    <label className="check schedule-lunch-switch">
+                                        <input type="checkbox" checked={lunch} onChange={e => updateDay(weekday,
+                                            e.target.checked
+                                                ? {break_starts_at: "13:00", break_ends_at: "14:00"}
+                                                : {break_starts_at: null, break_ends_at: null}
+                                        )} />
+                                        Перерыв
+                                    </label>
+                                    {lunch && (
+                                        <div className="schedule-time-range">
+                                            <input type="time" required aria-label={day + ": начало перерыва"}
                                                 value={h.break_starts_at ?? ""}
                                                 onChange={e => updateDay(weekday, {break_starts_at: e.target.value})} />
-                                        </label>
-                                        <label className="schedule-time-label">
-                                            <span className="muted small">Конец обеда</span>
-                                            <input type="time" required aria-label={day + ": конец обеда"}
+                                            <span aria-hidden="true">–</span>
+                                            <input type="time" required aria-label={day + ": конец перерыва"}
                                                 value={h.break_ends_at ?? ""}
                                                 onChange={e => updateDay(weekday, {break_ends_at: e.target.value})} />
-                                        </label>
-                                    </div>
-                                )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         ) : <span className="muted">Выходной</span>}
                     </div>

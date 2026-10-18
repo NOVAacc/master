@@ -2231,42 +2231,85 @@ h2 {
     box-shadow: none;
     background: transparent;
 }
-.schedule-day {
-    align-items: flex-start;
+.schedule-row.schedule-day {
+    display: grid;
+    grid-template-columns: 130px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px 20px;
+    padding: 12px 0;
 }
+.schedule-day > .check {
+    margin: 0;
+    align-items: center;
+    font-size: 13px;
+}
+.schedule-day .check input { margin: 0; }
 .schedule-day-fields {
-    display: grid;
-    gap: 9px;
-    width: min(100%, 390px);
-}
-.schedule-day-fields > .row,
-.schedule-lunch-times {
     display: flex;
-    gap: 12px;
-    align-items: end;
+    align-items: center;
     flex-wrap: wrap;
-}
-.schedule-time-label {
-    flex: 1 1 130px;
-    display: grid;
-    gap: 5px;
+    gap: 10px 24px;
     min-width: 0;
 }
-.schedule-time-label input {
+.schedule-hours-line,
+.schedule-break-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+}
+.schedule-range-label {
+    font-size: 12px;
+    color: #737373;
+}
+.schedule-time-range {
+    display: grid;
+    grid-template-columns: 94px 10px 94px;
+    align-items: center;
+    gap: 5px;
+}
+.schedule-time-range > span {
+    text-align: center;
+    color: #aaa;
+}
+.schedule-time-range input {
     width: 100%;
     min-width: 0;
+    height: 36px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.2;
 }
-.schedule-lunch-switch {
-    font-size: 13px;
-    color: #475569;
+.schedule-day .schedule-lunch-switch {
+    margin: 0;
+    align-items: center;
+    font-size: 12px;
+    color: #737373;
+    white-space: nowrap;
 }
-.schedule-lunch-times {
-    padding: 12px;
-    border: 1px solid #e4e8ed;
-    background: #f7f9fc;
-    border-radius: 12px;
+@container (max-width: 700px) {
+    .schedule-row.schedule-day {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+    }
+    .schedule-day-fields {
+        grid-column: 1 / -1;
+        display: grid;
+        gap: 8px;
+    }
+    .schedule-hours-line,
+    .schedule-break-line {
+        display: grid;
+        grid-template-columns: 92px minmax(0, 1fr);
+        gap: 8px;
+    }
+    .schedule-time-range {
+        grid-template-columns: minmax(0, 1fr) 10px minmax(0, 1fr);
+        gap: 4px;
+    }
+    .schedule-time-range input { padding: 5px; }
 }
-
 
 /* A separate, quiet navigation group for the master's profile settings. */
 .sidebar nav.sidebar-settings {
