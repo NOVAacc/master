@@ -20,7 +20,6 @@ export type Master = {
     whatsapp_notifications: boolean;
     avatar_url?: string | null;
     cover_url?: string | null;
-    tagline?: string | null;
     instagram_username?: string | null;
     instagram_url?: string | null;
     profile_theme?: string | null;
