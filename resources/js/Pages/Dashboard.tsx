@@ -430,7 +430,7 @@ export default function Dashboard({
                         </button>
                     ))}
                 </nav>
-                <div className="sidebar-settings">
+                <nav className="sidebar-settings" aria-label="Настройки">
                     <button
                         type="button"
                         className={tab === "settings" ? "active" : ""}
@@ -441,7 +441,7 @@ export default function Dashboard({
                         <span>Настройки профиля</span>
                         <span className="nav-chevron" aria-hidden="true">›</span>
                     </button>
-                </div>
+                </nav>
                 <div className="sidebar-bottom">
                     <a href={publicUrl} target="_blank" rel="noreferrer">
                         Открыть страницу ↗
