@@ -41,7 +41,12 @@ jobs:
           set cmd:fail-exit false
           mkdir brand
           set cmd:fail-exit true
-          mput -O brand public/brand/*
+          rm -f brand/bosh-icon-1024.png
+          put public/brand/bosh-mark.svg -o brand/bosh-mark.svg
+          put public/brand/bosh-mark-v2.svg -o brand/bosh-mark-v2.svg
+          put public/brand/bosh-icon-192.png -o brand/bosh-icon-192.png
+          put public/brand/bosh-icon-512.png -o brand/bosh-icon-512.png
+          put public/brand/bosh-social.png -o brand/bosh-social.png
           put public/favicon.svg -o favicon.svg
           put public/favicon.ico -o favicon.ico
           put public/favicon-16.png -o favicon-16.png
@@ -54,7 +59,7 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          for ASSET in brand/bosh-mark.svg brand/bosh-mark-v2.svg brand/bosh-social.png brand/bosh-icon-192.png brand/bosh-icon-512.png brand/bosh-icon-1024.png favicon.svg favicon.ico favicon-16.png favicon-32.png apple-touch-icon.png site.webmanifest; do
+          for ASSET in brand/bosh-mark.svg brand/bosh-mark-v2.svg brand/bosh-social.png brand/bosh-icon-192.png brand/bosh-icon-512.png favicon.svg favicon.ico favicon-16.png favicon-32.png apple-touch-icon.png site.webmanifest; do
             curl --fail --silent --show-error --max-time 30 "https://bosh.kg/$ASSET?verify=$GITHUB_SHA" -o /tmp/bosh-brand-check
             cmp "public/$ASSET" /tmp/bosh-brand-check
           done
