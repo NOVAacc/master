@@ -1245,7 +1245,7 @@ h2 {
 .booking-calendar {
     border: 1px solid #e5e5e5;
     border-radius: 20px;
-    padding: 20px;
+    padding: 14px;
     margin: 12px 0 24px;
     width: 100%;
     max-width: none;
@@ -1257,7 +1257,7 @@ h2 {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     gap: 8px;
 }
 .calendar-heading h3 {
@@ -1300,7 +1300,7 @@ h2 {
     background: none;
     color: #252525;
     border-radius: 12px;
-    aspect-ratio: 1;
+    height: 40px;
     width: 100%;
     font-size: 13px;
     display: flex;
@@ -1341,8 +1341,8 @@ h2 {
     align-items: center;
     gap: 7px;
     border-top: 1px solid #eee;
-    padding-top: 16px;
-    margin-top: 16px;
+    padding-top: 10px;
+    margin-top: 10px;
     font-size: 10px;
     color: #858585;
 }
@@ -1987,6 +1987,16 @@ h2 {
     color: #737373;
     margin: 12px 0 0;
     overflow-wrap: anywhere;
+}
+.profile-social-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+.profile-social-links .instagram-link {
+    margin-top: 0;
 }
 .instagram-link {
     display: inline-flex;

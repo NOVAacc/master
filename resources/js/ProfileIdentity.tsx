@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 export type ProfileIdentityData = {
     display_name: string;
     specialty?: string | null;
+    phone?: string | null;
     avatar_url?: string | null;
     cover_url?: string | null;
     instagram_username?: string | null;
@@ -38,6 +39,10 @@ export default function ProfileIdentity({
 }: {
     master: ProfileIdentityData;
 }) {
+    const phone = (master.phone || "").replace(/\D/g, "");
+    const whatsappUrl = /^[1-9][0-9]{6,14}$/.test(phone)
+        ? `https://wa.me/${phone}`
+        : null;
     return (
         <div
             className={`profile-identity theme-${master.profile_theme || "graphite"}`}
@@ -53,6 +58,7 @@ export default function ProfileIdentity({
                 <p className="profile-specialty">
                     {master.specialty || "Специализация"}
                 </p>
+                <div className="profile-social-links">
                 {master.instagram_url && master.instagram_username && (
                     <a
                         className="instagram-link"
@@ -83,6 +89,25 @@ export default function ProfileIdentity({
                         <span aria-hidden="true">↗</span>
                     </a>
                 )}
+                {whatsappUrl && (
+                    <a
+                        className="instagram-link"
+                        href={whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Написать мастеру в WhatsApp: ${master.phone}`}
+                        title={master.phone || undefined}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+                            <path d="M21 11.5a9 9 0 0 1-13.4 7.9L3 21l1.6-4.6A9 9 0 1 1 21 11.5Z" />
+                            <path d="M8 7.5c0 4.5 4 8 8 8l1-2-2.5-1-1 1a7 7 0 0 1-3-3l1-1-1-2.5Z" />
+                        </svg>
+                        WhatsApp
+                        <span aria-hidden="true">↗</span>
+                    </a>
+                )}
+                </div>
             </div>
         </div>
     );
