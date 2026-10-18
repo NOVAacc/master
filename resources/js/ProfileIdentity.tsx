@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 export type ProfileIdentityData = {
     display_name: string;
     specialty?: string | null;
-    tagline?: string | null;
     avatar_url?: string | null;
     cover_url?: string | null;
     instagram_username?: string | null;
@@ -54,9 +53,6 @@ export default function ProfileIdentity({
                 <p className="profile-specialty">
                     {master.specialty || "Специализация"}
                 </p>
-                {master.tagline && (
-                    <p className="profile-tagline">{master.tagline}</p>
-                )}
                 {master.instagram_url && master.instagram_username && (
                     <a
                         className="instagram-link"
