@@ -48,7 +48,9 @@ jobs:
           set ftp:ssl-protect-data true
           set ssl:verify-certificate true
           cd /
-          mkdir -p brand
+          set cmd:fail-exit false
+          mkdir brand
+          set cmd:fail-exit true
           mput -O brand public/brand/*
           put public/favicon.svg -o favicon.svg
           put public/favicon.ico -o favicon.ico
