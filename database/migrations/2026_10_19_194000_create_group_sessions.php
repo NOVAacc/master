@@ -34,8 +34,8 @@ return new class extends Migration
             $table->timestamps();
             $table->foreign('master_group_session_id')->references('id')->on('master_group_sessions')->onDelete('cascade');
             $table->index(['master_group_session_id', 'status'], 'group_participants_status_idx');
-            // A repeated form submission must never consume a second seat.
-            $table->unique(['master_group_session_id', 'phone_digits'], 'group_participant_unique_phone');
+            // Repeat submissions by the same person must not consume another seat; family members may share a phone.
+            $table->unique(['master_group_session_id', 'phone_digits', 'client_name'], 'group_participant_unique_person');
         });
     }
 
