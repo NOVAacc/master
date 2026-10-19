@@ -166,11 +166,11 @@ final class BookingIntegrityTest extends TestCase
             'created_at' => now(), 'updated_at' => now(),
         ]);
         try {
-            app(\\App\\Services\\BookAppointment::class)->create(
+            app(\App\Services\BookAppointment::class)->create(
                 $master, $service, $start, 'Tester', '996555987654'
             );
             $this->fail('An individual appointment was created over a group session.');
-        } catch (\\Illuminate\\Validation\\ValidationException $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
             $this->assertArrayHasKey('starts_at', $e->errors());
         }
         $this->assertDatabaseCount('master_appointments', 0);
