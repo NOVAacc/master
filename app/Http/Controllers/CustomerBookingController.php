@@ -32,8 +32,9 @@ final class CustomerBookingController extends Controller
         }
     }
 
-    public function show(Request $request, MasterAppointment $appointment)
+    public function show(Request $request, int $appointment)
     {
+        $appointment = MasterAppointment::findOrFail($appointment);
         $this->checkAccess($appointment, (int) $request->query('revision'));
         $master = $appointment->masterProfile;
         return Inertia::render('ManageBooking', [
@@ -48,8 +49,9 @@ final class CustomerBookingController extends Controller
         ]);
     }
 
-    public function update(Request $request, MasterAppointment $appointment)
+    public function update(Request $request, int $appointment)
     {
+        $appointment = MasterAppointment::findOrFail($appointment);
         $this->checkAccess($appointment, (int) $request->query('revision'));
         $data = $request->validate([
             'action' => ['required', 'in:cancel,reschedule'],
