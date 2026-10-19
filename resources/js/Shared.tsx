@@ -43,7 +43,7 @@ export function Brand() {
 export function BrandMark({ small = false }: { small?: boolean }) {
     return (
         <span className={`brand-mark${small ? " brand-mark-small" : ""}`} aria-hidden="true">
-            <img src="/brand/bosh-logo-blink.gif" width="500" height="500" alt="" decoding="async" />
+            <img src={small ? "/brand/bosh-clock.svg" : "/brand/bosh-clock-animated.svg"} width="835" height="1020" alt="" decoding="async" />
         </span>
     );
 }
