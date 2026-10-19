@@ -69,7 +69,11 @@ final class BookAppointment
                 ->where('ends_at', '>', $startsAtUtc->format('Y-m-d H:i:s'))
                 ->exists();
 
-            if ($overlap || $blocked) {
+            $groupBusy = DB::table('master_group_sessions')
+                ->where('master_profile_id', $lockedMaster->id)->where('status', 'open')
+                ->where('starts_at', '<', $endsAtUtc->format('Y-m-d H:i:s'))
+                ->where('ends_at', '>', $startsAtUtc->format('Y-m-d H:i:s'))->exists();
+            if ($overlap || $blocked || $groupBusy) {
                 throw ValidationException::withMessages(['starts_at' => 'Это время уже занято.']);
             }
 
