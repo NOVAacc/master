@@ -28,7 +28,7 @@ final class BackfillMasterClients extends Command
             ->chunkById(200, function ($appointments) use (&$scanned, &$linked, &$skipped, $dryRun) {
                 foreach ($appointments as $appointment) {
                     $scanned++;
-                    $phone = \\App\\Services\\WhatsApp::phone($appointment->client_phone) ?? preg_replace('/\\D+/', '', (string) $appointment->client_phone);
+                    $phone = \App\Services\WhatsApp::phone($appointment->client_phone) ?? preg_replace('/\\D+/', '', (string) $appointment->client_phone);
                     if (strlen($phone) < 7 || strlen($phone) > 15) {
                         $skipped++;
                         continue;
