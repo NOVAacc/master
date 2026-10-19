@@ -3,6 +3,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccountSecurityController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\CustomerBookingController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MasterImageController;
 use App\Http\Controllers\PublicBookingController;
@@ -40,3 +41,9 @@ Route::get('/security/email/verify/{user}/{hash}', [AccountSecurityController::c
 Route::get('/m/{master:slug}', [PublicBookingController::class, 'show'])->name('public.master');
 Route::post('/m/{master:slug}/book', [PublicBookingController::class, 'book'])->middleware('throttle:10,1');
 Route::get('/m/{master:slug}/image/{kind}/{version}', MasterImageController::class)->whereIn('kind', ['avatar', 'cover', 'work1', 'work2', 'work3'])->where('version', '[A-Za-z0-9]{40}')->name('master.image');
+
+// Signed, short-lived capability: no account required; mutation still uses CSRF.
+Route::get('/booking/manage/{appointment}', [CustomerBookingController::class, 'show'])
+    ->whereNumber('appointment')->middleware(['signed', 'throttle:30,1'])->name('booking.manage');
+Route::post('/booking/manage/{appointment}', [CustomerBookingController::class, 'update'])
+    ->whereNumber('appointment')->middleware(['signed', 'throttle:10,1']);
