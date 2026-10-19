@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MasterProfile;
 use App\Services\WorkingHours;
-use App\Services\WhatsApp;
+use App\Services\ReserveGroupSeat;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -62,62 +62,18 @@ final class GroupSessionController extends Controller
         return back()->with('success', 'Групповое занятие создано.');
     }
 
-    public function register(Request $request, int $session)
+    public function register(Request $request, int $session, ReserveGroupSeat $booking)
     {
         $data = $request->validate([
             'client_name' => ['required', 'string', 'max:100'],
             'client_phone' => ['required', 'string', 'regex:/^\\+?[0-9 ()-]{7,30}$/'],
             'consent' => ['accepted'],
         ]);
-        $digits = WhatsApp::phone($data['client_phone']);
-        if (! $digits) {
-            throw ValidationException::withMessages(['client_phone' => 'Введите корректный номер телефона.']);
-        }
-        DB::transaction(function () use ($session, $data, $digits) {
-            // Lock the master first, like all other booking operations.
-            $ownerId = DB::table('master_group_sessions')->where('id', $session)->value('master_profile_id');
-            abort_unless($ownerId, 404);
-            $master = MasterProfile::whereKey($ownerId)->lockForUpdate()->firstOrFail();
-            $row = DB::table('master_group_sessions')->where('id', $session)
-                ->where('master_profile_id', $master->id)->lockForUpdate()->firstOrFail();
-            if (! $master->booking_enabled || $master->is_demo || $row->status !== 'open' || $row->reserved_seats >= $row->capacity
-                || CarbonImmutable::parse($row->starts_at, 'UTC')->isPast()) {
-                throw ValidationException::withMessages(['booking' => 'Нет свободных мест.']);
-            }
-            if (DB::table('master_group_participants')
-                ->where('master_group_session_id', $session)
-                ->where('phone_digits', $digits)
-                ->where('client_name', $data['client_name'])->exists()) {
-                throw ValidationException::withMessages([
-                    'client_phone' => 'Этот участник уже записан на занятие.',
-                ]);
-            }
-            DB::table('master_group_participants')->insert([
-                'master_group_session_id' => $session,
-                'client_name' => $data['client_name'],
-                'client_phone' => $data['client_phone'],
-                'phone_digits' => $digits,
-                'status' => 'confirmed',
-                'created_at' => now(), 'updated_at' => now(),
-            ]);
-            // Database-level guard complements the master lock and prevents
-            // over-capacity even if another writer fails to honor the lock.
-            $claimed = DB::table('master_group_sessions')
-                ->where('id', $session)
-                ->where('status', 'open')
-                ->whereColumn('reserved_seats', '<', 'capacity')
-                ->update([
-                    'reserved_seats' => DB::raw('reserved_seats + 1'),
-                    'updated_at' => now(),
-                ]);
-            if ($claimed !== 1) {
-                // Reverts participant insertion in this same transaction.
-                throw ValidationException::withMessages(['booking' => 'Нет свободных мест.']);
-            }
-        }, 3);
+        $booking->reserve($session, $data['client_name'], $data['client_phone']);
 
         return back()->with('success', 'Место забронировано.');
     }
+
     public function cancelParticipant(Request $request, int $session, int $participant)
     {
         $master = MasterProfile::where('user_id', $request->user()->id)->firstOrFail();
