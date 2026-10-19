@@ -9,6 +9,7 @@ use App\Services\WorkingHours;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -104,8 +105,11 @@ final class CustomerBookingController extends Controller
         if ($changed->status === 'confirmed') {
             app(WhatsApp::class)->confirmed($changed);
         }
-        return redirect()->route('public.master', $changed->masterProfile->slug)
-            ->with('success', $data['action'] === 'cancel'
-                ? 'Запись отменена.' : 'Время записи изменено. Сохраните новое подтверждение.');
+        $freshLink = URL::temporarySignedRoute('booking.manage', now()->addDays(30), [
+            'appointment' => $changed->id,
+            'revision' => $changed->revision,
+        ]);
+        return redirect()->to($freshLink)->with('success', $data['action'] === 'cancel'
+            ? 'Запись отменена.' : 'Время записи изменено. Сохраните эту обновлённую ссылку.');
     }
 }
