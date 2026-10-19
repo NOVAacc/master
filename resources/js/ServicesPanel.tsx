@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "@inertiajs/react";
 import { Errors, Field } from "./Shared";
 import type { Service } from "./types";
+import { serviceBookingLink } from "./service-links";
 
 function ServiceEditor({
     service,
@@ -149,23 +150,13 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
     const [query, setQuery] = useState("");
     const [linkSelections, setLinkSelections] = useState<number[]>([]);
     const [linkFeedback, setLinkFeedback] = useState("");
-    function bookingLink(ids: number[]): string {
-        const url = new URL(publicUrl);
-        if (ids.length === 1) {
-            url.searchParams.set("service", String(ids[0]));
-        } else {
-            url.searchParams.set("selection", "1");
-            for (const id of ids) url.searchParams.append("services[]", String(id));
-        }
-        return url.toString();
-    }
     async function copyBookingLink(ids: number[]): Promise<void> {
         const availableIds = new Set(services.filter(item => item.is_active).map(item => item.id));
         if (!ids.length || ids.some(id => !availableIds.has(id))) {
             setLinkFeedback("Выберите доступные для записи услуги.");
             return;
         }
-        const link = bookingLink(ids);
+        const link = serviceBookingLink(publicUrl, ids);
         try {
             await navigator.clipboard.writeText(link);
             setLinkFeedback("Ссылка скопирована.");
@@ -236,7 +227,7 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                 </div>
                 {linkSelections.length > 0 && (
                     <input aria-label="Ссылка на выбранные услуги" type="text" readOnly
-                        value={bookingLink(linkSelections.filter(id => services.some(s => s.id === id && s.is_active)))}
+                        value={serviceBookingLink(publicUrl, linkSelections)}
                         onFocus={event => event.currentTarget.select()} />
                 )}
                 {linkFeedback && <p role="status" className="muted small">{linkFeedback}</p>}
