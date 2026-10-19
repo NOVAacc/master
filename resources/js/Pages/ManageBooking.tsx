@@ -17,8 +17,8 @@ export default function ManageBooking({
     }).format(new Date(appointment.starts_at));
     function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        form.transform(data => ({ ...data, action: "reschedule" }))
-            .post(actionUrl, { preserveScroll: true });
+        form.transform(data => ({ ...data, action: "reschedule" }));
+        form.post(actionUrl, { preserveScroll: true });
     }
     function cancel() {
         if (!window.confirm("Отменить запись? Это действие нельзя отменить.")) return;
