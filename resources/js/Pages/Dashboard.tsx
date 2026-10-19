@@ -119,6 +119,7 @@ export default function Dashboard({
     master,
     security,
     services,
+    clients,
     hours,
     appointments,
     publicUrl,
@@ -130,6 +131,7 @@ export default function Dashboard({
     master: Master;
     security: SecurityStatus;
     services: Service[];
+    clients: { id: number; name: string; phone_digits: string; notes: string | null }[];
     hours: Hour[];
     appointments: Appointment[];
     publicUrl: string;
@@ -400,6 +402,7 @@ export default function Dashboard({
                     {Object.entries({
                         appointments: "Записи",
                         services: "Услуги",
+                        clients: "Клиенты",
                         schedule: "Расписание",
                         profile: "Моя страница",
                     }).map(([key, label]) => (
@@ -413,6 +416,7 @@ export default function Dashboard({
                                     {
                                         appointments: "calendar",
                                         services: "grid",
+                                        clients: "user",
                                         schedule: "clock",
                                         profile: "user",
                                     }[key] || "grid"
@@ -500,6 +504,7 @@ export default function Dashboard({
                                 {
                                     appointments: "Записи клиентов",
                                     services: "Ваши услуги",
+                                    clients: "Клиенты",
                                     schedule: "Рабочая неделя",
                                     profile: "Моя страница",
                                     settings: "Настройки профиля",
@@ -610,6 +615,22 @@ export default function Dashboard({
                                 </>
                             )}
                         </>
+                    )}
+                    {tab === "clients" && (
+                        <div>
+                            <p className="muted">Клиенты добавляются автоматически после онлайн-записи. Данные доступны только вашему профилю.</p>
+                            {clients.length === 0 ? (
+                                <p className="muted">Пока нет клиентов. После первой записи здесь появится карточка.</p>
+                            ) : clients.map(client => (
+                                <article className="appointment" key={client.id}>
+                                    <div>
+                                        <h3>{client.name}</h3>
+                                        <a href={`tel:+${client.phone_digits}`}>+{client.phone_digits}</a>
+                                        {client.notes && <p className="muted">{client.notes}</p>}
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
                     )}
                     {tab === "services" && (
                         <ServicesPanel services={services} />
