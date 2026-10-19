@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MasterProfile;
 use App\Services\WorkingHours;
+use App\Services\WhatsApp;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -68,11 +69,11 @@ final class GroupSessionController extends Controller
             'client_phone' => ['required', 'string', 'regex:/^\\+?[0-9 ()-]{7,30}$/'],
             'consent' => ['accepted'],
         ]);
-        $digits = preg_replace('/\\D+/', '', $data['client_phone']);
-        if (strlen($digits) < 7 || strlen($digits) > 15) {
+        $digits = WhatsApp::phone($data['client_phone']);
+        if (! $digits) {
             throw ValidationException::withMessages(['client_phone' => 'Введите корректный номер телефона.']);
         }
-        DB::transaction(function () use ($session, $data) {
+        DB::transaction(function () use ($session, $data, $digits) {
             // Lock the master first, like all other booking operations.
             $ownerId = DB::table('master_group_sessions')->where('id', $session)->value('master_profile_id');
             abort_unless($ownerId, 404);
@@ -83,10 +84,18 @@ final class GroupSessionController extends Controller
                 || CarbonImmutable::parse($row->starts_at, 'UTC')->isPast()) {
                 throw ValidationException::withMessages(['booking' => 'Нет свободных мест.']);
             }
+            if (DB::table('master_group_participants')
+                ->where('master_group_session_id', $session)
+                ->where('phone_digits', $digits)->exists()) {
+                throw ValidationException::withMessages([
+                    'client_phone' => 'Этот номер уже записан на занятие.',
+                ]);
+            }
             DB::table('master_group_participants')->insert([
                 'master_group_session_id' => $session,
                 'client_name' => $data['client_name'],
                 'client_phone' => $data['client_phone'],
+                'phone_digits' => $digits,
                 'status' => 'confirmed',
                 'created_at' => now(), 'updated_at' => now(),
             ]);
