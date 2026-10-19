@@ -59,6 +59,21 @@ class DashboardController extends Controller
                 'emailVerified' => $request->user()->email_verified_at !== null,
                 'passwordSet' => $request->user()->password_initialized_at !== null,
             ],
+            'groupSessions' => DB::table('master_group_sessions')
+                ->where('master_profile_id', $master->id)
+                ->where('ends_at', '>', now('UTC')->subDays(7))
+                ->orderBy('starts_at')->limit(100)
+                ->get(['id', 'master_service_id', 'service_name_snapshot', 'starts_at', 'ends_at', 'capacity', 'reserved_seats', 'status', 'price_som'])
+                ->map(fn ($session) => [
+                    'id' => $session->id,
+                    'service_name_snapshot' => $session->service_name_snapshot,
+                    'starts_at' => CarbonImmutable::parse($session->starts_at, 'UTC')->toIso8601String(),
+                    'ends_at' => CarbonImmutable::parse($session->ends_at, 'UTC')->toIso8601String(),
+                    'capacity' => $session->capacity,
+                    'reserved_seats' => $session->reserved_seats,
+                    'status' => $session->status,
+                    'price_som' => $session->price_som,
+                ]),
             'clients' => DB::table('master_clients')
                 ->where('master_profile_id', $master->id)
                 ->orderByDesc('updated_at')
