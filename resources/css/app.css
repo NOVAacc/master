@@ -2409,3 +2409,17 @@ h2 {
     object-fit: contain;
 }
 .brand-mark.brand-mark-small { width: 26px; height: 26px; }
+
+/* Play the original 100 frames explicitly, including browsers that pause animated images. */
+.brand-mark img {
+    width: 10000%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    object-fit: fill;
+    animation: bosh-logo-frames 5s steps(100, end) infinite;
+}
+@keyframes bosh-logo-frames {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+}

@@ -42,8 +42,8 @@ export function Brand() {
 
 export function BrandMark({ small = false }: { small?: boolean }) {
     return (
-        <picture className={`brand-mark${small ? " brand-mark-small" : ""}`} aria-hidden="true">
-            <img src="/brand/bosh-logo-animated.webp?v=2" width="500" height="500" alt="" decoding="async" />
-        </picture>
+        <span className={`brand-mark${small ? " brand-mark-small" : ""}`} aria-hidden="true">
+            <img src="/brand/bosh-logo-frames.webp" width="16000" height="160" alt="" decoding="async" />
+        </span>
     );
 }
