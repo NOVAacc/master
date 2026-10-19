@@ -44,6 +44,7 @@ class DashboardController extends Controller
         };
 
         return Inertia::render('Dashboard', [
+            'industries' => config('industries'),
             'calendarDate' => $calendarDate,
             'calendarAppointments' => $master->appointments()->where('starts_at', '<', $calendarEnd->utc())
                 ->where('ends_at', '>', $calendarStart->utc())
@@ -91,7 +92,12 @@ class DashboardController extends Controller
         $slugRules = $request->input('slug') === $master->slug
             ? ['required', 'string'] // Keep legacy links unchanged while editing other fields.
             : ['required', 'string', 'regex:/^[a-z0-9]{3,30}$/', Rule::unique('master_profiles', 'slug')->ignore($master->id)];
+        $industries = config('industries');
+        $industry = $request->input('industry', $master->industry);
+        $activities = is_string($industry) ? ($industries[$industry]['activities'] ?? []) : [];
         $data = $request->validate([
+            'industry' => ['sometimes', 'nullable', 'string', Rule::in(array_keys($industries))],
+            'activity' => ['sometimes', 'nullable', 'string', Rule::in(array_keys($activities))],
             'slug' => $slugRules,
             'display_name' => ['required', 'string', 'max:100'],
             'specialty' => ['nullable', 'string', 'max:150'],
@@ -130,6 +136,9 @@ class DashboardController extends Controller
             'auto_confirm' => ['required', 'boolean'],
             'whatsapp_notifications' => ['sometimes', 'boolean'],
         ]);
+        if (array_key_exists('industry', $data) && $data['industry'] !== $master->industry && ! array_key_exists('activity', $data)) {
+            $data['activity'] = null;
+        }
         if (($data['whatsapp_notifications'] ?? false) && ! WhatsApp::phone($data['phone'] ?? null)) {
             throw ValidationException::withMessages(['phone' => 'Укажите номер WhatsApp с кодом страны.']);
         }

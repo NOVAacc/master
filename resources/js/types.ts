@@ -11,6 +11,8 @@ export type Master = {
     slug: string;
     display_name: string;
     specialty: string;
+    industry?: string | null;
+    activity?: string | null;
     bio: string;
     phone: string;
     address: string;
@@ -77,3 +79,5 @@ export type AppointmentSnapshot = {
     client_phone: string;
     client_comment: string | null;
 };
+
+export type Industries = Record<string, { name: string; activities: Record<string, string> }>;

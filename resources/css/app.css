@@ -2410,3 +2410,19 @@ h2 {
 }
 .brand-mark.brand-mark-small { width: 26px; height: 26px; }
 
+
+/* Compact two-level activity filters. */
+.catalog-filters { margin: 0 0 32px; }
+.industry-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.industry-options a { display: inline-flex; align-items: center; padding: 9px 15px; border: 1px solid #e5e5e5; border-radius: 999px; background: white; font-size: 12px; }
+.industry-options a:hover { text-decoration: none; border-color: #aaa; }
+.industry-options a[aria-current="page"] { background: #252525; border-color: #252525; color: white; }
+.activity-filter { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+.activity-filter label { font-size: 12px; color: #737373; }
+.activity-filter select { width: min(100%, 360px); }
+@container (max-width: 700px) {
+    .industry-options { gap: 6px; }
+    .industry-options a { padding: 8px 12px; }
+    .activity-filter { align-items: stretch; flex-direction: column; gap: 7px; }
+    .activity-filter select { width: 100%; }
+}

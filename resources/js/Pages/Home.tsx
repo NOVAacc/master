@@ -1,6 +1,7 @@
-import { Head, Link, usePage } from "@inertiajs/react";
+import { Head, Link, router, usePage } from "@inertiajs/react";
 import { Brand } from "../Shared";
 import Icon from "../Icon";
+import type { Industries } from "../types";
 import { MasterAvatar } from "../ProfileIdentity";
 
 type Master = {
@@ -69,9 +70,13 @@ function MasterCard({
 export default function Home({
     newMasters,
     topMasters,
+    industries,
+    filters,
 }: {
     newMasters: Master[];
     topMasters: Master[];
+    industries: Industries;
+    filters: { industry: string; activity: string };
 }) {
     const { auth } = usePage<{ auth: { user: { name: string } | null } }>()
         .props;
@@ -116,13 +121,30 @@ export default function Home({
                         </a>
                     </nav>
                 </section>
+                <section className="catalog-filters" aria-label="Направления деятельности">
+                    <nav className="industry-options" aria-label="Сфера деятельности">
+                        <Link href="/" preserveScroll replace aria-current={!filters.industry ? "page" : undefined}>Все</Link>
+                        {Object.entries(industries).map(([key, item]) => (
+                            <Link key={key} href={`/?industry=${key}`} preserveScroll replace aria-current={filters.industry === key ? "page" : undefined}>{item.name}</Link>
+                        ))}
+                    </nav>
+                    {filters.industry && (
+                        <div className="activity-filter">
+                            <label htmlFor="catalog-activity">Направление</label>
+                            <select id="catalog-activity" value={filters.activity} onChange={e => router.get("/", { industry: filters.industry, ...(e.target.value ? { activity: e.target.value } : {}) }, { preserveScroll: true, replace: true })}>
+                                <option value="">Все направления</option>
+                                {Object.entries(industries[filters.industry]?.activities || {}).map(([key, name]) => <option key={key} value={key}>{name}</option>)}
+                            </select>
+                        </div>
+                    )}
+                </section>
                 <section
                     id="new"
                     className="catalog-section"
                     aria-labelledby="new-title"
                 >
                     <p className="eyebrow">НОВЫЕ ЗНАКОМСТВА</p>
-                    <h2 id="new-title">Новые мастера</h2>
+                    <h2 id="new-title">{filters.activity ? industries[filters.industry]?.activities[filters.activity] : filters.industry ? industries[filters.industry]?.name : "Новые мастера"}</h2>
                     <p className="muted">
                         Специалисты, которые недавно присоединились к BOSH.
                     </p>
@@ -134,8 +156,7 @@ export default function Home({
                         </div>
                     ) : (
                         <div className="panel empty">
-                            Здесь появятся мастера с открытой записью и
-                            добавленными услугами.{" "}
+                            {filters.industry ? "В этом направлении пока нет мастеров с открытой записью. " : "Здесь появятся мастера с открытой записью и добавленными услугами. "}
                             <Link href={auth.user ? "/dashboard" : "/register"}>
                                 Создать свой профиль
                             </Link>

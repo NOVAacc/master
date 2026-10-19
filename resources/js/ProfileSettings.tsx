@@ -1,10 +1,10 @@
 import PhoneInput from "./PhoneInput";
-import { useForm } from "@inertiajs/react";
+import { useForm, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import { Errors, Field } from "./Shared";
 import ProfileIdentity from "./ProfileIdentity";
 import WorkGallery from "./WorkGallery";
-import type { Master } from "./types";
+import type { Master, Industries } from "./types";
 
 function useImagePreview(
     file: File | null,
@@ -46,11 +46,14 @@ function instagram(value: string) {
         : null;
 }
 export default function ProfileSettings({ master }: { master: Master }) {
+    const { industries } = usePage<{ industries: Industries }>().props;
     const [uploadKey, setUploadKey] = useState({ avatar: 0, cover: 0, work1: 0, work2: 0, work3: 0 });
     const f = useForm({
         slug: master.slug,
         display_name: master.display_name,
         specialty: master.specialty || "",
+        industry: master.industry || "",
+        activity: master.activity || "",
         bio: master.bio || "",
         instagram_username: master.instagram_username || "",
         profile_theme: master.profile_theme || "graphite",
@@ -278,6 +281,20 @@ export default function ProfileSettings({ master }: { master: Master }) {
                             <small>Новый адрес: {typeof window !== "undefined" ? window.location.origin : "https://bosh.kg"}/m/{f.data.slug}</small>
                         )}
                     </Field>
+                    <div className="form-grid">
+                        <Field label="Сфера деятельности">
+                            <select value={f.data.industry} onChange={e => f.setData(d => ({ ...d, industry: e.target.value, activity: "" }))}>
+                                <option value="">Выберите сферу</option>
+                                {Object.entries(industries).map(([key, item]) => <option key={key} value={key}>{item.name}</option>)}
+                            </select>
+                        </Field>
+                        <Field label="Направление">
+                            <select value={f.data.activity} disabled={!f.data.industry} onChange={e => f.setData("activity", e.target.value)}>
+                                <option value="">Выберите направление</option>
+                                {Object.entries(industries[f.data.industry]?.activities || {}).map(([key, name]) => <option key={key} value={key}>{name}</option>)}
+                            </select>
+                        </Field>
+                    </div>
                     <Field label="Специализация">
                         <input
                             maxLength={150}
