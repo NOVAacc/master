@@ -79,8 +79,30 @@ final class BookAppointment
                 throw ValidationException::withMessages(['starts_at' => 'Выберите время в рабочем расписании мастера.']);
             }
 
+            // A customer can book without creating an account. Phone identity is
+            // scoped to this master; no customer data is shared across businesses.
+            $phoneDigits = preg_replace('/\\D+/', '', $clientPhone);
+            $client = DB::table('master_clients')
+                ->where('master_profile_id', $lockedMaster->id)
+                ->where('phone_digits', $phoneDigits)
+                ->first();
+            if ($client) {
+                $clientId = $client->id;
+                DB::table('master_clients')->where('id', $clientId)->update([
+                    'name' => $clientName, 'updated_at' => now(),
+                ]);
+            } else {
+                $clientId = DB::table('master_clients')->insertGetId([
+                    'master_profile_id' => $lockedMaster->id,
+                    'phone_digits' => $phoneDigits,
+                    'name' => $clientName,
+                    'created_at' => now(), 'updated_at' => now(),
+                ]);
+            }
+
             return MasterAppointment::query()->create([
                 'master_profile_id' => $lockedMaster->id,
+                'master_client_id' => $clientId,
                 'master_service_id' => $services->count() === 1 ? $services->first()->id : null,
                 'services_snapshot' => $services->map->only(['id', 'name', 'duration_minutes', 'price_som'])->all(),
                 'client_name' => $clientName,
