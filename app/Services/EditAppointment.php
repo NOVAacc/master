@@ -84,6 +84,18 @@ final class EditAppointment
             }
             $notify = collect($before)->except('client_comment')->all() !== collect($after)->except('client_comment')->all();
             if ($phoneChanged) {
+                // Do not leave a visit linked to the previous customer's
+                // private CRM history when the master corrects the phone.
+                $digits = preg_replace('/\\D+/', '', $data['client_phone']);
+                $client = DB::table('master_clients')
+                    ->where('master_profile_id', $lockedMaster->id)
+                    ->where('phone_digits', $digits)->first(['id']);
+                $a->master_client_id = $client?->id ?? DB::table('master_clients')->insertGetId([
+                    'master_profile_id' => $lockedMaster->id,
+                    'phone_digits' => $digits,
+                    'name' => $data['client_name'],
+                    'created_at' => now(), 'updated_at' => now(),
+                ]);
                 $a->whatsapp_consent = false;
             }
             $a->revision++;
