@@ -78,6 +78,9 @@ jobs:
               names = z.namelist()
               assert '.env' not in names
               assert not any(n.startswith(('tests/', 'node_modules/', '.git/')) for n in names)
+              assert 'database/seeders/DemoMastersSeeder.php' in names
+              assert 'database/demo/profiles.json' in names
+              assert all(f'database/demo/avatar-{i}.jpg' in names for i in range(9))
               assert 'vendor/autoload.php' in names
               assert 'public/build/manifest.json' in names
               assert 'public/index.php' in names

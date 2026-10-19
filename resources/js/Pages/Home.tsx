@@ -5,6 +5,7 @@ import { MasterAvatar } from "../ProfileIdentity";
 
 type Master = {
     slug: string;
+    is_demo?: boolean;
     display_name: string;
     specialty: string | null;
     address: string | null;
@@ -38,6 +39,7 @@ function MasterCard({
                 <MasterAvatar master={master} large />
                 <div>
                     <h3>{master.display_name}</h3>
+                    {master.is_demo && <span className="badge">Демо-профиль</span>}
                     <p className="muted small">
                         {master.specialty || "Частный специалист"}
                     </p>
@@ -57,7 +59,7 @@ function MasterCard({
             <div className="row between master-card-footer">
                 <span>от {master.price_from.toLocaleString("ru-RU")} сом</span>
                 <span className="card-book-action">
-                    Записаться <Icon name="arrow" />
+                    {master.is_demo ? "Смотреть услуги" : "Записаться"} <Icon name="arrow" />
                 </span>
             </div>
         </Link>

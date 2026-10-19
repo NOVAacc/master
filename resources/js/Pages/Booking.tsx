@@ -152,7 +152,20 @@ export default function Booking(p: Props) {
                             )}
                         </section>
                     )}
-                    {!p.master.booking_enabled ? (
+                    {p.master.is_demo ? (
+                        <div>
+                            <p className="notice">Демонстрационный профиль. Мастер вымышленный, фотографии — иллюстрации. Цены примерные. Запись недоступна.</p>
+                            {p.services.map(service => (
+                                <div className="appointment" key={service.id}>
+                                    <div><h3>{service.name}</h3><p className="muted small">{service.description}</p></div>
+                                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                                        <strong>{service.price_som.toLocaleString("ru-RU")} сом</strong>
+                                        <p className="booking-service-duration">{service.duration_minutes} мин</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : !p.master.booking_enabled ? (
                         <p className="empty">
                             Мастер временно отключил онлайн-запись.
                         </p>

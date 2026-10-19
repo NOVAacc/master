@@ -7,7 +7,7 @@ from pathlib import Path
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-DIRECTORIES = ('app', 'bootstrap', 'config', 'database/migrations', 'public', 'resources/views', 'routes', 'vendor')
+DIRECTORIES = ('app', 'bootstrap', 'config', 'database/migrations', 'database/seeders', 'database/demo', 'public', 'resources/views', 'routes', 'vendor')
 FILES = ('artisan', 'composer.json', 'composer.lock', '.env.example')
 EMPTY_DIRS = ('bootstrap/cache', 'storage/app/private', 'storage/app/public',
               'storage/framework/cache/data', 'storage/framework/sessions', 'storage/framework/views', 'storage/logs')

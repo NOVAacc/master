@@ -51,7 +51,7 @@ final class BookAppointment
             }
             $duration = $services->sum('duration_minutes');
 
-            if (! $lockedMaster->booking_enabled) {
+            if ($lockedMaster->is_demo || ! $lockedMaster->booking_enabled) {
                 throw ValidationException::withMessages(['booking' => 'Онлайн-запись отключена.']);
             }
 
