@@ -56,6 +56,15 @@ jobs:
           DB_DATABASE: master_testing
           DB_USERNAME: root
           DB_PASSWORD: testing
+      - name: Test two independent PHP processes claiming last group seat
+        run: php tests/integration/group-seat-race.php
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: master_testing
+          DB_USERNAME: root
+          DB_PASSWORD: testing
       - uses: actions/upload-artifact@v4
         with:
           name: master-frontend-build
