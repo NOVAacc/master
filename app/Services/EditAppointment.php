@@ -88,7 +88,7 @@ final class EditAppointment
             if ($phoneChanged) {
                 // Do not leave a visit linked to the previous customer's
                 // private CRM history when the master corrects the phone.
-                $digits = preg_replace('/\\D+/', '', $data['client_phone']);
+                $digits = WhatsApp::phone($data['client_phone']) ?? preg_replace('/\\D+/', '', $data['client_phone']);
                 $client = DB::table('master_clients')
                     ->where('master_profile_id', $lockedMaster->id)
                     ->where('phone_digits', $digits)->first(['id']);
