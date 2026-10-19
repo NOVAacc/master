@@ -624,7 +624,7 @@ export default function Dashboard({
                             ) : clients.map(client => (
                                 <article className="appointment" key={client.id}>
                                     <div>
-                                        <h3>{client.name}</h3>
+                                        <h3><Link href={`/clients/${client.id}`}>{client.name}</Link></h3>
                                         <a href={`tel:+${client.phone_digits}`}>+{client.phone_digits}</a>
                                         {client.notes && <p className="muted">{client.notes}</p>}
                                     </div>
