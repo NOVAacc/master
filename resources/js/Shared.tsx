@@ -43,8 +43,7 @@ export function Brand() {
 export function BrandMark({ small = false }: { small?: boolean }) {
     return (
         <picture className={`brand-mark${small ? " brand-mark-small" : ""}`} aria-hidden="true">
-            <source media="(prefers-reduced-motion: reduce)" srcSet="/brand/bosh-logo-static.png" />
-            <img src="/brand/bosh-logo-animated.webp" width="500" height="500" alt="" decoding="async" />
+            <img src="/brand/bosh-logo-animated.webp?v=2" width="500" height="500" alt="" decoding="async" />
         </picture>
     );
 }
