@@ -26,7 +26,7 @@ export default function ManageBooking({
     }
     return (
         <main className="booking-wrap">
-            <Head title="Управление записью" />
+            <Head title="Управление записью"><meta name="referrer" content="no-referrer" /></Head>
             <Brand />
             <section className="panel">
                 <p className="eyebrow">BOSH · ВАША ЗАПИСЬ</p>
