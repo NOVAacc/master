@@ -22,6 +22,7 @@ type Props = {
         text: string;
         masterLink: string | null;
         automaticStatus: string | null;
+        manageUrl: string;
     } | null;
 };
 export default function Booking(p: Props) {
@@ -107,6 +108,14 @@ export default function Booking(p: Props) {
                                     ? "Вы записаны"
                                     : "Заявка отправлена мастеру"}
                             </h2>
+                            {p.bookingReceipt.manageUrl && (
+                                <div>
+                                    <a href={p.bookingReceipt.manageUrl} className="ghost" referrerPolicy="no-referrer">
+                                        Отменить или перенести запись →
+                                    </a>
+                                    <p className="muted small">Сохраните ссылку: она действует 30 дней, но изменения доступны только заранее.</p>
+                                </div>
+                            )}
                             <p className="receipt-text">
                                 {p.bookingReceipt.text}
                             </p>
