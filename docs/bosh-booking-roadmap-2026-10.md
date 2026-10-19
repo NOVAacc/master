@@ -85,3 +85,18 @@ Known limits: no participant cancellation or attendance tracking UI, no reusable
 The existing public booking controller already validates a single `service` query argument and a multi-service `services[]` selection against the profile's **active** services; invalid or foreign IDs return 404. The service catalog now offers per-service copy controls and a checkbox-based bundle selector that generates URLs using `URL.searchParams` (to handle brackets and other encoding safely). The preselected services flow directly into the existing availability calculator; no authentication or privileged action is granted by the link itself. Inactive services do not get share controls. Deep links to individual staff members are deferred until team accounts have correct access controls and scheduling rules.
 
 The group-session registration uniqueness guard now keys on group, normalized contact phone, and participant name rather than only the contact phone. This allows family members with a shared phone to book separate seats, while rejecting an identical repeat. It is still not a general-purpose idempotency-key scheme: dedicated idempotency protection and member management remain for further work.
+
+
+## Integrity and security audit — phase 7
+
+New MySQL/HTTP regression tests (`tests/Feature/BookingIntegrityTest.php`) cover:
+
+1. Signed customer link invalidation after cancellation and refusal to replay the old revision.
+2. Signed URL tampering to another appointment.
+3. Tenant isolation: another master cannot read or update a customer's private notes.
+4. Group participant deduplication with alternative phone formats, shared phone across different people, and capacity ceiling.
+5. Group events blocking overlapping individual appointments.
+
+New CRM normalization uses the same canonical international phone format in public booking, master edits and historical backfill, with fallback to the legacy raw-digits format for supported pre-existing inputs. This is a compatibility change; shared household phones can still represent more than one actual visitor. No automatic multi-person merge is currently attempted.
+
+**Pending before production release:** test true multi-process concurrency over the final group seat (not just sequential POST requests), inspect MySQL migrations against hosting schema, verify migration rollback after real data, and confirm full app security controls. The checks in CI are not a substitute for a staging smoke test or security penetration assessment.
