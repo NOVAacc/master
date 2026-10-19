@@ -2,6 +2,19 @@
 
 This document defines the requested scope without implying that all modules are already live.
 
+## Numbered implementation queue
+
+1. **CRM completion**: history, private notes, legacy backfill, duplicate handling, tenant-isolation tests. (History and notes implemented in this branch; backfill and full isolation regression pending.)
+2. **Status model**: separate booking state, attendance, payments; migrate existing statuses safely.
+3. **Notification events**: transactional outbox, reminders, deduplication, retries and WhatsApp delivery tracking.
+4. **Client self-service**: cancellation and rescheduling limits, signed scoped links and atomic changes.
+5. **Group bookings**: sessions, attendees, capacity locks and participant status.
+6. **Deep links**: canonical links to service combinations and eventually specific staff.
+7. **Data model and safety**: payment and refund records only when actual flows are built; security tests and audit trails.
+8. **Future role permissions**: owner, administrator, master, observer with backend authorization.
+9. **Future product modes**: progressive disclosure from solo master to teams, branches and enterprise.
+10. **Regression suite and rollout**: concurrent slots, legacy data migration, financial snapshots, notifications, tenant isolation, MySQL 5.7, production smoke tests.
+
 ## Included from research stage 2
 
 - **2.3 Statuses**: retain appointment statuses already in the app (pending, confirmed, cancelled, completed, no_show). Future: separate booking, attendance, and payment states, with explicit transition guards.
@@ -34,7 +47,8 @@ This document defines the requested scope without implying that all modules are 
 - [x] Register client as part of a successful booking under existing row lock.
 - [x] Minimal CRM list in authenticated dashboard.
 - [ ] Backfill clients from previous appointments.
-- [ ] Client history, editing notes and merged duplicates.
+- [x] Client visit history (new linked bookings) and editing private notes.
+- [ ] Backfill of legacy appointments and duplicate resolution.
 - [ ] Automated tests and MySQL 5.7 verification.
 - [ ] Customer self-service and group bookings.
 - [ ] Event outbox, reminder scheduling and role system.
