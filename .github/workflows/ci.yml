@@ -43,6 +43,19 @@ jobs:
           DB_DATABASE: master_testing
           DB_USERNAME: root
           DB_PASSWORD: testing
+      - name: Verify migration rollback and re-apply on disposable MySQL 5.7
+        run: |
+          php artisan migrate:fresh --force
+          php artisan migrate:rollback --step=5 --force
+          php artisan migrate --force
+          php artisan bosh:audit-bookings
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: master_testing
+          DB_USERNAME: root
+          DB_PASSWORD: testing
       - uses: actions/upload-artifact@v4
         with:
           name: master-frontend-build
