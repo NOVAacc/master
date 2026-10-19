@@ -133,7 +133,7 @@ export default function Dashboard({
     security: SecurityStatus;
     services: Service[];
     clients: { id: number; name: string; phone_digits: string; notes: string | null }[];
-    groupSessions: { id: number; service_name_snapshot: string; starts_at: string; capacity: number; reserved_seats: number; status: string; price_som: number }[];
+    groupSessions: { id: number; service_name_snapshot: string; starts_at: string; capacity: number; reserved_seats: number; status: string; price_som: number; participants: {id: number; client_name: string; client_phone: string; status: string}[] }[];
     hours: Hour[];
     appointments: Appointment[];
     publicUrl: string;
@@ -671,6 +671,27 @@ export default function Dashboard({
                                         <strong>{session.service_name_snapshot}</strong>
                                         <p>{date(session.starts_at)} · {session.price_som.toLocaleString("ru-RU")} сом</p>
                                         <p className="muted">Занято {session.reserved_seats} из {session.capacity} мест</p>
+                                        {session.participants.length > 0 && (
+                                            <details>
+                                                <summary>Участники ({session.participants.length})</summary>
+                                                {session.participants.map(person => (
+                                                    <div className="row between wrap" key={person.id}>
+                                                        <div>
+                                                            <strong>{person.client_name}</strong>
+                                                            <p className="muted small">{person.client_phone} · {person.status === "cancelled" ? "Отменён" : "Записан"}</p>
+                                                        </div>
+                                                        {person.status === "confirmed" && (
+                                                            <button className="ghost" type="button"
+                                                                onClick={() => {
+                                                                    if (window.confirm("Снять участника с занятия?")) {
+                                                                        router.post(`/group-sessions/${session.id}/participants/${person.id}/cancel`, {}, {preserveScroll: true});
+                                                                    }
+                                                                }}>Снять с занятия</button>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </details>
+                                        )}
                                     </div>
                                 </article>
                             ))}
