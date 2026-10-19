@@ -9,6 +9,7 @@ use App\Services\WorkingHours;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 
 class PublicBookingController extends Controller
@@ -98,6 +99,7 @@ class PublicBookingController extends Controller
             'text' => app(WhatsApp::class)->message($appointment, 'client'),
             'masterLink' => app(WhatsApp::class)->link($master->phone, app(WhatsApp::class)->message($appointment, 'master')),
             'automaticStatus' => $appointment->notifications()->where('recipient', 'client')->value('status'),
+            'manageUrl' => URL::temporarySignedRoute('booking.manage', now()->addDays(30), ['appointment' => $appointment->id, 'revision' => $appointment->revision]),
         ])->with('success',
             $appointment->status === 'confirmed' ? 'Запись подтверждена. Ждём вас!' : 'Заявка отправлена. Мастер свяжется с вами для подтверждения.');
     }
