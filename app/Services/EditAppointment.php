@@ -43,7 +43,9 @@ final class EditAppointment
                     ->where('starts_at', '<', $end)->where('ends_at', '>', $start)->exists();
                 $blocked = DB::table('master_time_blocks')->where('master_profile_id', $lockedMaster->id)
                     ->where('starts_at', '<', $end)->where('ends_at', '>', $start)->exists();
-                if ($busy || $blocked) {
+                $groupBusy = DB::table('master_group_sessions')->where('master_profile_id', $lockedMaster->id)
+                    ->where('status', 'open')->where('starts_at', '<', $end)->where('ends_at', '>', $start)->exists();
+                if ($busy || $blocked || $groupBusy) {
                     throw ValidationException::withMessages(['starts_at_local' => 'Интервал пересекается с другой записью или закрытым временем. Выберите другое время или длительность.']);
                 }
             }
