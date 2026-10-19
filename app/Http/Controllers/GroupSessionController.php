@@ -86,9 +86,10 @@ final class GroupSessionController extends Controller
             }
             if (DB::table('master_group_participants')
                 ->where('master_group_session_id', $session)
-                ->where('phone_digits', $digits)->exists()) {
+                ->where('phone_digits', $digits)
+                ->where('client_name', $data['client_name'])->exists()) {
                 throw ValidationException::withMessages([
-                    'client_phone' => 'Этот номер уже записан на занятие.',
+                    'client_phone' => 'Этот участник уже записан на занятие.',
                 ]);
             }
             DB::table('master_group_participants')->insert([
