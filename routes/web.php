@@ -2,6 +2,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccountSecurityController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MasterImageController;
 use App\Http\Controllers\PublicBookingController;
@@ -24,6 +25,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/appointments/{appointment}/whatsapp', [DashboardController::class, 'retryWhatsApp'])->middleware('throttle:5,1');
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/dashboard', [DashboardController::class, 'show'])->name('dashboard');
+    Route::get('/clients/{client}', [ClientController::class, 'show'])->whereNumber('client')->name('clients.show');
+    Route::put('/clients/{client}', [ClientController::class, 'update'])->whereNumber('client')->middleware('throttle:30,1')->name('clients.update');
     Route::post('/security/password', [AccountSecurityController::class, 'password'])->middleware('throttle:5,10');
     Route::post('/security/email', [AccountSecurityController::class, 'email'])->middleware('throttle:3,10');
     Route::post('/security/email/resend', [AccountSecurityController::class, 'resend'])->middleware('throttle:3,10');
