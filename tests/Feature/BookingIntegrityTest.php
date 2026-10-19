@@ -137,4 +137,43 @@ final class BookingIntegrityTest extends TestCase
         ])->assertSessionHasErrors('booking');
         $this->assertDatabaseCount('master_group_participants', 2);
     }
+    public function test_group_session_blocks_overlapping_individual_booking(): void
+    {
+        $master = $this->master('testmaster6');
+        $service = $master->services()->create([
+            'name' => 'Training', 'description' => '', 'duration_minutes' => 60,
+            'price_som' => 100, 'is_active' => true,
+        ]);
+        $local = CarbonImmutable::now($master->timezone)->addDays(3)->setTime(12, 0, 0);
+        DB::table('master_working_hours')->insert([
+            'master_profile_id' => $master->id,
+            'weekday' => $local->isoWeekday(),
+            'starts_at' => '09:00',
+            'ends_at' => '18:00',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $start = $local->utc();
+        DB::table('master_group_sessions')->insert([
+            'master_profile_id' => $master->id,
+            'master_service_id' => $service->id,
+            'starts_at' => $start->format('Y-m-d H:i:s'),
+            'ends_at' => $start->addHour()->format('Y-m-d H:i:s'),
+            'capacity' => 6,
+            'reserved_seats' => 1,
+            'service_name_snapshot' => $service->name,
+            'price_som' => $service->price_som,
+            'status' => 'open',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        try {
+            app(\\App\\Services\\BookAppointment::class)->create(
+                $master, $service, $start, 'Tester', '996555987654'
+            );
+            $this->fail('An individual appointment was created over a group session.');
+        } catch (\\Illuminate\\Validation\\ValidationException $e) {
+            $this->assertArrayHasKey('starts_at', $e->errors());
+        }
+        $this->assertDatabaseCount('master_appointments', 0);
+    }
+
 }
