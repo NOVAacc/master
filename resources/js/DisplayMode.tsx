@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Icon from "./Icon";
+import { BrandMark } from "./Shared";
 
 type DisplayMode = "auto" | "mobile" | "desktop";
 const storageKey = "master.display-mode";
@@ -39,7 +40,7 @@ export default function DisplayModeFooter() {
     return (
         <footer className="site-footer">
             <div className="footer-identity">
-                <a href="/" aria-label="BOSH — главная страница"><img src="/brand/bosh-mark-v2.svg" width="26" height="26" alt="" /></a>
+                <a href="/" aria-label="BOSH — главная страница"><BrandMark small /></a>
                 <p className="muted small">BOSH — время для вашего дела.</p>
             </div>
             <div

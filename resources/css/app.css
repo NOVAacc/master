@@ -2388,3 +2388,24 @@ h2 {
 .footer-identity { display: flex; align-items: center; gap: 10px; }
 .footer-identity a { display: inline-flex; flex-shrink: 0; }
 .footer-identity img { display: block; width: 26px; height: 26px; }
+
+/* Keep the supplied animation intact and frame its visible mark. */
+.brand-mark {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    width: 40px;
+    height: 40px;
+    vertical-align: middle;
+}
+.brand-mark img {
+    position: absolute;
+    display: block;
+    width: 312.5%;
+    height: 312.5%;
+    max-width: none;
+    left: -111.25%;
+    top: -101.875%;
+    object-fit: contain;
+}
+.brand-mark.brand-mark-small { width: 26px; height: 26px; }
