@@ -7,7 +7,7 @@ This document defines the requested scope without implying that all modules are 
 1. **CRM completion**: history and private notes implemented; an explicit dry-run capable historical backfill command added. Duplicate handling and full isolation regression pending.
 2. **Status model**: nullable attendance/payment fields added; new bookings start with expected attendance, historical states remain unclassified; master status updates synchronize attendance. Payment settlement workflow remains future work.
 3. **Notification events**: an idempotent reminder-planning ledger and dry-run command now exist. A verified approved reminder template, delivery worker, robust final dispatch checks and webhook-based delivery status are still pending.
-4. **Client self-service**: cancellation and rescheduling limits, signed scoped links and atomic changes.
+4. **Client self-service**: initial signed-link cancellation and transactional rescheduling implemented. The client receives a 30-day link in the booking receipt; 2-hour change cutoff, two-reschedule maximum, revision invalidation, overlap and work-hours checks. Notification templates and fuller integration tests remain pending.
 5. **Group bookings**: sessions, attendees, capacity locks and participant status.
 6. **Deep links**: canonical links to service combinations and eventually specific staff.
 7. **Data model and safety**: payment and refund records only when actual flows are built; security tests and audit trails.
@@ -64,3 +64,10 @@ Eligibility requires client WhatsApp consent, confirmed booking, a valid phone a
 **Safety:** No message dispatch worker, cron schedule or automatic sender was enabled. Do not send any reminders until a separately approved Meta template is configured, delivery-status webhooks are verified, and consent/phone/status/revision are rechecked within the claim-and-send flow. Connection timeouts must be treated as unknown to avoid duplicated WhatsApp messages.
 
 The initial integration only tests empty planner execution and command repeatability. Integration tests for eligible bookings, revisions and cancellations remain required.
+
+
+## Initial self-service workflow (feature branch only)
+
+After creating a public booking, the user receives a temporary signed link in the receipt (expires in 30 days). The link allows the customer to see the selected service, price and current time; cancel or move the booking without an account. Mutating actions are POST-only, signed, CSRF-protected and rate-limited. Only pending/confirmed appointments may change, no later than two hours before the original appointment. A new slot must be within 90 days, at a 30-minute boundary and fully available in the business schedule. The master row is locked first, preventing concurrent conflicting bookings. Two customer-initiated reschedules are allowed. After any change, the old link becomes invalid and a fresh signed link is issued. The client must save the replacement URL.
+
+This initial capability is only placed on the booking receipt. It is not inserted into unapproved Meta templates or retroactively issued to legacy customers. Customers whose links expired or were invalidated must contact the master. Per-master customizable cutoffs, self-service links delivered via verified communications and event-level history require further work.
