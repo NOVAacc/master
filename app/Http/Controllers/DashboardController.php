@@ -43,6 +43,16 @@ class DashboardController extends Controller
             return $appointment;
         };
 
+        // Fetch group attendees once, scoped to the authenticated master.
+        // No private participant details are exposed by public booking endpoints.
+        $groupParticipants = DB::table('master_group_participants as p')
+            ->join('master_group_sessions as s', 's.id', '=', 'p.master_group_session_id')
+            ->where('s.master_profile_id', $master->id)
+            ->where('s.ends_at', '>', now('UTC')->subDays(7))
+            ->orderBy('p.id')
+            ->get(['p.id', 'p.master_group_session_id', 'p.client_name', 'p.client_phone', 'p.status'])
+            ->groupBy('master_group_session_id');
+
         return Inertia::render('Dashboard', [
             'industries' => config('industries'),
             'calendarDate' => $calendarDate,
@@ -65,6 +75,7 @@ class DashboardController extends Controller
                 ->orderBy('starts_at')->limit(100)
                 ->get(['id', 'master_service_id', 'service_name_snapshot', 'starts_at', 'ends_at', 'capacity', 'reserved_seats', 'status', 'price_som'])
                 ->map(fn ($session) => [
+                    'participants' => ($groupParticipants->get($session->id) ?? collect())->values(),
                     'id' => $session->id,
                     'service_name_snapshot' => $session->service_name_snapshot,
                     'starts_at' => CarbonImmutable::parse($session->starts_at, 'UTC')->toIso8601String(),
