@@ -106,4 +106,46 @@ final class GroupSessionController extends Controller
 
         return back()->with('success', 'Место забронировано.');
     }
+    public function cancelParticipant(Request $request, int $session, int $participant)
+    {
+        $master = MasterProfile::where('user_id', $request->user()->id)->firstOrFail();
+
+        DB::transaction(function () use ($master, $session, $participant) {
+            // Respect the master -> session -> participant lock ordering used
+            // for new registrations, so the final available seat is safe.
+            $lockedMaster = MasterProfile::whereKey($master->id)->lockForUpdate()->firstOrFail();
+            $row = DB::table('master_group_sessions')
+                ->where('master_profile_id', $lockedMaster->id)
+                ->where('id', $session)->lockForUpdate()->firstOrFail();
+            $member = DB::table('master_group_participants')
+                ->where('master_group_session_id', $row->id)
+                ->where('id', $participant)->lockForUpdate()->firstOrFail();
+
+            if ($member->status === 'cancelled') {
+                return; // Repeated requests must not free a second seat.
+            }
+            if ($member->status !== 'confirmed') {
+                throw ValidationException::withMessages([
+                    'booking' => 'Этот статус участника нельзя отменить.',
+                ]);
+            }
+            if ($row->reserved_seats < 1) {
+                throw ValidationException::withMessages([
+                    'booking' => 'Обнаружено расхождение мест. Проверьте занятие.',
+                ]);
+            }
+            DB::table('master_group_participants')
+                ->where('id', $member->id)->update([
+                    'status' => 'cancelled', 'updated_at' => now(),
+                ]);
+            DB::table('master_group_sessions')
+                ->where('id', $row->id)->update([
+                    'reserved_seats' => $row->reserved_seats - 1,
+                    'updated_at' => now(),
+                ]);
+        }, 3);
+
+        return back()->with('success', 'Участник снят с занятия. Место освобождено.');
+    }
+
 }
