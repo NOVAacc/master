@@ -40,6 +40,8 @@ class PublicBookingController extends Controller
                 ->where('starts_at', '<', $endUtc)->where('ends_at', '>', $startUtc)->get();
             $blocks = DB::table('master_time_blocks')->where('master_profile_id', $master->id)
                 ->where('starts_at', '<', $endUtc)->where('ends_at', '>', $startUtc)->get();
+            $groupBlocks = DB::table('master_group_sessions')->where('master_profile_id', $master->id)
+                ->where('status', 'open')->where('starts_at', '<', $endUtc)->where('ends_at', '>', $startUtc)->get();
             for ($cursor = $day; $cursor->lessThan($day->addDay()); $cursor = $cursor->addMinutes(30)) {
                 $start = $cursor->utc();
                 $end = $start->addMinutes($duration);
@@ -49,7 +51,9 @@ class PublicBookingController extends Controller
                 $overlap = $busy->contains(fn ($a) => $a->starts_at->lt($end) && $a->ends_at->gt($start)) ||
                     $blocks->contains(fn ($b) => CarbonImmutable::parse($b->starts_at, 'UTC')->lt($end) &&
                         CarbonImmutable::parse($b->ends_at, 'UTC')->gt($start));
-                if (! $overlap) {
+                $groupOverlap = $groupBlocks->contains(fn ($g) => CarbonImmutable::parse($g->starts_at, 'UTC')->lt($end)
+                    && CarbonImmutable::parse($g->ends_at, 'UTC')->gt($start));
+                if (! $overlap && ! $groupOverlap) {
                     $slots[] = ['value' => $start->toIso8601String(), 'label' => $cursor->format('H:i')];
                 }
             }
