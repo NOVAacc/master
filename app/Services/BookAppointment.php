@@ -114,6 +114,8 @@ final class BookAppointment
                 'price_som' => $services->sum('price_som'),
                 'service_name_snapshot' => mb_substr($services->pluck('name')->implode(' + '), 0, 255),
                 'status' => $lockedMaster->auto_confirm ? 'confirmed' : 'pending',
+                'attendance_status' => 'expected',
+                'payment_status' => null,
             ]);
         }, 3);
         app(WhatsApp::class)->confirmed($appointment);
