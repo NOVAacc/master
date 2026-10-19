@@ -6,7 +6,7 @@ This document defines the requested scope without implying that all modules are 
 
 1. **CRM completion**: history and private notes implemented; an explicit dry-run capable historical backfill command added. Duplicate handling and full isolation regression pending.
 2. **Status model**: nullable attendance/payment fields added; new bookings start with expected attendance, historical states remain unclassified; master status updates synchronize attendance. Payment settlement workflow remains future work.
-3. **Notification events**: transactional outbox, reminders, deduplication, retries and WhatsApp delivery tracking.
+3. **Notification events**: an idempotent reminder-planning ledger and dry-run command now exist. A verified approved reminder template, delivery worker, robust final dispatch checks and webhook-based delivery status are still pending.
 4. **Client self-service**: cancellation and rescheduling limits, signed scoped links and atomic changes.
 5. **Group bookings**: sessions, attendees, capacity locks and participant status.
 6. **Deep links**: canonical links to service combinations and eventually specific staff.
@@ -53,3 +53,14 @@ This document defines the requested scope without implying that all modules are 
 - [ ] Automated tests and MySQL 5.7 verification.
 - [ ] Customer self-service and group bookings.
 - [ ] Event outbox, reminder scheduling and role system.
+
+
+## Reminder planner (staged, no outbound messages)
+
+The CLI `php artisan bosh:plan-reminders --dry-run` finds eligible confirmed bookings over the next 48 hours and reports potential 24-hour reminders. `php artisan bosh:plan-reminders` stages them in `master_reminders`. Planning is repeatable because the database uniquely identifies appointment, notification revision, channel and recipient.
+
+Eligibility requires client WhatsApp consent, confirmed booking, a valid phone and a visit more than one hour ahead. Changed/cancelled/opted-out bookings cause superseded **scheduled** entries to be cancelled. Entries accepted by an external provider are deliberately retained as immutable delivery history.
+
+**Safety:** No message dispatch worker, cron schedule or automatic sender was enabled. Do not send any reminders until a separately approved Meta template is configured, delivery-status webhooks are verified, and consent/phone/status/revision are rechecked within the claim-and-send flow. Connection timeouts must be treated as unknown to avoid duplicated WhatsApp messages.
+
+The initial integration only tests empty planner execution and command repeatability. Integration tests for eligible bookings, revisions and cancellations remain required.
