@@ -21,6 +21,9 @@ final class GroupSessionController extends Controller
         $master = MasterProfile::where('user_id', $request->user()->id)->firstOrFail();
         DB::transaction(function () use ($master, $data) {
             $locked = MasterProfile::whereKey($master->id)->lockForUpdate()->firstOrFail();
+            if (! $locked->booking_enabled || $locked->is_demo) {
+                throw ValidationException::withMessages(['booking' => 'Приём записей отключён.']);
+            }
             $service = $locked->services()->whereKey($data['service_id'])->where('is_active', true)->firstOrFail();
             $local = CarbonImmutable::createFromFormat('!Y-m-d\\TH:i', $data['starts_at_local'], $locked->timezone);
             if (! $local || $local->format('Y-m-d\\TH:i') !== $data['starts_at_local']) {
@@ -65,6 +68,10 @@ final class GroupSessionController extends Controller
             'client_phone' => ['required', 'string', 'regex:/^\\+?[0-9 ()-]{7,30}$/'],
             'consent' => ['accepted'],
         ]);
+        $digits = preg_replace('/\\D+/', '', $data['client_phone']);
+        if (strlen($digits) < 7 || strlen($digits) > 15) {
+            throw ValidationException::withMessages(['client_phone' => 'Введите корректный номер телефона.']);
+        }
         DB::transaction(function () use ($session, $data) {
             // Lock the master first, like all other booking operations.
             $ownerId = DB::table('master_group_sessions')->where('id', $session)->value('master_profile_id');
@@ -72,7 +79,7 @@ final class GroupSessionController extends Controller
             $master = MasterProfile::whereKey($ownerId)->lockForUpdate()->firstOrFail();
             $row = DB::table('master_group_sessions')->where('id', $session)
                 ->where('master_profile_id', $master->id)->lockForUpdate()->firstOrFail();
-            if ($row->status !== 'open' || $row->reserved_seats >= $row->capacity
+            if (! $master->booking_enabled || $master->is_demo || $row->status !== 'open' || $row->reserved_seats >= $row->capacity
                 || CarbonImmutable::parse($row->starts_at, 'UTC')->isPast()) {
                 throw ValidationException::withMessages(['booking' => 'Нет свободных мест.']);
             }
