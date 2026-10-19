@@ -677,7 +677,7 @@ export default function Dashboard({
                         </div>
                     )}
                     {tab === "services" && (
-                        <ServicesPanel services={services} />
+                        <ServicesPanel services={services} publicUrl={publicUrl} />
                     )}
                     {tab === "schedule" && <Schedule hours={hours} />}
                     {tab === "profile" && (
