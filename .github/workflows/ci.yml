@@ -47,7 +47,11 @@ jobs:
         run: |
           php artisan migrate:fresh --force
           php artisan migrate:rollback --step=5 --force
+          php tests/integration/legacy-migration.php seed
           php artisan migrate --force
+          php tests/integration/legacy-migration.php verify
+          php artisan bosh:backfill-clients --dry-run
+          php tests/integration/legacy-migration.php verify
           php artisan bosh:audit-bookings
         env:
           DB_CONNECTION: mysql
