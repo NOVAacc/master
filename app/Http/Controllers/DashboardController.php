@@ -315,7 +315,13 @@ class DashboardController extends Controller
             if ($appointment->status !== $data['status']) {
                 $appointment->revision++;
             }
-            $appointment->fill($data)->save();
+            $attendance = match ($data['status']) {
+                'completed' => 'attended',
+                'no_show' => 'missed',
+                'cancelled' => 'not_applicable',
+                default => 'expected',
+            };
+            $appointment->fill($data + ['attendance_status' => $attendance])->save();
         });
 
         app(WhatsApp::class)->confirmed($appointment->fresh());
