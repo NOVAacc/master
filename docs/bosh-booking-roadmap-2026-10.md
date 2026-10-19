@@ -100,3 +100,10 @@ New MySQL/HTTP regression tests (`tests/Feature/BookingIntegrityTest.php`) cover
 New CRM normalization uses the same canonical international phone format in public booking, master edits and historical backfill, with fallback to the legacy raw-digits format for supported pre-existing inputs. This is a compatibility change; shared household phones can still represent more than one actual visitor. No automatic multi-person merge is currently attempted.
 
 **Pending before production release:** test true multi-process concurrency over the final group seat (not just sequential POST requests), inspect MySQL migrations against hosting schema, verify migration rollback after real data, and confirm full app security controls. The checks in CI are not a substitute for a staging smoke test or security penetration assessment.
+
+
+### Read-only booking integrity audit
+
+A new command `php artisan bosh:audit-bookings` audits four invariants without modifying production records: sessions exceeding capacity, mismatches between confirmed participants and reserved-seat counts, client links crossing business boundaries, and active group events overlapping individual appointments. The command exits nonzero and reports anomaly counts so it can be incorporated into a deployment review or manual incident check.
+
+This is a limited database-consistency check, **not** a security penetration test, data recovery operation or complete duplicate-booking checker. The backup, historical CRM backfill dry run and true multiprocess race tests remain explicit gates before merging.
