@@ -100,8 +100,20 @@ final class GroupSessionController extends Controller
                 'status' => 'confirmed',
                 'created_at' => now(), 'updated_at' => now(),
             ]);
-            DB::table('master_group_sessions')->where('id', $session)
-                ->update(['reserved_seats' => $row->reserved_seats + 1, 'updated_at' => now()]);
+            // Database-level guard complements the master lock and prevents
+            // over-capacity even if another writer fails to honor the lock.
+            $claimed = DB::table('master_group_sessions')
+                ->where('id', $session)
+                ->where('status', 'open')
+                ->whereColumn('reserved_seats', '<', 'capacity')
+                ->update([
+                    'reserved_seats' => DB::raw('reserved_seats + 1'),
+                    'updated_at' => now(),
+                ]);
+            if ($claimed !== 1) {
+                // Reverts participant insertion in this same transaction.
+                throw ValidationException::withMessages(['booking' => 'Нет свободных мест.']);
+            }
         }, 3);
 
         return back()->with('success', 'Место забронировано.');
