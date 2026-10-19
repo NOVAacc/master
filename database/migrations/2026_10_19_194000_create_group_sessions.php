@@ -29,10 +29,13 @@ return new class extends Migration
             $table->unsignedBigInteger('master_group_session_id');
             $table->string('client_name', 100);
             $table->string('client_phone', 30);
+            $table->string('phone_digits', 20);
             $table->string('status', 20)->default('confirmed');
             $table->timestamps();
             $table->foreign('master_group_session_id')->references('id')->on('master_group_sessions')->onDelete('cascade');
             $table->index(['master_group_session_id', 'status'], 'group_participants_status_idx');
+            // A repeated form submission must never consume a second seat.
+            $table->unique(['master_group_session_id', 'phone_digits'], 'group_participant_unique_phone');
         });
     }
 
