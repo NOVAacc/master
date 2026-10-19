@@ -10,6 +10,7 @@ import type { Master, Service } from "../types";
 type Props = {
     master: Master;
     services: Service[];
+    groupSessions: { id: number; name: string; starts_at: string; price_som: number; capacity: number; reserved_seats: number }[];
     selectedServices: number[];
     workingDays: number[];
     date: string;
@@ -22,6 +23,7 @@ type Props = {
         text: string;
         masterLink: string | null;
         automaticStatus: string | null;
+        manageUrl: string;
     } | null;
 };
 export default function Booking(p: Props) {
@@ -107,6 +109,14 @@ export default function Booking(p: Props) {
                                     ? "Вы записаны"
                                     : "Заявка отправлена мастеру"}
                             </h2>
+                            {p.bookingReceipt.manageUrl && (
+                                <div>
+                                    <a href={p.bookingReceipt.manageUrl} className="ghost" referrerPolicy="no-referrer">
+                                        Отменить или перенести запись →
+                                    </a>
+                                    <p className="muted small">Сохраните ссылку: она действует 30 дней, но изменения доступны только заранее.</p>
+                                </div>
+                            )}
                             <p className="receipt-text">
                                 {p.bookingReceipt.text}
                             </p>
@@ -150,6 +160,39 @@ export default function Booking(p: Props) {
                                     уже сохранена в его кабинете.
                                 </p>
                             )}
+                        </section>
+                    )}
+                    {p.groupSessions?.length > 0 && !p.master.is_demo && (
+                        <section>
+                            <h2>Групповые занятия</h2>
+                            <p className="muted small">Выберите занятие и запишитесь на свободное место.</p>
+                            {p.groupSessions.map(group => (
+                                <div key={group.id} className="appointment">
+                                    <div>
+                                        <strong>{group.name}</strong>
+                                        <p>{new Intl.DateTimeFormat("ru-RU", {
+                                            dateStyle: "medium", timeStyle: "short", timeZone: p.master.timezone,
+                                        }).format(new Date(group.starts_at))}</p>
+                                        <p className="muted small">Свободно {group.capacity - group.reserved_seats} из {group.capacity} мест · {group.price_som.toLocaleString("ru-RU")} сом</p>
+                                        {group.reserved_seats < group.capacity && (
+                                            <form onSubmit={event => {
+                                                event.preventDefault();
+                                                const fd = new FormData(event.currentTarget);
+                                                router.post(`/group-sessions/${group.id}/register`, {
+                                                    client_name: String(fd.get("client_name")),
+                                                    client_phone: String(fd.get("client_phone")),
+                                                    consent: fd.get("consent") === "on",
+                                                }, { preserveScroll: true });
+                                            }}>
+                                                <Field label="Ваше имя"><input required maxLength={100} name="client_name"/></Field>
+                                                <Field label="Телефон"><input required name="client_phone" type="tel" minLength={7} maxLength={30}/></Field>
+                                                <label className="check"><input type="checkbox" name="consent" required/> Согласен на обработку данных для записи</label>
+                                                <button className="primary" type="submit">Записаться на занятие</button>
+                                            </form>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
                         </section>
                     )}
                     {p.master.is_demo ? (

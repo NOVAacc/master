@@ -9,6 +9,7 @@ use App\Services\WorkingHours;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 
 class PublicBookingController extends Controller
@@ -39,6 +40,8 @@ class PublicBookingController extends Controller
                 ->where('starts_at', '<', $endUtc)->where('ends_at', '>', $startUtc)->get();
             $blocks = DB::table('master_time_blocks')->where('master_profile_id', $master->id)
                 ->where('starts_at', '<', $endUtc)->where('ends_at', '>', $startUtc)->get();
+            $groupBlocks = DB::table('master_group_sessions')->where('master_profile_id', $master->id)
+                ->where('status', 'open')->where('starts_at', '<', $endUtc)->where('ends_at', '>', $startUtc)->get();
             for ($cursor = $day; $cursor->lessThan($day->addDay()); $cursor = $cursor->addMinutes(30)) {
                 $start = $cursor->utc();
                 $end = $start->addMinutes($duration);
@@ -48,7 +51,9 @@ class PublicBookingController extends Controller
                 $overlap = $busy->contains(fn ($a) => $a->starts_at->lt($end) && $a->ends_at->gt($start)) ||
                     $blocks->contains(fn ($b) => CarbonImmutable::parse($b->starts_at, 'UTC')->lt($end) &&
                         CarbonImmutable::parse($b->ends_at, 'UTC')->gt($start));
-                if (! $overlap) {
+                $groupOverlap = $groupBlocks->contains(fn ($g) => CarbonImmutable::parse($g->starts_at, 'UTC')->lt($end)
+                    && CarbonImmutable::parse($g->ends_at, 'UTC')->gt($start));
+                if (! $overlap && ! $groupOverlap) {
                     $slots[] = ['value' => $start->toIso8601String(), 'label' => $cursor->format('H:i')];
                 }
             }
@@ -57,6 +62,15 @@ class PublicBookingController extends Controller
         return Inertia::render('Booking', [
             'master' => $master->only('slug', 'display_name', 'specialty', 'bio', 'phone', 'address', 'address_url', 'timezone', 'booking_enabled', 'is_demo', 'auto_confirm', 'instagram_username', 'instagram_url', 'avatar_url', 'cover_url', 'work1_url', 'work2_url', 'work3_url', 'profile_theme'),
             'services' => $services->map->only(['id', 'name', 'description', 'duration_minutes', 'price_som']),
+            'groupSessions' => DB::table('master_group_sessions')
+                ->where('master_profile_id', $master->id)->where('status', 'open')
+                ->where('starts_at', '>', now('UTC'))->orderBy('starts_at')->limit(30)
+                ->get(['id', 'service_name_snapshot', 'starts_at', 'price_som', 'capacity', 'reserved_seats'])
+                ->map(fn ($g) => [
+                    'id' => $g->id, 'name' => $g->service_name_snapshot,
+                    'starts_at' => CarbonImmutable::parse($g->starts_at, 'UTC')->toIso8601String(),
+                    'price_som' => $g->price_som, 'capacity' => $g->capacity, 'reserved_seats' => $g->reserved_seats,
+                ]),
             'selectedService' => $selected->first()?->id,
             'selectedServices' => $selected->pluck('id')->all(),
             'workingDays' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->pluck('weekday')->map(fn ($day) => (int) $day)->all(),
@@ -98,6 +112,7 @@ class PublicBookingController extends Controller
             'text' => app(WhatsApp::class)->message($appointment, 'client'),
             'masterLink' => app(WhatsApp::class)->link($master->phone, app(WhatsApp::class)->message($appointment, 'master')),
             'automaticStatus' => $appointment->notifications()->where('recipient', 'client')->value('status'),
+            'manageUrl' => URL::temporarySignedRoute('booking.manage', now()->addDays(30), ['appointment' => $appointment->id, 'revision' => $appointment->revision]),
         ])->with('success',
             $appointment->status === 'confirmed' ? 'Запись подтверждена. Ждём вас!' : 'Заявка отправлена. Мастер свяжется с вами для подтверждения.');
     }

@@ -69,7 +69,11 @@ final class BookAppointment
                 ->where('ends_at', '>', $startsAtUtc->format('Y-m-d H:i:s'))
                 ->exists();
 
-            if ($overlap || $blocked) {
+            $groupBusy = DB::table('master_group_sessions')
+                ->where('master_profile_id', $lockedMaster->id)->where('status', 'open')
+                ->where('starts_at', '<', $endsAtUtc->format('Y-m-d H:i:s'))
+                ->where('ends_at', '>', $startsAtUtc->format('Y-m-d H:i:s'))->exists();
+            if ($overlap || $blocked || $groupBusy) {
                 throw ValidationException::withMessages(['starts_at' => 'Это время уже занято.']);
             }
 
@@ -79,8 +83,30 @@ final class BookAppointment
                 throw ValidationException::withMessages(['starts_at' => 'Выберите время в рабочем расписании мастера.']);
             }
 
+            // A customer can book without creating an account. Phone identity is
+            // scoped to this master; no customer data is shared across businesses.
+            $phoneDigits = WhatsApp::phone($clientPhone) ?? preg_replace('/\\D+/', '', $clientPhone);
+            $client = DB::table('master_clients')
+                ->where('master_profile_id', $lockedMaster->id)
+                ->where('phone_digits', $phoneDigits)
+                ->first();
+            if ($client) {
+                $clientId = $client->id;
+                DB::table('master_clients')->where('id', $clientId)->update([
+                    'name' => $clientName, 'updated_at' => now(),
+                ]);
+            } else {
+                $clientId = DB::table('master_clients')->insertGetId([
+                    'master_profile_id' => $lockedMaster->id,
+                    'phone_digits' => $phoneDigits,
+                    'name' => $clientName,
+                    'created_at' => now(), 'updated_at' => now(),
+                ]);
+            }
+
             return MasterAppointment::query()->create([
                 'master_profile_id' => $lockedMaster->id,
+                'master_client_id' => $clientId,
                 'master_service_id' => $services->count() === 1 ? $services->first()->id : null,
                 'services_snapshot' => $services->map->only(['id', 'name', 'duration_minutes', 'price_som'])->all(),
                 'client_name' => $clientName,
@@ -92,6 +118,8 @@ final class BookAppointment
                 'price_som' => $services->sum('price_som'),
                 'service_name_snapshot' => mb_substr($services->pluck('name')->implode(' + '), 0, 255),
                 'status' => $lockedMaster->auto_confirm ? 'confirmed' : 'pending',
+                'attendance_status' => 'expected',
+                'payment_status' => null,
             ]);
         }, 3);
         app(WhatsApp::class)->confirmed($appointment);

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "@inertiajs/react";
 import { Errors, Field } from "./Shared";
 import type { Service } from "./types";
+import { serviceBookingLink } from "./service-links";
 
 function ServiceEditor({
     service,
@@ -145,8 +146,24 @@ function ServiceEditor({
     );
 }
 
-export default function ServicesPanel({ services }: { services: Service[] }) {
+export default function ServicesPanel({ services, publicUrl }: { services: Service[]; publicUrl: string }) {
     const [query, setQuery] = useState("");
+    const [linkSelections, setLinkSelections] = useState<number[]>([]);
+    const [linkFeedback, setLinkFeedback] = useState("");
+    async function copyBookingLink(ids: number[]): Promise<void> {
+        const availableIds = new Set(services.filter(item => item.is_active).map(item => item.id));
+        if (!ids.length || ids.some(id => !availableIds.has(id))) {
+            setLinkFeedback("Выберите доступные для записи услуги.");
+            return;
+        }
+        const link = serviceBookingLink(publicUrl, ids);
+        try {
+            await navigator.clipboard.writeText(link);
+            setLinkFeedback("Ссылка скопирована.");
+        } catch {
+            setLinkFeedback("Не удалось скопировать автоматически. Скопируйте ссылку из поля ниже.");
+        }
+    }
     const [filter, setFilter] = useState("all");
     const [sort, setSort] = useState("default");
     const [page, setPage] = useState(1);
@@ -191,6 +208,30 @@ export default function ServicesPanel({ services }: { services: Service[] }) {
                     + Добавить услугу
                 </button>
             </div>
+            <div className="panel" aria-label="Ссылки для записи">
+                <h3>Ссылки на услуги</h3>
+                <p className="muted small">
+                    Отправьте клиенту ссылку на одну услугу или готовый набор.
+                    Выбранные услуги откроются сразу, без повторного поиска.
+                </p>
+                <div className="row wrap">
+                    <button className="ghost" type="button"
+                        disabled={linkSelections.length === 0}
+                        onClick={() => void copyBookingLink(linkSelections)}>
+                        Скопировать ссылку на набор ({linkSelections.length})
+                    </button>
+                    <button className="ghost" type="button" disabled={!linkSelections.length}
+                        onClick={() => {setLinkSelections([]); setLinkFeedback("");}}>
+                        Очистить выбор
+                    </button>
+                </div>
+                {linkSelections.length > 0 && (
+                    <input aria-label="Ссылка на выбранные услуги" type="text" readOnly
+                        value={serviceBookingLink(publicUrl, linkSelections)}
+                        onFocus={event => event.currentTarget.select()} />
+                )}
+                {linkFeedback && <p role="status" className="muted small">{linkFeedback}</p>}
+            </div>
             <div className="services-tools">
                 <input
                     type="search"
@@ -232,6 +273,7 @@ export default function ServicesPanel({ services }: { services: Service[] }) {
                     <table className="services-table">
                         <thead>
                             <tr>
+                                <th scope="col"><span className="sr-only">Выбрать для ссылки</span></th>
                                 <th scope="col">Услуга</th>
                                 <th scope="col">Время</th>
                                 <th scope="col">Стоимость</th>
@@ -244,6 +286,17 @@ export default function ServicesPanel({ services }: { services: Service[] }) {
                         <tbody>
                             {shown.map((service) => (
                                 <tr key={service.id}>
+                                    <td>
+                                        <input type="checkbox" disabled={!service.is_active}
+                                            aria-label={`Включить «${service.name}» в ссылку`}
+                                            checked={linkSelections.includes(service.id)}
+                                            onChange={event => {
+                                                setLinkFeedback("");
+                                                setLinkSelections(current => event.target.checked
+                                                    ? [...current, service.id]
+                                                    : current.filter(id => id !== service.id));
+                                            }}/>
+                                    </td>
                                     <td className="service-name-cell">
                                         <strong>{service.name}</strong>
                                         {service.description && (
@@ -271,6 +324,13 @@ export default function ServicesPanel({ services }: { services: Service[] }) {
                                         </span>
                                     </td>
                                     <td className="service-action-cell">
+                                        {service.is_active && (
+                                            <button className="ghost" type="button"
+                                                aria-label={`Скопировать ссылку на услугу «${service.name}»`}
+                                                onClick={() => void copyBookingLink([service.id])}>
+                                                Ссылка
+                                            </button>
+                                        )}
                                         <button
                                             type="button"
                                             className="ghost"

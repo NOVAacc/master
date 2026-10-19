@@ -43,6 +43,16 @@ class DashboardController extends Controller
             return $appointment;
         };
 
+        // Fetch group attendees once, scoped to the authenticated master.
+        // No private participant details are exposed by public booking endpoints.
+        $groupParticipants = DB::table('master_group_participants as p')
+            ->join('master_group_sessions as s', 's.id', '=', 'p.master_group_session_id')
+            ->where('s.master_profile_id', $master->id)
+            ->where('s.ends_at', '>', now('UTC')->subDays(7))
+            ->orderBy('p.id')
+            ->get(['p.id', 'p.master_group_session_id', 'p.client_name', 'p.client_phone', 'p.status'])
+            ->groupBy('master_group_session_id');
+
         return Inertia::render('Dashboard', [
             'industries' => config('industries'),
             'calendarDate' => $calendarDate,
@@ -59,6 +69,27 @@ class DashboardController extends Controller
                 'emailVerified' => $request->user()->email_verified_at !== null,
                 'passwordSet' => $request->user()->password_initialized_at !== null,
             ],
+            'groupSessions' => DB::table('master_group_sessions')
+                ->where('master_profile_id', $master->id)
+                ->where('ends_at', '>', now('UTC')->subDays(7))
+                ->orderBy('starts_at')->limit(100)
+                ->get(['id', 'master_service_id', 'service_name_snapshot', 'starts_at', 'ends_at', 'capacity', 'reserved_seats', 'status', 'price_som'])
+                ->map(fn ($session) => [
+                    'participants' => ($groupParticipants->get($session->id) ?? collect())->values(),
+                    'id' => $session->id,
+                    'service_name_snapshot' => $session->service_name_snapshot,
+                    'starts_at' => CarbonImmutable::parse($session->starts_at, 'UTC')->toIso8601String(),
+                    'ends_at' => CarbonImmutable::parse($session->ends_at, 'UTC')->toIso8601String(),
+                    'capacity' => $session->capacity,
+                    'reserved_seats' => $session->reserved_seats,
+                    'status' => $session->status,
+                    'price_som' => $session->price_som,
+                ]),
+            'clients' => DB::table('master_clients')
+                ->where('master_profile_id', $master->id)
+                ->orderByDesc('updated_at')
+                ->limit(200)
+                ->get(['id', 'name', 'phone_digits', 'notes']),
             'services' => $master->services()->orderBy('sort_order')->get(),
             'hours' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->orderBy('weekday')->get()
                 ->map(fn ($hour) => [
@@ -310,7 +341,13 @@ class DashboardController extends Controller
             if ($appointment->status !== $data['status']) {
                 $appointment->revision++;
             }
-            $appointment->fill($data)->save();
+            $attendance = match ($data['status']) {
+                'completed' => 'attended',
+                'no_show' => 'missed',
+                'cancelled' => 'not_applicable',
+                default => 'expected',
+            };
+            $appointment->fill($data + ['attendance_status' => $attendance])->save();
         });
 
         app(WhatsApp::class)->confirmed($appointment->fresh());

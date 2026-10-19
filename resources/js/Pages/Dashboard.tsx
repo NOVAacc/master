@@ -119,6 +119,8 @@ export default function Dashboard({
     master,
     security,
     services,
+    clients,
+    groupSessions,
     hours,
     appointments,
     publicUrl,
@@ -130,6 +132,8 @@ export default function Dashboard({
     master: Master;
     security: SecurityStatus;
     services: Service[];
+    clients: { id: number; name: string; phone_digits: string; notes: string | null }[];
+    groupSessions: { id: number; service_name_snapshot: string; starts_at: string; capacity: number; reserved_seats: number; status: string; price_som: number; participants: {id: number; client_name: string; client_phone: string; status: string}[] }[];
     hours: Hour[];
     appointments: Appointment[];
     publicUrl: string;
@@ -400,6 +404,8 @@ export default function Dashboard({
                     {Object.entries({
                         appointments: "Записи",
                         services: "Услуги",
+                        clients: "Клиенты",
+                        groups: "Групповые занятия",
                         schedule: "Расписание",
                         profile: "Моя страница",
                     }).map(([key, label]) => (
@@ -413,6 +419,8 @@ export default function Dashboard({
                                     {
                                         appointments: "calendar",
                                         services: "grid",
+                                        clients: "user",
+                                        groups: "calendar",
                                         schedule: "clock",
                                         profile: "user",
                                     }[key] || "grid"
@@ -500,6 +508,8 @@ export default function Dashboard({
                                 {
                                     appointments: "Записи клиентов",
                                     services: "Ваши услуги",
+                                    clients: "Клиенты",
+                                    groups: "Групповые занятия",
                                     schedule: "Рабочая неделя",
                                     profile: "Моя страница",
                                     settings: "Настройки профиля",
@@ -611,8 +621,84 @@ export default function Dashboard({
                             )}
                         </>
                     )}
+                    {tab === "clients" && (
+                        <div>
+                            <p className="muted">Клиенты добавляются автоматически после онлайн-записи. Данные доступны только вашему профилю.</p>
+                            {clients.length === 0 ? (
+                                <p className="muted">Пока нет клиентов. После первой записи здесь появится карточка.</p>
+                            ) : clients.map(client => (
+                                <article className="appointment" key={client.id}>
+                                    <div>
+                                        <h3><Link href={`/clients/${client.id}`}>{client.name}</Link></h3>
+                                        <a href={`tel:+${client.phone_digits}`}>+{client.phone_digits}</a>
+                                        {client.notes && <p className="muted">{client.notes}</p>}
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    )}
+                    {tab === "groups" && (
+                        <div>
+                            <p className="muted">Групповые занятия бронируют время мастера один раз. Количество участников ограничено вместимостью.</p>
+                            <form onSubmit={event => {
+                                event.preventDefault();
+                                const data = new FormData(event.currentTarget);
+                                router.post("/group-sessions", {
+                                    service_id: Number(data.get("service_id")),
+                                    starts_at_local: String(data.get("starts_at_local")),
+                                    capacity: Number(data.get("capacity")),
+                                }, { preserveScroll: true });
+                            }}>
+                                <Field label="Услуга">
+                                    <select name="service_id" required>
+                                        {services.filter(service => service.is_active).map(service =>
+                                            <option key={service.id} value={service.id}>{service.name}</option>)}
+                                    </select>
+                                </Field>
+                                <Field label="Дата и время">
+                                    <input name="starts_at_local" type="datetime-local" required step={1800}/>
+                                </Field>
+                                <Field label="Количество мест">
+                                    <input name="capacity" type="number" min={2} max={100} defaultValue={8} required/>
+                                </Field>
+                                <button className="primary" type="submit" disabled={!services.some(s => s.is_active)}>Создать занятие</button>
+                            </form>
+                            <h3>Ближайшие занятия</h3>
+                            {groupSessions.length === 0 && <p className="muted">Занятий пока нет.</p>}
+                            {groupSessions.map(session => (
+                                <article className="appointment" key={session.id}>
+                                    <div>
+                                        <strong>{session.service_name_snapshot}</strong>
+                                        <p>{date(session.starts_at)} · {session.price_som.toLocaleString("ru-RU")} сом</p>
+                                        <p className="muted">Занято {session.reserved_seats} из {session.capacity} мест</p>
+                                        {session.participants.length > 0 && (
+                                            <details>
+                                                <summary>Участники ({session.participants.length})</summary>
+                                                {session.participants.map(person => (
+                                                    <div className="row between wrap" key={person.id}>
+                                                        <div>
+                                                            <strong>{person.client_name}</strong>
+                                                            <p className="muted small">{person.client_phone} · {person.status === "cancelled" ? "Отменён" : "Записан"}</p>
+                                                        </div>
+                                                        {person.status === "confirmed" && (
+                                                            <button className="ghost" type="button"
+                                                                onClick={() => {
+                                                                    if (window.confirm("Снять участника с занятия?")) {
+                                                                        router.post(`/group-sessions/${session.id}/participants/${person.id}/cancel`, {}, {preserveScroll: true});
+                                                                    }
+                                                                }}>Снять с занятия</button>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </details>
+                                        )}
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    )}
                     {tab === "services" && (
-                        <ServicesPanel services={services} />
+                        <ServicesPanel services={services} publicUrl={publicUrl} />
                     )}
                     {tab === "schedule" && <Schedule hours={hours} />}
                     {tab === "profile" && (

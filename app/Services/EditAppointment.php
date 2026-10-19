@@ -43,7 +43,9 @@ final class EditAppointment
                     ->where('starts_at', '<', $end)->where('ends_at', '>', $start)->exists();
                 $blocked = DB::table('master_time_blocks')->where('master_profile_id', $lockedMaster->id)
                     ->where('starts_at', '<', $end)->where('ends_at', '>', $start)->exists();
-                if ($busy || $blocked) {
+                $groupBusy = DB::table('master_group_sessions')->where('master_profile_id', $lockedMaster->id)
+                    ->where('status', 'open')->where('starts_at', '<', $end)->where('ends_at', '>', $start)->exists();
+                if ($busy || $blocked || $groupBusy) {
                     throw ValidationException::withMessages(['starts_at_local' => 'Интервал пересекается с другой записью или закрытым временем. Выберите другое время или длительность.']);
                 }
             }
@@ -84,6 +86,18 @@ final class EditAppointment
             }
             $notify = collect($before)->except('client_comment')->all() !== collect($after)->except('client_comment')->all();
             if ($phoneChanged) {
+                // Do not leave a visit linked to the previous customer's
+                // private CRM history when the master corrects the phone.
+                $digits = WhatsApp::phone($data['client_phone']) ?? preg_replace('/\\D+/', '', $data['client_phone']);
+                $client = DB::table('master_clients')
+                    ->where('master_profile_id', $lockedMaster->id)
+                    ->where('phone_digits', $digits)->first(['id']);
+                $a->master_client_id = $client?->id ?? DB::table('master_clients')->insertGetId([
+                    'master_profile_id' => $lockedMaster->id,
+                    'phone_digits' => $digits,
+                    'name' => $data['client_name'],
+                    'created_at' => now(), 'updated_at' => now(),
+                ]);
                 $a->whatsapp_consent = false;
             }
             $a->revision++;
