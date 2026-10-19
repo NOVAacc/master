@@ -85,7 +85,7 @@ final class BookAppointment
 
             // A customer can book without creating an account. Phone identity is
             // scoped to this master; no customer data is shared across businesses.
-            $phoneDigits = preg_replace('/\\D+/', '', $clientPhone);
+            $phoneDigits = WhatsApp::phone($clientPhone) ?? preg_replace('/\\D+/', '', $clientPhone);
             $client = DB::table('master_clients')
                 ->where('master_profile_id', $lockedMaster->id)
                 ->where('phone_digits', $phoneDigits)
