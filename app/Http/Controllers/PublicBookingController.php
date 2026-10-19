@@ -62,6 +62,15 @@ class PublicBookingController extends Controller
         return Inertia::render('Booking', [
             'master' => $master->only('slug', 'display_name', 'specialty', 'bio', 'phone', 'address', 'address_url', 'timezone', 'booking_enabled', 'is_demo', 'auto_confirm', 'instagram_username', 'instagram_url', 'avatar_url', 'cover_url', 'work1_url', 'work2_url', 'work3_url', 'profile_theme'),
             'services' => $services->map->only(['id', 'name', 'description', 'duration_minutes', 'price_som']),
+            'groupSessions' => DB::table('master_group_sessions')
+                ->where('master_profile_id', $master->id)->where('status', 'open')
+                ->where('starts_at', '>', now('UTC'))->orderBy('starts_at')->limit(30)
+                ->get(['id', 'service_name_snapshot', 'starts_at', 'price_som', 'capacity', 'reserved_seats'])
+                ->map(fn ($g) => [
+                    'id' => $g->id, 'name' => $g->service_name_snapshot,
+                    'starts_at' => CarbonImmutable::parse($g->starts_at, 'UTC')->toIso8601String(),
+                    'price_som' => $g->price_som, 'capacity' => $g->capacity, 'reserved_seats' => $g->reserved_seats,
+                ]),
             'selectedService' => $selected->first()?->id,
             'selectedServices' => $selected->pluck('id')->all(),
             'workingDays' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->pluck('weekday')->map(fn ($day) => (int) $day)->all(),
