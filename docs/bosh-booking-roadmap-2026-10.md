@@ -4,8 +4,8 @@ This document defines the requested scope without implying that all modules are 
 
 ## Numbered implementation queue
 
-1. **CRM completion**: history, private notes, legacy backfill, duplicate handling, tenant-isolation tests. (History and notes implemented in this branch; backfill and full isolation regression pending.)
-2. **Status model**: separate booking state, attendance, payments; migrate existing statuses safely.
+1. **CRM completion**: history and private notes implemented; an explicit dry-run capable historical backfill command added. Duplicate handling and full isolation regression pending.
+2. **Status model**: nullable attendance/payment fields added; new bookings start with expected attendance, historical states remain unclassified; master status updates synchronize attendance. Payment settlement workflow remains future work.
 3. **Notification events**: transactional outbox, reminders, deduplication, retries and WhatsApp delivery tracking.
 4. **Client self-service**: cancellation and rescheduling limits, signed scoped links and atomic changes.
 5. **Group bookings**: sessions, attendees, capacity locks and participant status.
@@ -46,9 +46,10 @@ This document defines the requested scope without implying that all modules are 
 - [x] Schema: master-scoped client registry and nullable appointment link.
 - [x] Register client as part of a successful booking under existing row lock.
 - [x] Minimal CRM list in authenticated dashboard.
-- [ ] Backfill clients from previous appointments.
+- [x] Add explicit resumable command for historical client linking (`php artisan bosh:backfill-clients --dry-run` then `php artisan bosh:backfill-clients`).
+- [ ] Execute backfill after deployment and review of dry-run result.
 - [x] Client visit history (new linked bookings) and editing private notes.
-- [ ] Backfill of legacy appointments and duplicate resolution.
+- [ ] Legacy backfill execution, safe handling of shared family phone numbers, and duplicate resolution.
 - [ ] Automated tests and MySQL 5.7 verification.
 - [ ] Customer self-service and group bookings.
 - [ ] Event outbox, reminder scheduling and role system.
