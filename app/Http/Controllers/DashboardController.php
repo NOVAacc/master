@@ -59,6 +59,11 @@ class DashboardController extends Controller
                 'emailVerified' => $request->user()->email_verified_at !== null,
                 'passwordSet' => $request->user()->password_initialized_at !== null,
             ],
+            'clients' => DB::table('master_clients')
+                ->where('master_profile_id', $master->id)
+                ->orderByDesc('updated_at')
+                ->limit(200)
+                ->get(['id', 'name', 'phone_digits', 'notes']),
             'services' => $master->services()->orderBy('sort_order')->get(),
             'hours' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->orderBy('weekday')->get()
                 ->map(fn ($hour) => [
