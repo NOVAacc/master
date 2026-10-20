@@ -22,7 +22,8 @@ final class BookAppointment
         string $clientName,
         string $clientPhone,
         ?string $comment = null,
-        bool $whatsappConsent = false
+        bool $whatsappConsent = false,
+        bool $manual = false
     ): MasterAppointment {
         $selected = is_array($service) ? $service : [$service];
         if (count($selected) < 1 || count($selected) > 20 ||
@@ -38,7 +39,7 @@ final class BookAppointment
             throw ValidationException::withMessages(['starts_at' => 'Выберите будущее время.']);
         }
 
-        $appointment = DB::transaction(function () use ($master, $ids, $startsAtUtc, $clientName, $clientPhone, $comment, $whatsappConsent) {
+        $appointment = DB::transaction(function () use ($master, $ids, $startsAtUtc, $clientName, $clientPhone, $comment, $whatsappConsent, $manual) {
             $lockedMaster = MasterProfile::query()->whereKey($master->id)->lockForUpdate()->firstOrFail();
 
             $services = MasterService::query()
@@ -51,7 +52,7 @@ final class BookAppointment
             }
             $duration = $services->sum('duration_minutes');
 
-            if ($lockedMaster->is_demo || ! $lockedMaster->booking_enabled) {
+            if ($lockedMaster->is_demo || (! $manual && ! $lockedMaster->booking_enabled)) {
                 throw ValidationException::withMessages(['booking' => 'Онлайн-запись отключена.']);
             }
 
@@ -117,12 +118,14 @@ final class BookAppointment
                 'ends_at' => $endsAtUtc->format('Y-m-d H:i:s'),
                 'price_som' => $services->sum('price_som'),
                 'service_name_snapshot' => mb_substr($services->pluck('name')->implode(' + '), 0, 255),
-                'status' => $lockedMaster->auto_confirm ? 'confirmed' : 'pending',
+                'status' => ($manual || $lockedMaster->auto_confirm) ? 'confirmed' : 'pending',
                 'attendance_status' => 'expected',
                 'payment_status' => null,
             ]);
         }, 3);
-        app(WhatsApp::class)->confirmed($appointment);
+        if (! $manual) {
+            app(WhatsApp::class)->confirmed($appointment);
+        }
 
         return $appointment;
     }

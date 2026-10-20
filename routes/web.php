@@ -23,6 +23,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [AccountSecurityController::class, 'reset'])->middleware('throttle:5,10')->name('password.update');
 });
 Route::middleware('auth')->group(function () {
+    Route::get('/appointments/clients', [\App\Http\Controllers\ManualBookingController::class, 'clients'])->middleware('throttle:120,1');
+    Route::get('/appointments/slots', [\App\Http\Controllers\ManualBookingController::class, 'slots'])->middleware('throttle:120,1');
+    Route::post('/appointments', [\App\Http\Controllers\ManualBookingController::class, 'create'])->middleware('throttle:30,1');
     Route::post('/appointments/{appointment}/edit', [DashboardController::class, 'editAppointment']);
     Route::post('/appointments/{appointment}/whatsapp', [DashboardController::class, 'retryWhatsApp'])->middleware('throttle:5,1');
     Route::post('/logout', [AuthController::class, 'logout']);

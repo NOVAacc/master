@@ -8,6 +8,7 @@ import { MasterAvatar } from "../ProfileIdentity";
 import ServicesPanel from "../ServicesPanel";
 import EditAppointmentForm from "../EditAppointmentForm";
 import AppointmentCalendar from "../AppointmentCalendar";
+import QuickBooking from "../QuickBooking";
 import { Brand, Errors, Field, Notice } from "../Shared";
 import type { Appointment, Hour, Master, Service } from "../types";
 const days = [
@@ -148,6 +149,7 @@ export default function Dashboard({
     }[];
 }) {
     const [tab, setTab] = useState("appointments");
+    const [quickBooking, setQuickBooking] = useState(false);
     const [appointmentView, setAppointmentView] = useState<"calendar" | "list">(
         "calendar",
     );
@@ -518,6 +520,7 @@ export default function Dashboard({
                         </h2>
                         {tab === "appointments" && (
                             <div className="row wrap appointment-view-controls">
+                                <button type="button" className="primary" onClick={() => setQuickBooking(true)} disabled={!services.some(s => s.is_active)}>+ Записать клиента</button>
                                 <div
                                     className="display-switch text-switch"
                                     role="group"
@@ -721,6 +724,8 @@ export default function Dashboard({
                     {tab === "settings" && <AccountSecurity status={security} />}
                 </section>
             </main>
+            {quickBooking && <QuickBooking services={services} timezone={master.timezone} date={calendarDate}
+                onClose={() => setQuickBooking(false)} />}
         </div>
     );
 }
