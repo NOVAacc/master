@@ -128,20 +128,23 @@ export default function AppointmentCalendar({
         };
     });
     const all = entries.flatMap((entry) => entry.items);
-    const opening = hours.map((h) => clockMinutes(h.starts_at));
-    const closing = hours.map((h) => clockMinutes(h.ends_at));
-    const start = Math.max(
-        0,
-        Math.floor(
-            (Math.min(480, ...opening, ...all.map((a) => a.start)) - 30) / 60,
-        ) * 60,
-    );
-    const end = Math.min(
-        1440,
-        Math.ceil(
-            (Math.max(1200, ...closing, ...all.map((a) => a.end)) + 30) / 60,
-        ) * 60,
-    );
+    const weekdays = new Set(days.map(day =>
+        new Date(`${day}T12:00:00Z`).getUTCDay() || 7,
+    ));
+    const visibleHours = hours.filter(h => weekdays.has(h.weekday));
+    // Existing appointments remain visible even after the schedule is changed.
+    // Closed-time blocks do not expand the calendar beyond usable hours.
+    const bookings = all.filter(item => item.appointment);
+    const starts = [
+        ...visibleHours.map(h => clockMinutes(h.starts_at)),
+        ...bookings.map(item => item.start),
+    ];
+    const ends = [
+        ...visibleHours.map(h => clockMinutes(h.ends_at)),
+        ...bookings.map(item => item.end),
+    ];
+    const start = starts.length ? Math.max(0, Math.min(...starts)) : 0;
+    const end = ends.length ? Math.min(1440, Math.max(...ends)) : start;
     const height = (end - start) * 1.4;
     const ticks = Array.from(
         { length: Math.ceil((end - start) / 60) },
@@ -230,7 +233,7 @@ export default function AppointmentCalendar({
                     Загружаем записи…
                 </p>
             )}
-            <div
+            {height > 0 ? <div
                 className="time-calendar-scroll"
                 aria-busy={loading}
             >
@@ -389,6 +392,7 @@ export default function AppointmentCalendar({
                     </div>
                 </div>
             </div>
+            : <p className="muted small">На выбранный период рабочие часы не настроены.</p>}
             <div className="calendar-legend">
                 <span className="badge pending">Ожидает</span>
                 <span className="badge confirmed">Подтверждена</span>
