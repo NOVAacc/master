@@ -1621,7 +1621,20 @@ h2 {
     border-left-width: 2px;
 }
 .calendar-appointment.short strong {
-    display: none;
+    display: block;
+    font-size: 9px;
+}
+.calendar-appt-phone {
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+.calendar-appointment.past,
+.badge.calendar-past {
+    background: #f0f0f0;
+    border-color: #d8d8d8;
+    border-left-color: #999;
+    color: #656565;
 }
 .calendar-time-block {
     background: repeating-linear-gradient(
