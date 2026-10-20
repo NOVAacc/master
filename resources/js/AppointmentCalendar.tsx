@@ -1,3 +1,4 @@
+import { timezoneLabel } from "./timezone";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { Appointment, Hour } from "./types";
@@ -220,7 +221,7 @@ export default function AppointmentCalendar({
                 </div>
             </div>
             <p className="muted small">
-                {timezone} · сетка по 30 минут. Белые участки рабочего дня
+                {timezoneLabel(timezone)} · сетка по 30 минут. Белые участки рабочего дня
                 свободны; серые — вне расписания. Нажмите запись, чтобы открыть
                 детали.
             </p>
@@ -391,8 +392,8 @@ export default function AppointmentCalendar({
             <div className="calendar-legend">
                 <span className="badge pending">Ожидает</span>
                 <span className="badge confirmed">Подтверждена</span>
-                <span className="badge completed">Завершена</span>
-                <span className="badge calendar-past">Прошедшая</span>
+                <span className="badge completed" title="Мастер отметил, что приём состоялся">Завершена</span>
+                <span className="badge calendar-past" title="Время записи закончилось. Это не отметка о посещении">Время прошло</span>
             </div>
             {!all.length && (
                 <p className="muted small">На выбранный период записей нет.</p>
