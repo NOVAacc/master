@@ -1,3 +1,4 @@
+import { timezoneLabel } from "./timezone";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "@inertiajs/react";
 import axios from "axios";
@@ -140,7 +141,7 @@ export default function QuickBooking({ services, timezone, date, onClose }: {
                     </Field>
                 </div>
                 <h3>Свободное время</h3>
-                <p className="muted small">Время мастера: {timezone}</p>
+                <p className="muted small">Время мастера: {timezoneLabel(timezone)}</p>
                 <div aria-busy={slotsLoading}>
                     {slotsLoading ? <p className="muted small" role="status">Проверяем время…</p> :
                         slotError ? <div><p role="alert" className="errors">{slotError}</p>

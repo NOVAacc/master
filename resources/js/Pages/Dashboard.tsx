@@ -1,3 +1,4 @@
+import { timezoneLabel } from "../timezone";
 import { Head, Link, router, useForm } from "@inertiajs/react";
 import { useState } from "react";
 import Icon from "../Icon";
@@ -174,7 +175,6 @@ export default function Dashboard({
                     ),
             },
         );
-    const [filter, setFilter] = useState("active");
     const [message, setMessage] = useState("");
     const [editingId, setEditingId] = useState<number | null>(null);
     const [pending, setPending] = useState<number | null>(null);
@@ -465,7 +465,7 @@ export default function Dashboard({
                 <header className="row between dashboard-header">
                     <div>
                         <p className="eyebrow">
-                            ЛИЧНЫЙ КАБИНЕТ · {master.timezone}
+                            ЛИЧНЫЙ КАБИНЕТ · {timezoneLabel(master.timezone)}
                         </p>
                         <h1>{master.display_name}</h1>
                     </div>
@@ -491,16 +491,6 @@ export default function Dashboard({
                                 ).length
                             }
                         </strong>
-                    </article>
-                    <article className="metric">
-                        <small>Активные услуги</small>
-                        <strong>
-                            {services.filter((s) => s.is_active).length}
-                        </strong>
-                    </article>
-                    <article className="metric">
-                        <small>Рабочих дней в неделе</small>
-                        <strong>{hours.length}</strong>
                     </article>
                 </div>
                 <section className="panel">
@@ -549,14 +539,6 @@ export default function Dashboard({
                                         Список
                                     </button>
                                 </div>
-                                <select
-                                    aria-label="Фильтр записей"
-                                    value={filter}
-                                    onChange={(e) => setFilter(e.target.value)}
-                                >
-                                    <option value="active">Активные</option>
-                                    <option value="all">Все статусы</option>
-                                </select>
                             </div>
                         )}
                     </div>
@@ -564,13 +546,7 @@ export default function Dashboard({
                         <>
                             {appointmentView === "calendar" ? (
                                 <AppointmentCalendar
-                                    appointments={calendarAppointments.filter(
-                                        (a) =>
-                                            filter === "all" ||
-                                            ["pending", "confirmed"].includes(
-                                                a.status,
-                                            ),
-                                    )}
+                                    appointments={calendarAppointments}
                                     blocks={calendarBlocks}
                                     hours={hours}
                                     timezone={master.timezone}
@@ -586,24 +562,9 @@ export default function Dashboard({
                                         часовом поясе мастера.
                                     </p>
                                     <div className="appointment-list">
-                                        {appointments
-                                            .filter(
-                                                (a) =>
-                                                    filter === "all" ||
-                                                    [
-                                                        "pending",
-                                                        "confirmed",
-                                                    ].includes(a.status),
-                                            )
-                                            .map(renderAppointment)}
+                                        {appointments.map(renderAppointment)}
                                     </div>
-                                    {!appointments.some(
-                                        (a) =>
-                                            filter === "all" ||
-                                            ["pending", "confirmed"].includes(
-                                                a.status,
-                                            ),
-                                    ) && (
+                                    {!appointments.length && (
                                         <div className="empty">
                                             <h3>Здесь появятся ваши записи</h3>
                                             <p>

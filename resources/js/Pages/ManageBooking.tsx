@@ -1,3 +1,4 @@
+import { timezoneLabel } from "../timezone";
 import { Head, router, useForm } from "@inertiajs/react";
 import { FormEvent } from "react";
 import { Brand, Errors, Notice } from "../Shared";
@@ -48,7 +49,7 @@ export default function ManageBooking({
                         {appointment.customer_reschedule_count < 2 && (
                             <form onSubmit={submit}>
                                 <h3>Перенести запись</h3>
-                                <label htmlFor="appointment-new-time">Новое время (часовой пояс {master.timezone})</label>
+                                <label htmlFor="appointment-new-time">Новое время (часовой пояс {timezoneLabel(master.timezone)})</label>
                                 <input id="appointment-new-time" type="datetime-local" required step={1800}
                                     value={form.data.starts_at_local}
                                     onChange={event => form.setData("starts_at_local", event.target.value)} />

@@ -1,3 +1,4 @@
+import { timezoneLabel } from "./timezone";
 import PhoneInput from "./PhoneInput";
 import { useForm, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
@@ -377,7 +378,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
                                     "UTC",
                                 ]),
                             ].map((zone) => (
-                                <option key={zone}>{zone}</option>
+                                <option key={zone} value={zone}>{timezoneLabel(zone)}</option>
                             ))}
                         </select>
                     </Field>

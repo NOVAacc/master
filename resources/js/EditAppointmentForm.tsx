@@ -1,3 +1,4 @@
+import { timezoneLabel } from "./timezone";
 import PhoneInput from "./PhoneInput";
 import { useForm } from "@inertiajs/react";
 import { Errors, Field } from "./Shared";
@@ -103,7 +104,7 @@ export default function EditAppointmentForm({
         >
             <h3>Перенос и редактирование</h3>
             <p className="muted small">
-                Время мастера: {timezone}. Изменения сохраняются в истории.
+                Время мастера: {timezoneLabel(timezone)}. Изменения сохраняются в истории.
             </p>
             <Errors errors={f.errors} />
             <div className="form-grid">
