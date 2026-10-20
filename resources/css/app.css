@@ -2450,3 +2450,21 @@ h2 {
     .time-calendar.week .time-day-heading { padding: 8px 0; font-size: 9px; }
     .time-calendar.week .time-day-heading strong { font-size: 9px; }
 }
+
+/* Fast manual booking, using the same compact controls as the master cabinet. */
+.quick-booking-form { padding: 18px 24px 24px; }
+.quick-client-results { display: grid; gap: 6px; max-height: 190px; overflow-y: auto; margin-bottom: 16px; }
+.quick-client-results > button { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 10px 12px; text-align: left; border: 1px solid #e5e5e5; border-radius: 10px; background: #fff; font-size: 12px; }
+.quick-client-results > button:hover { background: #f6f6f6; border-color: #aaa; }
+.quick-client-results > button span { color: #737373; }
+.quick-client-selected { padding: 12px; border: 1px solid #e5e5e5; border-radius: 12px; margin: 16px 0; }
+.quick-client-selected p { margin-bottom: 0; }
+.quick-time-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 6px; margin: 12px 0 20px; }
+.quick-time-slots .slot { padding: 8px 4px; }
+.quick-booking-comment { font-size: 12px; margin: 18px 0; }
+.quick-booking-comment summary { cursor: pointer; color: #737373; }
+.quick-booking-footer { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; border-top: 1px solid #eee; padding-top: 16px; }
+@container (max-width: 700px) {
+    .quick-booking-dialog .service-dialog-header { padding: 16px; }
+    .quick-booking-form { padding: 12px 16px 20px; }
+}
