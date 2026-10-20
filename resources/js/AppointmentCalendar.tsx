@@ -54,6 +54,11 @@ export default function AppointmentCalendar({
     const scroll = useRef<HTMLDivElement>(null);
     const detail = useRef<HTMLDivElement>(null);
     const [compact, setCompact] = useState(false);
+    const [now, setNow] = useState(() => Date.now());
+    useEffect(() => {
+        const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+        return () => window.clearInterval(timer);
+    }, []);
     const [mode, setMode] = useState<"auto" | "day" | "week">("auto");
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const view = mode === "auto" ? (compact ? "day" : "week") : mode;
@@ -62,7 +67,7 @@ export default function AppointmentCalendar({
         view === "day"
             ? [date]
             : Array.from({ length: 7 }, (_, i) => addDays(first, i));
-    const today = localDay(new Date(), timezone);
+    const today = localDay(new Date(now), timezone);
     const selected = appointments.find((a) => a.id === selectedId);
     useEffect(() => {
         const observer = new ResizeObserver((entries) =>
@@ -350,12 +355,13 @@ export default function AppointmentCalendar({
                                                 </div>
                                             );
                                         const a = item.appointment!;
-                                        const text = `${minuteLabel(item.start)}–${minuteLabel(item.end)} · ${a.client_name} · ${a.service_name_snapshot} · ${labels[a.status] || a.status}`;
+                                        const past = new Date(a.ends_at).getTime() <= now;
+                                        const text = `${minuteLabel(item.start)}–${minuteLabel(item.end)} · ${a.client_name} · ${a.client_phone} · ${a.service_name_snapshot} · ${labels[a.status] || a.status}${past ? " · Прошедшая запись" : ""}`;
                                         return (
                                             <button
                                                 key={item.id}
                                                 type="button"
-                                                className={`calendar-appointment ${a.status}${selectedId === a.id ? " selected" : ""}${size < 48 ? " short" : ""}`}
+                                                className={`calendar-appointment ${a.status}${past ? " past" : ""}${selectedId === a.id ? " selected" : ""}${size < 48 ? " short" : ""}`}
                                                 style={style}
                                                 aria-label={text}
                                                 aria-pressed={
@@ -371,14 +377,15 @@ export default function AppointmentCalendar({
                                                     {minuteLabel(item.end)}
                                                 </span>
                                                 <strong>{a.client_name}</strong>
-                                                {size >= 64 && (
+                                                <span className="calendar-appt-phone">{a.client_phone}</span>
+                                                {size >= 88 && (
                                                     <span>
                                                         {
                                                             a.service_name_snapshot
                                                         }
                                                     </span>
                                                 )}
-                                                {size >= 96 && (
+                                                {size >= 112 && (
                                                     <small>
                                                         {a.price_som.toLocaleString(
                                                             "ru-RU",
@@ -399,6 +406,7 @@ export default function AppointmentCalendar({
                 <span className="badge pending">Ожидает</span>
                 <span className="badge confirmed">Подтверждена</span>
                 <span className="badge completed">Завершена</span>
+                <span className="badge calendar-past">Прошедшая</span>
             </div>
             {!all.length && (
                 <p className="muted small">На выбранный период записей нет.</p>
