@@ -51,7 +51,6 @@ export default function AppointmentCalendar({
     renderDetails: (appointment: Appointment) => ReactNode;
 }) {
     const root = useRef<HTMLDivElement>(null);
-    const scroll = useRef<HTMLDivElement>(null);
     const detail = useRef<HTMLDivElement>(null);
     const [compact, setCompact] = useState(false);
     const [now, setNow] = useState(() => Date.now());
@@ -147,18 +146,6 @@ export default function AppointmentCalendar({
         { length: Math.ceil((end - start) / 60) },
         (_, i) => start + i * 60,
     );
-    const scrollMinute = Math.min(
-        ...opening,
-        ...all.map((item) => item.start),
-        540,
-    );
-    useEffect(() => {
-        if (scroll.current)
-            scroll.current.scrollTop = Math.max(
-                0,
-                (scrollMinute - start - 30) * 1.4,
-            );
-    }, [view, date, start, scrollMinute]);
     return (
         <div className="appointment-calendar" ref={root}>
             <div className="calendar-toolbar">
@@ -244,7 +231,6 @@ export default function AppointmentCalendar({
             )}
             <div
                 className="time-calendar-scroll"
-                ref={scroll}
                 aria-busy={loading}
             >
                 <div className={`time-calendar ${view}`}>

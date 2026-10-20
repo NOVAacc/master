@@ -1434,19 +1434,19 @@ h2 {
     min-height: 32px;
 }
 .time-calendar-scroll {
-    max-height: 650px;
-    overflow: auto;
+    width: 100%;
+    min-width: 0;
     border: 1px solid #e5e5e5;
     border-radius: 16px;
     margin-top: 16px;
-    overscroll-behavior: contain;
 }
 .time-calendar {
     position: relative;
     background: white;
 }
 .time-calendar.week {
-    min-width: 840px;
+    min-width: 0;
+    width: 100%;
 }
 .time-calendar-head,
 .time-calendar-body {
@@ -1689,9 +1689,6 @@ h2 {
     }
     .appointment-view-controls select {
         max-width: 145px;
-    }
-    .time-calendar-scroll {
-        max-height: 600px;
     }
     .calendar-detail {
         padding: 14px;
@@ -2441,4 +2438,15 @@ h2 {
     .industry-options a { padding: 8px 12px; }
     .activity-filter { align-items: stretch; flex-direction: column; gap: 7px; }
     .activity-filter select { width: 100%; }
+}
+
+/* Calendar grids follow the available panel width without nested scrolling. */
+.main { min-width: 0; }
+.time-calendar-head > *,
+.time-calendar-body > * { min-width: 0; }
+.time-day-heading { overflow: hidden; }
+.time-day-heading strong { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+@container (max-width: 450px) {
+    .time-calendar.week .time-day-heading { padding: 8px 0; font-size: 9px; }
+    .time-calendar.week .time-day-heading strong { font-size: 9px; }
 }
