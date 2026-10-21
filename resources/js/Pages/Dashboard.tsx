@@ -448,6 +448,7 @@ export default function Dashboard({
             <aside className={`sidebar${mobileMenuOpen ? " mobile-menu-open" : ""}`}>
                 <div className="sidebar-mobile-header">
                     <Brand />
+                    <span className="mobile-header-title">Кабинет</span>
                     <button
                         type="button"
                         className="sidebar-menu-toggle"
