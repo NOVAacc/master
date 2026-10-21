@@ -2851,3 +2851,28 @@ h2 {
     .shell > .main { padding-inline: 8px; }
     .catalog-wrap, .booking-wrap, .auth-wrap { padding-inline: 8px; }
 }
+
+
+/* Phone-only navigation: no desktop switch or linked logo in any header. */
+.mobile-header-title { display: none; }
+@media (max-width: 700px) {
+    .display-switch { display: none !important; }
+    html[data-display-mode="desktop"] .display-frame {
+        min-width: 0;
+        width: 100%;
+    }
+    .display-frame .brand { display: none !important; }
+    .shell .sidebar-mobile-header .mobile-header-title {
+        display: block;
+        font-size: 15px;
+        font-weight: 650;
+        letter-spacing: -0.25px;
+        color: #252525;
+    }
+    .catalog-header {
+        justify-content: flex-end;
+    }
+    .catalog-header nav {
+        margin-left: auto;
+    }
+}
