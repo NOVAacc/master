@@ -2,6 +2,7 @@ import { timezoneLabel } from "./timezone";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "@inertiajs/react";
 import axios from "axios";
+import CloseButton from "./CloseButton";
 import { Errors, Field } from "./Shared";
 import PhoneInput from "./PhoneInput";
 import { addDays, localDay } from "./calendar";
@@ -70,7 +71,7 @@ export default function QuickBooking({ services, timezone, date, initialClient, 
             aria-labelledby="quick-booking-title" onCancel={e => { e.preventDefault(); if (!f.processing) onClose(); }}>
             <div className="service-dialog-header">
                 <h2 id="quick-booking-title">Записать клиента</h2>
-                <button type="button" className="ghost" onClick={onClose} disabled={f.processing} aria-label="Закрыть">×</button>
+                <CloseButton onClick={onClose} disabled={f.processing} />
             </div>
             <form className="quick-booking-form" onSubmit={e => {
                 e.preventDefault();
