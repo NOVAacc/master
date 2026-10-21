@@ -22,7 +22,7 @@ class ManualBookingController extends Controller
     {
         $master = $this->master($request);
         $data = $request->validate(['q' => ['nullable', 'string', 'max:100']]);
-        $query = DB::table('master_clients')->where('master_profile_id', $master->id);
+        $query = DB::table('master_clients')->where('master_profile_id', $master->id)->whereNull('archived_at');
         $search = trim($data['q'] ?? '');
         if ($search !== '') {
             // Escape LIKE metacharacters so a phone/name search stays literal.
@@ -94,7 +94,7 @@ class ManualBookingController extends Controller
             'client_comment' => ['nullable', 'string', 'max:1000'],
         ]);
         $client = empty($data['client_id']) ? null : DB::table('master_clients')
-            ->where('master_profile_id', $master->id)->where('id', $data['client_id'])->first();
+            ->where('master_profile_id', $master->id)->whereNull('archived_at')->where('id', $data['client_id'])->first();
         abort_if(! empty($data['client_id']) && ! $client, 404);
         $name = trim($client?->name ?? $data['client_name'] ?? '');
         $phone = $client?->phone_digits ?? $data['client_phone'] ?? '';
