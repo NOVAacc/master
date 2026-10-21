@@ -49,6 +49,34 @@ final class ClientController extends Controller
         return redirect()->route('dashboard');
     }
 
+
+    public function search(Request $request)
+    {
+        $master = MasterProfile::query()->where('user_id', $request->user()->id)->firstOrFail();
+        $data = $request->validate(['q' => ['required', 'string', 'max:100']]);
+        $term = trim($data['q']);
+        if ($term === '') {
+            return response()->json([])->header('Cache-Control', 'private, no-store');
+        }
+
+        $digits = preg_replace('/\\D/', '', $term);
+        $name = '%'.addcslashes($term, '%_\\').'%';
+        $clients = DB::table('master_clients')
+            ->where('master_profile_id', $master->id)
+            ->whereNull('archived_at')
+            ->where(function ($query) use ($name, $digits) {
+                $query->where('name', 'like', $name);
+                if ($digits !== '') {
+                    $query->orWhere('phone_digits', 'like', '%'.$digits.'%');
+                }
+            })
+            ->orderBy('name')
+            ->limit(100)
+            ->get(['id', 'name', 'phone_digits', 'notes']);
+
+        return response()->json($clients)->header('Cache-Control', 'private, no-store');
+    }
+
     public function candidates(Request $request, int $client)
     {
         [$master] = $this->scopedClient($request, $client);
