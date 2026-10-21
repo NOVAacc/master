@@ -2681,3 +2681,49 @@ h2 {
     .services-table .service-status-cell { grid-column: 1; grid-row: 3; }
     .services-table .service-action-cell { grid-column: 2; grid-row: 3; }
 }
+
+
+/* Compact inline action icons in the services table. */
+.services-table th:last-child { width: 94px; }
+.services-table td.service-action-cell { white-space: nowrap; padding: 8px 10px; }
+.service-action-buttons {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    width: 100%;
+}
+.service-icon-button {
+    display: inline-flex;
+    flex: 0 0 32px;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: #676767;
+    cursor: pointer;
+    transition: color 150ms ease, background-color 150ms ease;
+}
+.service-icon-button:hover { background: #f1f1f1; color: #242424; }
+.service-icon-button:focus-visible { outline: 2px solid #666; outline-offset: 2px; }
+.service-icon-button .icon { width: 16px; height: 16px; }
+@container (max-width: 700px) {
+    .services-table .service-action-cell {
+        grid-column: 2;
+        grid-row: 3;
+        width: auto;
+        padding: 0;
+    }
+    .service-action-buttons { gap: 2px; }
+    .service-icon-button { width: 30px; height: 30px; min-width: 30px; flex-basis: 30px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .service-icon-button { transition: none; }
+}
