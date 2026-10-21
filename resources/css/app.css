@@ -2521,3 +2521,52 @@ h2 {
 .client-card-candidate strong { font-size: 12px; }
 .client-card-candidate small { font-size: 11px; color: #737373; }
 .client-card-confirm .row { gap: 8px; }
+
+
+/* Unified compact iOS-inspired close action across BOSH. */
+.bosh-close-button {
+    appearance: none;
+    box-sizing: border-box;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: rgba(118, 118, 128, .12);
+    color: #707078;
+    box-shadow: none;
+    cursor: pointer;
+    line-height: 1;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 140ms ease, color 140ms ease, transform 140ms ease;
+}
+.bosh-close-button svg {
+    display: block;
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
+}
+.bosh-close-button:hover:not(:disabled) {
+    background: rgba(118, 118, 128, .2);
+    color: #36363c;
+}
+.bosh-close-button:active:not(:disabled) {
+    transform: scale(.94);
+    background: rgba(118, 118, 128, .25);
+}
+.bosh-close-button:focus-visible {
+    outline: 2px solid #666;
+    outline-offset: 3px;
+}
+.bosh-close-button:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+@media (prefers-reduced-motion: reduce) {
+    .bosh-close-button { transition: none; }
+}
