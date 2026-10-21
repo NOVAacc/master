@@ -2876,3 +2876,83 @@ h2 {
         margin-left: auto;
     }
 }
+
+
+/* Compact appointment notifications in the master's header. */
+.dashboard-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+    margin-left: auto;
+}
+.dashboard-notifications { position: relative; flex: 0 0 auto; }
+.dashboard-notification-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 88px;
+    min-height: 44px;
+    padding: 6px 8px;
+    color: #343434;
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 13px;
+}
+.dashboard-notification-trigger:hover,
+.dashboard-notification-trigger[aria-expanded="true"] { background: #f5f5f5; }
+.dashboard-notification-trigger .icon { width: 19px; height: 19px; }
+.notification-counter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    padding: 0 2px;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    color: #666;
+}
+.notification-counter-pending { color: #b44c3b; }
+.dashboard-notification-panel {
+    position: absolute;
+    z-index: 40;
+    right: 0;
+    top: calc(100% + 8px);
+    width: min(310px, calc(100vw - 24px));
+    padding: 8px;
+    border: 1px solid #e7e7e7;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 12px 35px rgba(0,0,0,.1);
+}
+.dashboard-notification-heading { padding: 9px 10px 12px; font-size: 13px; font-weight: 700; }
+.dashboard-notification-panel > button {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 44px;
+    border: 0;
+    border-radius: 9px;
+    background: none;
+    padding: 10px;
+    text-align: left;
+    color: #333;
+    font-size: 13px;
+}
+.dashboard-notification-panel > button:hover { background: #f5f5f5; }
+.dashboard-notification-panel > button strong { font-variant-numeric: tabular-nums; }
+.dashboard-notification-panel > p { margin: 8px 10px 5px; font-size: 11px; color: #777; }
+.appointment-filter-reset { margin-bottom: 12px; }
+@media (max-width: 700px) {
+    .shell .dashboard-header { flex-wrap: nowrap; gap: 10px; align-items: center; }
+    .dashboard-header > div:first-child { min-width: 0; }
+    .dashboard-header h1 { overflow-wrap: anywhere; font-size: 20px; }
+    .dashboard-header-actions { gap: 8px; flex-shrink: 0; }
+    .dashboard-notification-trigger { min-width: 80px; gap: 3px; padding-inline: 5px; }
+    .dashboard-notification-panel { right: -4px; }
+}
