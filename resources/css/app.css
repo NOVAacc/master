@@ -3043,3 +3043,31 @@ h2 {
     .shell .dashboard-header { gap: 6px; }
     .dashboard-header-actions { gap: 4px; }
 }
+
+
+/* Mobile: remove the remaining outer horizontal gutter. Content controls retain their own padding. */
+@media (max-width: 700px) {
+    .shell > .main { padding-left: 0; padding-right: 0; }
+    .shell > .sidebar { padding-left: 0; padding-right: 0; }
+    .shell .sidebar-mobile-header { padding-left: 10px; padding-right: 10px; }
+    .shell .sidebar.mobile-menu-open > nav,
+    .shell .sidebar.mobile-menu-open > .sidebar-bottom { padding-left: 10px; padding-right: 10px; }
+    .shell .main > .dashboard-header,
+    .shell .main > .notice,
+    .shell .main > .errors { margin-left: 10px; margin-right: 10px; }
+    .shell .main > .panel,
+    .shell .main > section.panel { margin-left: 0; margin-right: 0; }
+    .catalog-wrap { padding-left: 0; padding-right: 0; }
+    .catalog-header, .catalog-wrap > main > .catalog-filters, .catalog-wrap > main > .catalog-section { padding-left: 10px; padding-right: 10px; }
+    .booking-wrap { padding-left: 0; padding-right: 0; }
+    .booking-wrap > .booking-grid { margin-left: 0; margin-right: 0; }
+}
+@media (max-width: 380px) {
+    .shell .sidebar-mobile-header,
+    .shell .sidebar.mobile-menu-open > nav,
+    .shell .sidebar.mobile-menu-open > .sidebar-bottom,
+    .catalog-header, .catalog-wrap > main > .catalog-filters, .catalog-wrap > main > .catalog-section { padding-left: 8px; padding-right: 8px; }
+    .shell .main > .dashboard-header,
+    .shell .main > .notice,
+    .shell .main > .errors { margin-left: 8px; margin-right: 8px; }
+}
