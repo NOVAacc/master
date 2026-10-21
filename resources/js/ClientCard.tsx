@@ -10,12 +10,13 @@ const labels: Record<string, string> = {
     completed: "Завершена", no_show: "Не пришёл",
 };
 
-export default function ClientCard({ client, services, onClose, onBook, onSaved }: {
+export default function ClientCard({ client, services, onClose, onBook, onSaved, onChanged }: {
     client: Client;
     services: Service[];
     onClose: () => void;
     onBook: (client: Client) => void;
     onSaved: (client: Client) => void;
+    onChanged: () => void;
 }) {
     const dialog = useRef<HTMLDialogElement>(null);
     const [detail, setDetail] = useState<Detail | null>(null);
@@ -28,6 +29,12 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved 
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
     const [menu, setMenu] = useState(false);
+    const [action, setAction] = useState<"merge" | "archive" | null>(null);
+    const [candidates, setCandidates] = useState<Client[]>([]);
+    const [query, setQuery] = useState("");
+    const [sourceId, setSourceId] = useState<number | null>(null);
+    const [actionBusy, setActionBusy] = useState(false);
+    const [actionError, setActionError] = useState("");
     const savedNotes = useRef(client.notes ?? "");
 
     useEffect(() => {
@@ -45,6 +52,36 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved 
             .finally(() => { if (!controller.signal.aborted) setLoading(false); });
         return () => controller.abort();
     }, [client.id]);
+
+    useEffect(() => {
+        if (action !== "merge") return;
+        const controller = new AbortController();
+        axios.get<Client[]>("/clients/" + client.id + "/merge-candidates", {
+            params: { q: query }, signal: controller.signal,
+        }).then(({ data }) => setCandidates(data))
+            .catch(e => { if (!axios.isCancel(e)) setActionError("Не удалось загрузить список клиентов."); });
+        return () => controller.abort();
+    }, [action, client.id, query]);
+
+    async function confirmAction() {
+        if (!action || (action === "merge" && !sourceId)) return;
+        setActionBusy(true);
+        setActionError("");
+        try {
+            if (action === "merge") {
+                await axios.post("/clients/" + client.id + "/merge", { source_id: sourceId }, { headers: { Accept: "application/json" } });
+            } else {
+                await axios.delete("/clients/" + client.id, { headers: { Accept: "application/json" } });
+            }
+            onChanged();
+        } catch (e) {
+            setActionError(axios.isAxiosError(e) && e.response?.status === 422
+                ? "Не удалось объединить: проверьте карточки и длину заметок."
+                : "Действие не выполнено. Повторите попытку.");
+        } finally {
+            setActionBusy(false);
+        }
+    }
 
     async function save(patch: Partial<Client>) {
         setSaving(true);
@@ -78,10 +115,10 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved 
     const contact = detail?.client ?? client;
 
     return <dialog ref={dialog} className="service-dialog client-card-dialog" aria-labelledby="client-card-heading"
-        onCancel={e => { e.preventDefault(); if (!saving) onClose(); }}>
+        onCancel={e => { e.preventDefault(); if (!saving && !actionBusy) onClose(); }}>
         <div className="service-dialog-header">
             <span className="client-card-eyebrow">КЛИЕНТ</span>
-            <button className="ghost" aria-label="Закрыть карточку" type="button" onClick={onClose}>×</button>
+            <button className="ghost" aria-label="Закрыть карточку" type="button" onClick={onClose} disabled={actionBusy}>×</button>
         </div>
         <div className="client-card-body">
             {loading ? <p className="muted" role="status">Загрузка…</p> : error && !detail ? <p role="alert" className="errors">{error}</p> : <>
@@ -138,7 +175,40 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved 
                     <a className="ghost" aria-label="WhatsApp" title="WhatsApp" href={`https://wa.me/${contact.phone_digits}`} target="_blank" rel="noreferrer">WhatsApp</a>
                     <button className="ghost" type="button" aria-expanded={menu} aria-label="Дополнительные действия" onClick={() => setMenu(v => !v)}>···</button>
                 </div>
-                {menu && <p className="muted small">Для изменения или отмены записи используйте календарь.</p>}
+                {menu && !action && <div className="client-card-menu">
+                    <button type="button" className="ghost" onClick={() => { setAction("merge"); setMenu(false); setActionError(""); }}>Объединить с другим клиентом</button>
+                    <button type="button" className="ghost" onClick={() => { setAction("archive"); setMenu(false); setActionError(""); }}>Удалить из списка</button>
+                </div>}
+                {action === "merge" && <section className="client-card-confirm">
+                    <strong>Объединение клиентов</strong>
+                    <p className="muted small">Все записи выбранного клиента перейдут в карточку «{contact.name}». История и заметки сохранятся, а вторая карточка исчезнет.</p>
+                    <label htmlFor="merge-search">Найти второй профиль</label>
+                    <input id="merge-search" type="search" value={query} maxLength={100} placeholder="Имя или телефон"
+                        onChange={e => { setQuery(e.target.value); setSourceId(null); }} />
+                    <div className="client-card-candidates">
+                        {candidates.length ? candidates.map(c => <label key={c.id} className="client-card-candidate">
+                            <input type="radio" name="merge-target" checked={sourceId === c.id} onChange={() => setSourceId(c.id)} />
+                            <span><strong>{c.name}</strong><small>+{c.phone_digits}</small></span>
+                        </label>) : <p className="muted small">Другие клиенты не найдены.</p>}
+                    </div>
+                    <div className="row wrap">
+                        <button type="button" className="primary" onClick={() => void confirmAction()} disabled={actionBusy || !sourceId}>
+                            {actionBusy ? "Объединяем…" : "Подтвердить объединение"}
+                        </button>
+                        <button type="button" className="ghost" disabled={actionBusy} onClick={() => setAction(null)}>Отмена</button>
+                    </div>
+                </section>}
+                {action === "archive" && <section className="client-card-confirm">
+                    <strong>Удалить клиента из списка?</strong>
+                    <p className="muted small">Карточка исчезнет из списка клиентов. Существующие записи, история и финансовые данные останутся без изменений. При новой записи на тот же номер карточка восстановится.</p>
+                    <div className="row wrap">
+                        <button type="button" className="primary" disabled={actionBusy} onClick={() => void confirmAction()}>
+                            {actionBusy ? "Удаляем…" : "Удалить из списка"}
+                        </button>
+                        <button type="button" className="ghost" disabled={actionBusy} onClick={() => setAction(null)}>Отмена</button>
+                    </div>
+                </section>}
+                {actionError && <p role="alert" className="errors">{actionError}</p>}
             </>}
         </div>
     </dialog>;
