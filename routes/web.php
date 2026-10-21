@@ -33,6 +33,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/group-sessions', [GroupSessionController::class, 'create'])->middleware('throttle:20,1');
     Route::post('/group-sessions/{session}/participants/{participant}/cancel', [GroupSessionController::class, 'cancelParticipant'])->whereNumber('session')->whereNumber('participant')->middleware('throttle:20,1');
     Route::get('/clients/{client}', [ClientController::class, 'show'])->whereNumber('client')->name('clients.show');
+    Route::get('/clients/{client}/merge-candidates', [ClientController::class, 'candidates'])->whereNumber('client')->middleware('throttle:120,1');
+    Route::post('/clients/{client}/merge', [ClientController::class, 'merge'])->whereNumber('client')->middleware('throttle:20,1');
+    Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->whereNumber('client')->middleware('throttle:20,1');
     Route::put('/clients/{client}', [ClientController::class, 'update'])->whereNumber('client')->middleware('throttle:30,1')->name('clients.update');
     Route::post('/security/password', [AccountSecurityController::class, 'password'])->middleware('throttle:5,10');
     Route::post('/security/email', [AccountSecurityController::class, 'email'])->middleware('throttle:3,10');
