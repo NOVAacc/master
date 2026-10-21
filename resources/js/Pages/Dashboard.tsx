@@ -166,6 +166,11 @@ export default function Dashboard({
     const selectTab = (nextTab: string) => {
         setTab(nextTab);
         setMobileMenuOpen(false);
+        setNotificationsOpen(false);
+        if (nextTab === "appointments") {
+            setAppointmentFilter("all");
+            setAppointmentView("calendar");
+        }
     };
     const [quickBooking, setQuickBooking] = useState(false);
     const [selectedClient, setSelectedClient] = useState<(typeof clients)[number] | null>(null);
@@ -237,11 +242,14 @@ export default function Dashboard({
             ["pending", "confirmed"].includes(a.status) &&
             new Date(a.starts_at) > new Date(),
     );
-    const awaitingConfirmation = appointments.filter(a => a.status === "pending");
+    const awaitingConfirmation = appointments.filter(a =>
+        a.status === "pending" && new Date(a.starts_at) > new Date()
+    );
     const showNotificationAppointments = (filter: "upcoming" | "pending") => {
         setAppointmentFilter(filter);
         setAppointmentView("list");
-        selectTab("appointments");
+        setTab("appointments");
+        setMobileMenuOpen(false);
         setNotificationsOpen(false);
     };
     const visibleAppointments = appointmentFilter === "upcoming" ? upcoming
@@ -611,9 +619,10 @@ export default function Dashboard({
                                         aria-pressed={
                                             appointmentView === "calendar"
                                         }
-                                        onClick={() =>
-                                            setAppointmentView("calendar")
-                                        }
+                                        onClick={() => {
+                                            setAppointmentView("calendar");
+                                            setAppointmentFilter("all");
+                                        }}
                                     >
                                         Календарь
                                     </button>
@@ -622,9 +631,10 @@ export default function Dashboard({
                                         aria-pressed={
                                             appointmentView === "list"
                                         }
-                                        onClick={() =>
-                                            setAppointmentView("list")
-                                        }
+                                        onClick={() => {
+                                            setAppointmentView("list");
+                                            setAppointmentFilter("all");
+                                        }}
                                     >
                                         Список
                                     </button>
@@ -659,19 +669,23 @@ export default function Dashboard({
                                     </div>
                                     {!visibleAppointments.length && (
                                         <div className="empty">
-                                            <h3>Здесь появятся ваши записи</h3>
-                                            <p>
-                                                Добавьте услуги, настройте
-                                                расписание и поделитесь ссылкой
-                                                на страницу.
-                                            </p>
-                                            <a
-                                                href={publicUrl}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                            >
-                                                {publicUrl}
-                                            </a>
+                                            {appointmentFilter === "upcoming" ? (
+                                                <>
+                                                    <h3>Предстоящих записей пока нет</h3>
+                                                    <p>Здесь появятся будущие записи клиентов.</p>
+                                                </>
+                                            ) : appointmentFilter === "pending" ? (
+                                                <>
+                                                    <h3>Нет записей на подтверждение</h3>
+                                                    <p>Все предстоящие записи обработаны.</p>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <h3>Здесь появятся ваши записи</h3>
+                                                    <p>Добавьте услуги, настройте расписание и поделитесь ссылкой на страницу.</p>
+                                                    <a href={publicUrl} target="_blank" rel="noreferrer">{publicUrl}</a>
+                                                </>
+                                            )}
                                         </div>
                                     )}
                                 </>
