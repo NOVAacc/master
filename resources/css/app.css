@@ -2608,3 +2608,80 @@ h2 {
 @media (prefers-reduced-motion: reduce) {
     .clients-item, .clients-search { transition: none; }
 }
+
+
+/* Short lists grow naturally; keep internal scrolling only for genuinely long lists. */
+.client-card-candidates,
+.client-card-history,
+.quick-client-results {
+    max-height: none;
+    overflow: visible;
+}
+.client-card-candidates.is-long {
+    max-height: min(48svh, 440px);
+    overflow-y: auto;
+}
+.client-card-history.is-long {
+    max-height: min(48svh, 480px);
+    overflow-y: auto;
+}
+.quick-client-results.is-long {
+    max-height: min(48svh, 440px);
+    overflow-y: auto;
+}
+.services-table-scroll,
+@ignore-this-rule {
+    max-height: none;
+}
+.services-table-scroll {
+    max-height: none;
+    overflow-y: visible;
+    overflow-x: auto;
+}
+.services-table-scroll.is-long {
+    max-height: min(70svh, 760px);
+    overflow: auto;
+}
+.services-table th:first-child,
+.services-table th.service-select-cell {
+    width: 46px;
+    min-width: 46px;
+    max-width: 46px;
+    text-align: center;
+    padding-left: 9px;
+    padding-right: 9px;
+}
+.services-table td.service-select-cell {
+    width: 46px;
+    text-align: center;
+    padding-left: 9px;
+    padding-right: 9px;
+}
+.services-table .service-select-cell input[type="checkbox"] {
+    margin: 0;
+    vertical-align: middle;
+}
+.services-table th:nth-child(2) { width: 36%; }
+@container (max-width: 700px) {
+    .services-table-scroll { max-height: none; }
+    .services-table-scroll.is-long { max-height: min(70svh, 760px); }
+    .services-table tr {
+        grid-template-columns: minmax(0, 1fr) 46px;
+        align-items: center;
+    }
+    .services-table .service-select-cell {
+        grid-column: 2;
+        grid-row: 1;
+        width: 46px;
+        padding: 0;
+        text-align: center;
+    }
+    .services-table .service-name-cell {
+        grid-column: 1;
+        grid-row: 1;
+    }
+    .services-table .service-duration-cell { grid-column: 1; grid-row: 2; }
+    .services-table .service-price-cell { grid-column: 2; grid-row: 2; }
+    .services-table .service-status-cell { grid-column: 1; grid-row: 3; }
+    .services-table .service-action-cell { grid-column: 2; grid-row: 3; }
+}
