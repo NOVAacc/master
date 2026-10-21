@@ -10,8 +10,8 @@ import type { Service } from "./types";
 type Client = { id: number; name: string; phone_digits: string };
 type Slot = { value: string; label: string };
 
-export default function QuickBooking({ services, timezone, date, onClose }: {
-    services: Service[]; timezone: string; date: string; onClose: () => void;
+export default function QuickBooking({ services, timezone, date, initialClient, onClose }: {
+    services: Service[]; timezone: string; date: string; initialClient?: Client | null; onClose: () => void;
 }) {
     const dialog = useRef<HTMLDialogElement>(null);
     const active = services.filter(s => s.is_active);
@@ -19,7 +19,7 @@ export default function QuickBooking({ services, timezone, date, onClose }: {
     const [day, setDay] = useState(date >= today && date <= addDays(today, 90) ? date : today);
     const [query, setQuery] = useState("");
     const [newClient, setNewClient] = useState(false);
-    const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+    const [selectedClient, setSelectedClient] = useState<Client | null>(initialClient ?? null);
     const [clients, setClients] = useState<Client[]>([]);
     const [clientsLoading, setClientsLoading] = useState(true);
     const [clientError, setClientError] = useState("");
@@ -28,7 +28,7 @@ export default function QuickBooking({ services, timezone, date, onClose }: {
     const [slotError, setSlotError] = useState("");
     const [refresh, setRefresh] = useState(0);
     const f = useForm({
-        client_id: null as number | null,
+        client_id: initialClient?.id ?? null as number | null,
         client_name: "",
         client_phone: "",
         service_id: active[0]?.id ?? 0,
