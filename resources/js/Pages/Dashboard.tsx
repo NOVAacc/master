@@ -152,6 +152,19 @@ export default function Dashboard({
     }[];
 }) {
     const [tab, setTab] = useState("appointments");
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    useEffect(() => {
+        if (!mobileMenuOpen) return;
+        const closeOnEscape = (event: KeyboardEvent) => {
+            if (event.key === "Escape") setMobileMenuOpen(false);
+        };
+        window.addEventListener("keydown", closeOnEscape);
+        return () => window.removeEventListener("keydown", closeOnEscape);
+    }, [mobileMenuOpen]);
+    const selectTab = (nextTab: string) => {
+        setTab(nextTab);
+        setMobileMenuOpen(false);
+    };
     const [quickBooking, setQuickBooking] = useState(false);
     const [selectedClient, setSelectedClient] = useState<(typeof clients)[number] | null>(null);
     const [bookingClient, setBookingClient] = useState<(typeof clients)[number] | null>(null);
@@ -432,10 +445,22 @@ export default function Dashboard({
     return (
         <div className="shell">
             <Head title="Кабинет" />
-            <aside className="sidebar">
-                <Brand />
+            <aside className={`sidebar${mobileMenuOpen ? " mobile-menu-open" : ""}`}>
+                <div className="sidebar-mobile-header">
+                    <Brand />
+                    <button
+                        type="button"
+                        className="sidebar-menu-toggle"
+                        aria-label={mobileMenuOpen ? "Закрыть меню" : "Открыть меню"}
+                        aria-controls="master-sidebar-navigation"
+                        aria-expanded={mobileMenuOpen}
+                        onClick={() => setMobileMenuOpen(open => !open)}
+                    >
+                        <span className="sidebar-menu-lines" aria-hidden="true"><i /><i /><i /></span>
+                    </button>
+                </div>
                 <p className="eyebrow">ВАШЕ ДЕЛО</p>
-                <nav>
+                <nav id="master-sidebar-navigation" aria-label="Разделы кабинета">
                     {Object.entries({
                         appointments: "Записи",
                         services: "Услуги",
@@ -447,7 +472,7 @@ export default function Dashboard({
                         <button
                             key={key}
                             className={tab === key ? "active" : ""}
-                            onClick={() => setTab(key)}
+                            onClick={() => selectTab(key)}
                         >
                             <Icon
                                 name={
@@ -473,7 +498,7 @@ export default function Dashboard({
                         type="button"
                         className={tab === "settings" ? "active" : ""}
                         aria-current={tab === "settings" ? "page" : undefined}
-                        onClick={() => setTab("settings")}
+                        onClick={() => selectTab("settings")}
                     >
                         <Icon name="settings" />
                         <span>Настройки профиля</span>
