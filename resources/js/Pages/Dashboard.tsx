@@ -10,6 +10,7 @@ import ServicesPanel from "../ServicesPanel";
 import EditAppointmentForm from "../EditAppointmentForm";
 import AppointmentCalendar from "../AppointmentCalendar";
 import QuickBooking from "../QuickBooking";
+import ClientCard from "../ClientCard";
 import { Brand, Errors, Field, Notice } from "../Shared";
 import type { Appointment, Hour, Master, Service } from "../types";
 const days = [
@@ -151,6 +152,9 @@ export default function Dashboard({
 }) {
     const [tab, setTab] = useState("appointments");
     const [quickBooking, setQuickBooking] = useState(false);
+    const [selectedClient, setSelectedClient] = useState<(typeof clients)[number] | null>(null);
+    const [bookingClient, setBookingClient] = useState<(typeof clients)[number] | null>(null);
+    const [clientOverrides, setClientOverrides] = useState<Record<number, (typeof clients)[number]>>({});
     const [appointmentView, setAppointmentView] = useState<"calendar" | "list">(
         "calendar",
     );
@@ -593,9 +597,8 @@ export default function Dashboard({
                             ) : clients.map(client => (
                                 <article className="appointment" key={client.id}>
                                     <div>
-                                        <h3><Link href={`/clients/${client.id}`}>{client.name}</Link></h3>
-                                        <a href={`tel:+${client.phone_digits}`}>+{client.phone_digits}</a>
-                                        {client.notes && <p className="muted">{client.notes}</p>}
+                                        <h3><button type="button" className="client-list-link" onClick={() => setSelectedClient(clientOverrides[client.id] ?? client)}>{(clientOverrides[client.id] ?? client).name}</button></h3>
+                                        <a href={`tel:+${(clientOverrides[client.id] ?? client).phone_digits}`}>+{(clientOverrides[client.id] ?? client).phone_digits}</a>
                                     </div>
                                 </article>
                             ))}
@@ -685,8 +688,12 @@ export default function Dashboard({
                     {tab === "settings" && <AccountSecurity status={security} />}
                 </section>
             </main>
+            {selectedClient && <ClientCard key={selectedClient.id} client={selectedClient} services={services}
+                onClose={() => setSelectedClient(null)}
+                onSaved={updated => setClientOverrides(old => ({ ...old, [updated.id]: updated }))}
+                onBook={target => { setBookingClient(target); setSelectedClient(null); setQuickBooking(true); }} />}
             {quickBooking && <QuickBooking services={services} timezone={master.timezone} date={calendarDate}
-                onClose={() => setQuickBooking(false)} />}
+                initialClient={bookingClient} onClose={() => { setQuickBooking(false); setBookingClient(null); }} />}
         </div>
     );
 }
