@@ -2856,7 +2856,7 @@ h2 {
 /* Phone-only navigation: no desktop switch or linked logo in any header. */
 .mobile-header-title { display: none; }
 @media (max-width: 700px) {
-    .display-switch { display: none !important; }
+    .site-footer .display-switch { display: none !important; }
     html[data-display-mode="desktop"] .display-frame {
         min-width: 0;
         width: 100%;
