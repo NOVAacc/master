@@ -2507,3 +2507,17 @@ h2 {
     .client-card-body { padding: 16px; }
     .client-card-actions .ghost { padding-inline: 9px; }
 }
+
+
+.client-card-menu { display: grid; gap: 4px; padding: 8px; background: #f7f7f7; border-radius: 12px; }
+.client-card-menu .ghost { text-align: left; }
+.client-card-confirm { display: grid; gap: 10px; padding: 14px; border: 1px solid #e5e5e5; border-radius: 12px; }
+.client-card-confirm > strong { font-size: 13px; }
+.client-card-confirm p { margin: 0; }
+.client-card-confirm > label { font-size: 12px; font-weight: 600; }
+.client-card-candidates { display: grid; gap: 6px; max-height: 175px; overflow-y: auto; }
+.client-card-candidate { display: flex; gap: 9px; align-items: center; padding: 9px 10px; border: 1px solid #eee; border-radius: 10px; cursor: pointer; }
+.client-card-candidate > span { display: grid; gap: 3px; min-width: 0; }
+.client-card-candidate strong { font-size: 12px; }
+.client-card-candidate small { font-size: 11px; color: #737373; }
+.client-card-confirm .row { gap: 8px; }
