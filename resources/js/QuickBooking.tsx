@@ -116,7 +116,7 @@ export default function QuickBooking({ services, timezone, date, initialClient, 
                             <input autoFocus type="search" value={query} maxLength={100} placeholder="Начните вводить имя или телефон"
                                 onChange={e => { setQuery(e.target.value); setClients([]); setClientsLoading(true); }} />
                         </Field>
-                        <div className="quick-client-results" aria-label="Мои клиенты" aria-busy={clientsLoading}>
+                        <div className={`quick-client-results${clients.length > 8 ? " is-long" : ""}`} aria-label="Мои клиенты" aria-busy={clientsLoading}>
                             {clientsLoading ? <p className="muted small" role="status">Ищем клиентов…</p> :
                                 clientError ? <p className="errors" role="alert">{clientError}</p> :
                                 clients.length ? clients.map(client => (
