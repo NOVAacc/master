@@ -1,6 +1,7 @@
 import { timezoneLabel } from "../timezone";
 import { Head, Link, router, useForm } from "@inertiajs/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import Icon from "../Icon";
 import ProfileSettings from "../ProfileSettings";
 import AccountSecurity from "../AccountSecurity";
@@ -155,6 +156,34 @@ export default function Dashboard({
     const [selectedClient, setSelectedClient] = useState<(typeof clients)[number] | null>(null);
     const [bookingClient, setBookingClient] = useState<(typeof clients)[number] | null>(null);
     const [clientOverrides, setClientOverrides] = useState<Record<number, (typeof clients)[number]>>({});
+    const [clientQuery, setClientQuery] = useState("");
+    const [clientSearchResults, setClientSearchResults] = useState<(typeof clients)>([]);
+    const [clientSearching, setClientSearching] = useState(false);
+    const [clientSearchError, setClientSearchError] = useState("");
+    const [clientSearchRevision, setClientSearchRevision] = useState(0);
+    useEffect(() => {
+        const query = clientQuery.trim();
+        if (tab !== "clients" || !query) {
+            setClientSearching(false);
+            setClientSearchError("");
+            setClientSearchResults([]);
+            return;
+        }
+        const controller = new AbortController();
+        setClientSearching(true);
+        setClientSearchError("");
+        const timer = window.setTimeout(() => {
+            axios.get<typeof clients>("/clients/search", { params: { q: query }, signal: controller.signal })
+                .then(({ data }) => setClientSearchResults(data))
+                .catch(e => {
+                    if (!axios.isCancel(e)) setClientSearchError("Не удалось найти клиентов. Попробуйте ещё раз.");
+                })
+                .finally(() => { if (!controller.signal.aborted) setClientSearching(false); });
+        }, 250);
+        return () => { window.clearTimeout(timer); controller.abort(); };
+    }, [clientQuery, clientSearchRevision, tab]);
+    const visibleClients = (clientQuery.trim() ? clientSearchResults : clients)
+        .map(client => clientOverrides[client.id] ?? client);
     const [appointmentView, setAppointmentView] = useState<"calendar" | "list">(
         "calendar",
     );
@@ -590,18 +619,53 @@ export default function Dashboard({
                         </>
                     )}
                     {tab === "clients" && (
-                        <div>
-                            <p className="muted">Клиенты добавляются автоматически после онлайн-записи. Данные доступны только вашему профилю.</p>
-                            {clients.length === 0 ? (
-                                <p className="muted">Пока нет клиентов. После первой записи здесь появится карточка.</p>
-                            ) : clients.map(client => (
-                                <article className="appointment" key={client.id}>
-                                    <div>
-                                        <h3><button type="button" className="client-list-link" onClick={() => setSelectedClient(clientOverrides[client.id] ?? client)}>{(clientOverrides[client.id] ?? client).name}</button></h3>
-                                        <a href={`tel:+${(clientOverrides[client.id] ?? client).phone_digits}`}>+{(clientOverrides[client.id] ?? client).phone_digits}</a>
-                                    </div>
-                                </article>
-                            ))}
+                        <div className="clients-section">
+                            <div className="clients-toolbar">
+                                <label className="clients-search" htmlFor="clients-search-input">
+                                    <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                                        stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                        <circle cx="10.8" cy="10.8" r="6.8" />
+                                        <path d="m16 16 4.2 4.2" />
+                                    </svg>
+                                    <input id="clients-search-input" type="search" autoComplete="off" maxLength={100}
+                                        aria-label="Поиск клиентов по имени или телефону"
+                                        placeholder="Поиск по имени или телефону"
+                                        value={clientQuery} onChange={e => setClientQuery(e.target.value)} />
+                                </label>
+                                <span className="clients-count" role="status">
+                                    {clientSearching ? "Поиск…" : clientQuery.trim()
+                                        ? `Найдено: ${visibleClients.length}${visibleClients.length === 100 ? "+" : ""}`
+                                        : `Клиентов: ${visibleClients.length}`}
+                                </span>
+                            </div>
+                            {clientSearchError ? (
+                                <div className="clients-empty" role="alert">
+                                    {clientSearchError}
+                                    <button className="ghost" type="button" onClick={() => setClientSearchRevision(n => n + 1)}>Повторить</button>
+                                </div>
+                            ) : !clientSearching && visibleClients.length === 0 ? (
+                                <div className="clients-empty">
+                                    {clientQuery.trim()
+                                        ? "Клиенты не найдены. Проверьте имя или номер телефона."
+                                        : "Пока нет клиентов. После первой записи здесь появится карточка."}
+                                </div>
+                            ) : (
+                                <div className="clients-grid" aria-busy={clientSearching}>
+                                    {visibleClients.map(client => (
+                                        <button type="button" key={client.id} className="clients-item"
+                                            onClick={() => setSelectedClient(client)}>
+                                            <span className="clients-item-info">
+                                                <strong>{client.name}</strong>
+                                                <span>+{client.phone_digits}</span>
+                                            </span>
+                                            <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none"
+                                                stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="m9 5 7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                     {tab === "groups" && (
@@ -691,7 +755,7 @@ export default function Dashboard({
             {selectedClient && <ClientCard key={selectedClient.id} client={selectedClient} services={services}
                 onClose={() => setSelectedClient(null)}
                 onSaved={updated => setClientOverrides(old => ({ ...old, [updated.id]: updated }))}
-                onChanged={() => { setSelectedClient(null); router.reload({ only: ["clients", "appointments", "calendarAppointments"], preserveScroll: true }); }}
+                onChanged={() => { setSelectedClient(null); setClientSearchRevision(n => n + 1); router.reload({ only: ["clients", "appointments", "calendarAppointments"], preserveScroll: true }); }}
                 onBook={target => { setBookingClient(target); setSelectedClient(null); setQuickBooking(true); }} />}
             {quickBooking && <QuickBooking services={services} timezone={master.timezone} date={calendarDate}
                 initialClient={bookingClient} onClose={() => { setQuickBooking(false); setBookingClient(null); }} />}
