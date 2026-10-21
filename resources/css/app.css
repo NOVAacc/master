@@ -2629,10 +2629,6 @@ h2 {
     max-height: min(48svh, 440px);
     overflow-y: auto;
 }
-.services-table-scroll,
-@ignore-this-rule {
-    max-height: none;
-}
 .services-table-scroll {
     max-height: none;
     overflow-y: visible;
