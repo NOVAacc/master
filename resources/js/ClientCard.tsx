@@ -161,7 +161,7 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved,
                     <button type="button" className="client-card-history-toggle" aria-expanded={history} onClick={() => setHistory(v => !v)}>
                         История записей <span>{history ? "Скрыть" : "Показать"}</span>
                     </button>
-                    {history && <div className="client-card-history">
+                    {history && <div className={`client-card-history${visits.length > 10 ? " is-long" : ""}`}>
                         {visits.length === 0 ? <p className="muted">Записей пока нет.</p> :
                             visits.map(v => <div key={v.id} className="client-card-visit">
                                 <strong>{v.service_name_snapshot}</strong>
@@ -186,7 +186,7 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved,
                     <label htmlFor="merge-search">Найти второй профиль</label>
                     <input id="merge-search" type="search" value={query} maxLength={100} placeholder="Имя или телефон"
                         onChange={e => { setQuery(e.target.value); setSourceId(null); }} />
-                    <div className="client-card-candidates">
+                    <div className={`client-card-candidates${candidates.length > 8 ? " is-long" : ""}`}>
                         {candidates.length ? candidates.map(c => <label key={c.id} className="client-card-candidate">
                             <input type="radio" name="merge-target" checked={sourceId === c.id} onChange={() => setSourceId(c.id)} />
                             <span><strong>{c.name}</strong><small>+{c.phone_digits}</small></span>
