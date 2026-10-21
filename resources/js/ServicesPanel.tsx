@@ -262,11 +262,11 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                 </select>
             </div>
             {shown.length ? (
-                <div className="services-table-scroll">
+                <div className={`services-table-scroll${shown.length > 12 ? " is-long" : ""}`}>
                     <table className="services-table">
                         <thead>
                             <tr>
-                                <th scope="col"><span className="sr-only">Выбрать для ссылки</span></th>
+                                <th scope="col" className="service-select-cell"><span className="sr-only">Выбрать для ссылки</span></th>
                                 <th scope="col">Услуга</th>
                                 <th scope="col">Время</th>
                                 <th scope="col">Стоимость</th>
@@ -279,7 +279,7 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                         <tbody>
                             {shown.map((service) => (
                                 <tr key={service.id}>
-                                    <td>
+                                    <td className="service-select-cell">
                                         <input type="checkbox" disabled={!service.is_active}
                                             aria-label={`Включить «${service.name}» в ссылку`}
                                             checked={linkSelections.includes(service.id)}
