@@ -153,6 +153,8 @@ export default function Dashboard({
 }) {
     const [tab, setTab] = useState("appointments");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
+    const [appointmentFilter, setAppointmentFilter] = useState<"all" | "upcoming" | "pending">("all");
     useEffect(() => {
         if (!mobileMenuOpen) return;
         const closeOnEscape = (event: KeyboardEvent) => {
@@ -235,6 +237,23 @@ export default function Dashboard({
             ["pending", "confirmed"].includes(a.status) &&
             new Date(a.starts_at) > new Date(),
     );
+    const awaitingConfirmation = appointments.filter(a => a.status === "pending");
+    const showNotificationAppointments = (filter: "upcoming" | "pending") => {
+        setAppointmentFilter(filter);
+        setAppointmentView("list");
+        selectTab("appointments");
+        setNotificationsOpen(false);
+    };
+    const visibleAppointments = appointmentFilter === "upcoming" ? upcoming
+        : appointmentFilter === "pending" ? awaitingConfirmation : appointments;
+    useEffect(() => {
+        if (!notificationsOpen) return;
+        const dismiss = (event: KeyboardEvent) => {
+            if (event.key === "Escape") setNotificationsOpen(false);
+        };
+        window.addEventListener("keydown", dismiss);
+        return () => window.removeEventListener("keydown", dismiss);
+    }, [notificationsOpen]);
     const changeStatus = (a: Appointment, status: string) => {
         setPending(a.id);
         setMessage("");
@@ -528,7 +547,35 @@ export default function Dashboard({
                         </p>
                         <h1>{master.display_name}</h1>
                     </div>
-                    <MasterAvatar master={master} />
+                    <div className="dashboard-header-actions">
+                        <div className="dashboard-notifications">
+                            <button
+                                type="button"
+                                className="dashboard-notification-trigger"
+                                onClick={() => setNotificationsOpen(open => !open)}
+                                aria-label={`Уведомления: предстоящих записей ${upcoming.length}, ждут подтверждения ${awaitingConfirmation.length}`}
+                                aria-expanded={notificationsOpen}
+                                aria-controls="master-notification-panel"
+                            >
+                                <span className="notification-counter" title="Предстоящие записи">{upcoming.length}</span>
+                                <Icon name="bell" />
+                                <span className="notification-counter notification-counter-pending" title="Ждут подтверждения">{awaitingConfirmation.length}</span>
+                            </button>
+                            {notificationsOpen && (
+                                <div id="master-notification-panel" className="dashboard-notification-panel">
+                                    <div className="dashboard-notification-heading">Уведомления</div>
+                                    <button type="button" onClick={() => showNotificationAppointments("upcoming")}>
+                                        <span>Предстоящие записи</span><strong>{upcoming.length}</strong>
+                                    </button>
+                                    <button type="button" onClick={() => showNotificationAppointments("pending")}>
+                                        <span>Ждут подтверждения</span><strong>{awaitingConfirmation.length}</strong>
+                                    </button>
+                                    <p>Выберите категорию, чтобы увидеть соответствующие записи.</p>
+                                </div>
+                            )}
+                        </div>
+                        <MasterAvatar master={master} />
+                    </div>
                 </header>
                 <Notice />
                 {message && (
@@ -536,22 +583,6 @@ export default function Dashboard({
                         {message}
                     </div>
                 )}
-                <div className="metrics">
-                    <article className="metric">
-                        <small>Предстоящие записи</small>
-                        <strong>{upcoming.length}</strong>
-                    </article>
-                    <article className="metric">
-                        <small>Ждут подтверждения</small>
-                        <strong>
-                            {
-                                appointments.filter(
-                                    (a) => a.status === "pending",
-                                ).length
-                            }
-                        </strong>
-                    </article>
-                </div>
                 <section className="panel">
                     <div className="row between">
                         <h2>
@@ -617,13 +648,16 @@ export default function Dashboard({
                             ) : (
                                 <>
                                     <p className="muted">
-                                        Последние 200 записей. Время указано в
+                                        {appointmentFilter === "upcoming" ? "Предстоящие записи." : appointmentFilter === "pending" ? "Записи, ожидающие подтверждения." : "Последние 200 записей."} Время указано в
                                         часовом поясе мастера.
                                     </p>
+                                    {appointmentFilter !== "all" && (
+                                        <button type="button" className="ghost appointment-filter-reset" onClick={() => setAppointmentFilter("all")}>Показать все записи</button>
+                                    )}
                                     <div className="appointment-list">
-                                        {appointments.map(renderAppointment)}
+                                        {visibleAppointments.map(renderAppointment)}
                                     </div>
-                                    {!appointments.length && (
+                                    {!visibleAppointments.length && (
                                         <div className="empty">
                                             <h3>Здесь появятся ваши записи</h3>
                                             <p>
