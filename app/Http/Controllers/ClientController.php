@@ -6,6 +6,7 @@ use App\Models\MasterProfile;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 final class ClientController extends Controller
@@ -30,7 +31,7 @@ final class ClientController extends Controller
             ->limit(100)
             ->get(['id', 'starts_at', 'ends_at', 'status', 'price_som', 'service_name_snapshot']);
 
-        return Inertia::render('ClientDetails', [
+        $payload = [
             'client' => [
                 'id' => $customer->id,
                 'name' => $customer->name,
@@ -40,20 +41,30 @@ final class ClientController extends Controller
             'timezone' => $master->timezone,
             'visits' => $visits,
             'visitsShown' => $visits->count(),
-        ]);
+            'visitCount' => $master->appointments()->where('master_client_id', $customer->id)->where('status', 'completed')->count(),
+        ];
+        if ($request->expectsJson()) {
+            return response()->json($payload)->header('Cache-Control', 'private, no-store');
+        }
+        return Inertia::render('ClientDetails', $payload);
     }
 
     public function update(Request $request, int $client)
     {
         [$master, $customer] = $this->scopedClient($request, $client);
         $data = $request->validate([
-            'notes' => ['nullable', 'string', 'max:2000'],
+            'name' => ['sometimes', 'required', 'string', 'max:100'],
+            'phone_digits' => ['sometimes', 'required', 'string', 'regex:/^[0-9]{7,20}$/', Rule::unique('master_clients', 'phone_digits')->where('master_profile_id', $master->id)->ignore($customer->id)],
+            'notes' => ['sometimes', 'nullable', 'string', 'max:2000'],
         ]);
         DB::table('master_clients')
             ->where('master_profile_id', $master->id)
             ->where('id', $customer->id)
-            ->update(['notes' => $data['notes'] ?? null, 'updated_at' => now()]);
+            ->update(array_merge($data, ['updated_at' => now()]));
 
-        return back()->with('success', 'Заметка о клиенте сохранена.');
+        if ($request->expectsJson()) {
+            return response()->json(['saved' => true])->header('Cache-Control', 'private, no-store');
+        }
+        return back()->with('success', 'Данные клиента сохранены.');
     }
 }
