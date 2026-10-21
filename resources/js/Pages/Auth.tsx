@@ -42,32 +42,41 @@ export default function Auth({ register }: { register: boolean }) {
                 <p className="eyebrow">BOSH · КАБИНЕТ МАСТЕРА</p>
                 <h1>{register ? "Создать аккаунт" : "Войти в BOSH"}</h1>
                 <p className="muted">
-                    {!smsMode ? "Введите номер телефона и постоянный пароль." :
+                    {!smsMode ? (emailLogin ? "Введите почту и постоянный пароль." : "Введите номер телефона и постоянный пароль.") :
                      sent ? "Введите пятизначный код из SMS. Он действует 3 минуты." :
                      "Подтвердите телефон через SMS один раз, а затем установите постоянный пароль."}
                 </p>
                 <form onSubmit={submit}>
                     <Errors errors={f.errors} />
                     {!smsMode ? <>
-                        <Field label={emailLogin ? "Электронная почта" : "Номер телефона"}>
-                            {emailLogin ? (
-                                <input required type="email" autoComplete="email" value={f.data.identifier}
-                                    onChange={e => f.setData("identifier", e.target.value)} placeholder="mail@example.com" />
-                            ) : (
-                                <PhoneInput required value={f.data.identifier}
-                                    onChange={value => f.setData("identifier", value)} label="Номер телефона для входа" />
-                            )}
-                        </Field>
-                        <button type="button" className="ghost" onClick={() => {
-                            setEmailLogin(!emailLogin);
-                            f.setData("identifier", "");
-                            f.clearErrors();
-                        }}>{emailLogin ? "Войти по номеру телефона" : "Войти по электронной почте"}</button>
-                        <Field label="Пароль">
-                            <input required type="password" autoComplete="current-password"
-                                value={f.data.password}
-                                onChange={e => f.setData("password", e.target.value)} />
-                        </Field>
+                        <div className="display-switch text-switch auth-login-switch" role="group" aria-label="Способ входа">
+                            {[{ email: false, label: "Телефон" }, { email: true, label: "Почта" }].map(option => (
+                                <button key={option.label} type="button" aria-pressed={emailLogin === option.email}
+                                    disabled={f.processing} onClick={() => {
+                                        if (emailLogin !== option.email) {
+                                            setEmailLogin(option.email);
+                                            f.setData("identifier", "");
+                                            f.clearErrors();
+                                        }
+                                    }}>{option.label}</button>
+                            ))}
+                        </div>
+                        <div className="auth-login-fields">
+                            <Field label={emailLogin ? "Электронная почта" : "Номер телефона"}>
+                                {emailLogin ? (
+                                    <input key="email" required type="email" autoComplete="username" value={f.data.identifier}
+                                        onChange={e => f.setData("identifier", e.target.value)} placeholder="mail@example.com" />
+                                ) : (
+                                    <PhoneInput required showHint={false} autoComplete="username" value={f.data.identifier}
+                                        onChange={value => f.setData("identifier", value)} label="Номер телефона для входа" />
+                                )}
+                            </Field>
+                            <Field label="Пароль">
+                                <input required type="password" autoComplete="current-password"
+                                    value={f.data.password}
+                                    onChange={e => f.setData("password", e.target.value)} />
+                            </Field>
+                        </div>
                         <p className="muted"><Link href="/forgot-password">Забыли пароль?</Link></p>
                     </> : sent ? <>
                         <Field label="Код подтверждения">
@@ -83,7 +92,7 @@ export default function Auth({ register }: { register: boolean }) {
                                 onChange={e => f.setData("name", e.target.value)} />
                         </Field>}
                         <Field label="Номер телефона">
-                            <PhoneInput required fixedPrefix={register} value={f.data.phone}
+                            <PhoneInput required showHint={false} fixedPrefix={register} value={f.data.phone}
                                 onChange={value => f.setData("phone", value)} />
                         </Field>
                     </>}

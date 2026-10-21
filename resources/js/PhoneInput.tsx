@@ -7,6 +7,7 @@ export default function PhoneInput({
     label = "Телефон",
     autoComplete = "tel",
     fixedPrefix = false,
+    showHint = true,
 }: {
     value: string | null | undefined;
     onChange: (value: string) => void;
@@ -14,6 +15,7 @@ export default function PhoneInput({
     label?: string;
     autoComplete?: string;
     fixedPrefix?: boolean;
+    showHint?: boolean;
 }) {
     const digits = (value || "").replace(/\D/g, "");
     const local = digits.startsWith("996") ? digits.slice(3, 12) : digits.slice(0, 9);
@@ -36,7 +38,7 @@ export default function PhoneInput({
                 type="tel"
                 inputMode="numeric"
                 autoComplete={autoComplete}
-                aria-label={fixedPrefix ? label + ": 9 цифр после 996, без плюса" : label + ": только цифры, без плюса"}
+                aria-label={!showHint ? label : fixedPrefix ? label + ": 9 цифр после 996, без плюса" : label + ": только цифры, без плюса"}
                 placeholder={fixedPrefix ? "555123456" : "996555123456"}
                 value={fixedPrefix ? local : digits}
                 maxLength={fixedPrefix ? 9 : 15}
@@ -44,7 +46,7 @@ export default function PhoneInput({
                 required={required}
                 onChange={handleChange}
             />
-            {!fixedPrefix && <small className="phone-hint">Только цифры, без «+»</small>}
+            {showHint && !fixedPrefix && <small className="phone-hint">Только цифры, без «+»</small>}
         </div>
     );
 }
