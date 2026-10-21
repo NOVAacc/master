@@ -1,3 +1,4 @@
+import CloseButton from "./CloseButton";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "@inertiajs/react";
 import { Errors, Field } from "./Shared";
@@ -44,15 +45,7 @@ function ServiceEditor({
                 <h2 id="service-dialog-title">
                     {service ? "Редактирование услуги" : "Новая услуга"}
                 </h2>
-                <button
-                    type="button"
-                    className="calendar-nav"
-                    aria-label="Закрыть форму услуги"
-                    disabled={f.processing}
-                    onClick={requestClose}
-                >
-                    ×
-                </button>
+                <CloseButton label="Закрыть форму услуги" disabled={f.processing} onClick={requestClose} />
             </div>
             <form
                 className="service-editor"
