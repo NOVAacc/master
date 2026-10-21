@@ -7,6 +7,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 final class ClientController extends Controller
 {
@@ -15,7 +16,7 @@ final class ClientController extends Controller
         $master = MasterProfile::query()->where('user_id', $request->user()->id)->firstOrFail();
         $clientRow = DB::table('master_clients')
             ->where('master_profile_id', $master->id)
-            ->where('id', $client)->first();
+            ->where('id', $client)->whereNull('archived_at')->first();
         abort_unless($clientRow, 404);
 
         return [$master, $clientRow];
@@ -46,6 +47,82 @@ final class ClientController extends Controller
             return response()->json($payload)->header('Cache-Control', 'private, no-store');
         }
         return redirect()->route('dashboard');
+    }
+
+    public function candidates(Request $request, int $client)
+    {
+        [$master] = $this->scopedClient($request, $client);
+        $data = $request->validate(['q' => ['nullable', 'string', 'max:100']]);
+        $q = trim($data['q'] ?? '');
+        $clients = DB::table('master_clients')
+            ->where('master_profile_id', $master->id)
+            ->whereNull('archived_at')
+            ->where('id', '<>', $client)
+            ->when($q !== '', function ($query) use ($q) {
+                $digits = preg_replace('/\\D/', '', $q);
+                $query->where(function ($query) use ($q, $digits) {
+                    $query->where('name', 'like', '%'.addcslashes($q, '%_\\').'%');
+                    if ($digits !== '') {
+                        $query->orWhere('phone_digits', 'like', '%'.$digits.'%');
+                    }
+                });
+            })
+            ->orderBy('name')->limit(30)->get(['id', 'name', 'phone_digits']);
+        return response()->json($clients)->header('Cache-Control', 'private, no-store');
+    }
+
+    public function merge(Request $request, int $client)
+    {
+        $data = $request->validate(['source_id' => ['required', 'integer', 'different:client']]);
+        [$master] = $this->scopedClient($request, $client);
+        $sourceId = (int) $data['source_id'];
+        if ($sourceId === $client) {
+            throw ValidationException::withMessages(['source_id' => 'Нельзя объединить карточку с самой собой.']);
+        }
+
+        DB::transaction(function () use ($master, $client, $sourceId) {
+            // Match the booking lock order: master row first, then clients and appointments.
+            DB::table('master_profiles')->where('id', $master->id)->lockForUpdate()->first();
+            $rows = DB::table('master_clients')
+                ->where('master_profile_id', $master->id)
+                ->whereNull('archived_at')
+                ->whereIn('id', [$client, $sourceId])
+                ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+            abort_unless($rows->count() === 2, 404);
+            $target = $rows->get($client);
+            $source = $rows->get($sourceId);
+            $targetNotes = trim((string) $target->notes);
+            $sourceNotes = trim((string) $source->notes);
+            $notes = $targetNotes;
+            if ($sourceNotes !== '' && $sourceNotes !== $targetNotes) {
+                $notes = $targetNotes === '' ? $sourceNotes : $targetNotes."\n\n".$sourceNotes;
+            }
+            if (mb_strlen($notes) > 2000) {
+                throw ValidationException::withMessages(['source_id' => 'Заметки слишком длинные. Сократите их перед объединением.']);
+            }
+            DB::table('master_appointments')
+                ->where('master_profile_id', $master->id)
+                ->where('master_client_id', $sourceId)
+                ->update(['master_client_id' => $client]);
+            DB::table('master_clients')->where('id', $client)->where('master_profile_id', $master->id)
+                ->update(['notes' => $notes === '' ? null : $notes, 'updated_at' => now()]);
+            DB::table('master_clients')->where('id', $sourceId)->where('master_profile_id', $master->id)->delete();
+        }, 3);
+        return response()->json(['merged' => true])->header('Cache-Control', 'private, no-store');
+    }
+
+    public function destroy(Request $request, int $client)
+    {
+        [$master] = $this->scopedClient($request, $client);
+        DB::transaction(function () use ($master, $client) {
+            DB::table('master_profiles')->where('id', $master->id)->lockForUpdate()->first();
+            $updated = DB::table('master_clients')
+                ->where('master_profile_id', $master->id)
+                ->where('id', $client)->whereNull('archived_at')
+                ->update(['archived_at' => now(), 'updated_at' => now()]);
+            abort_unless($updated === 1, 404);
+        }, 3);
+        return response()->json(['archived' => true])->header('Cache-Control', 'private, no-store');
     }
 
     public function update(Request $request, int $client)
