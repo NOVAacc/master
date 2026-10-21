@@ -2830,3 +2830,24 @@ h2 {
     }
     .shell > .main { min-width: 0; }
 }
+
+
+/* Mobile spacing: use the available screen width without touching desktop layouts. */
+@media (max-width: 700px) {
+    .shell > .sidebar { padding-inline: 10px; }
+    .shell > .main { padding: 16px 10px 24px; }
+    .shell .main > .dashboard-header { margin-bottom: 16px; }
+    .shell .main > .metrics { margin: 16px 0; }
+    .shell .main > .panel,
+    .shell .main > section.panel { padding: 16px 12px; }
+    .catalog-wrap { padding: 0 10px 20px; }
+    .catalog-hero { padding: 24px 16px; }
+    .booking-wrap { padding: 16px 10px 24px; }
+    .auth-wrap { padding: 12px 10px 24px; }
+    .site-footer { padding-inline: 10px; }
+}
+@media (max-width: 380px) {
+    .shell > .sidebar { padding-inline: 8px; }
+    .shell > .main { padding-inline: 8px; }
+    .catalog-wrap, .booking-wrap, .auth-wrap { padding-inline: 8px; }
+}
