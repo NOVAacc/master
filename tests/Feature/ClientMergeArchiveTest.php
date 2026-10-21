@@ -104,4 +104,26 @@ class ClientMergeArchiveTest extends TestCase
         $this->getJson('/appointments/clients?q=996555000006')->assertExactJson([]);
         $this->getJson("/clients/{$client}")->assertNotFound();
     }
+    public function test_client_search_matches_name_and_phone_only_for_current_master(): void
+    {
+        [$user, $master] = $this->master('client-search');
+        [, $other] = $this->master('client-search-other');
+        $match = $this->client($master->id, '996555001122', 'Some note');
+        $foreign = $this->client($other->id, '996555001133', 'Private');
+        DB::table('master_clients')->where('id', $match)->update(['name' => 'Айдана Садыкова']);
+        DB::table('master_clients')->where('id', $foreign)->update(['name' => 'Айдана Другая']);
+
+        $this->actingAs($user)->getJson('/clients/search?q='.urlencode('Айдана'))
+            ->assertOk()->assertJsonCount(1)->assertJsonFragment(['id' => $match]);
+        $this->getJson('/clients/search?q=001122')
+            ->assertOk()->assertJsonCount(1)->assertJsonFragment(['id' => $match]);
+        $this->deleteJson("/clients/{$match}")->assertOk();
+        $this->getJson('/clients/search?q=001122')->assertOk()->assertExactJson([]);
+    }
+
+    public function test_guest_cannot_search_clients(): void
+    {
+        $this->getJson('/clients/search?q=client')->assertUnauthorized();
+    }
+
 }
