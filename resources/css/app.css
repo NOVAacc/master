@@ -2956,3 +2956,90 @@ h2 {
     .dashboard-notification-trigger { min-width: 80px; gap: 3px; padding-inline: 5px; }
     .dashboard-notification-panel { right: -4px; }
 }
+
+
+/* Header notification alignment: fixed-width counters on both sides of the bell. */
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: nowrap;
+}
+.dashboard-header > div:first-child { min-width: 0; flex: 1 1 auto; }
+.dashboard-header-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+.dashboard-notification-trigger {
+    display: grid;
+    grid-template-columns: 22px 24px 22px;
+    align-items: center;
+    justify-items: center;
+    column-gap: 3px;
+    min-width: 0;
+    width: 90px;
+    min-height: 44px;
+    padding: 0 6px;
+    border-radius: 12px;
+}
+.dashboard-notification-trigger .icon {
+    display: block;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+}
+.dashboard-notification-trigger .notification-counter {
+    display: block;
+    width: 22px;
+    min-width: 0;
+    padding: 0;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 650;
+    line-height: 16px;
+    font-variant-numeric: tabular-nums;
+}
+.dashboard-notification-panel { max-width: calc(100vw - 20px); }
+@media (max-width: 700px) {
+    .shell .dashboard-header {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 8px;
+    }
+    .shell .dashboard-header > div:first-child {
+        min-width: 0;
+        flex: 1 1 0;
+    }
+    .shell .dashboard-header .eyebrow {
+        font-size: 9px;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+    .shell .dashboard-header h1 {
+        font-size: clamp(16px, 4.5vw, 20px);
+        line-height: 1.2;
+        overflow-wrap: anywhere;
+    }
+    .dashboard-header-actions { gap: 6px; margin-left: 0; }
+    .dashboard-notification-trigger {
+        width: 76px;
+        grid-template-columns: 18px 22px 18px;
+        column-gap: 2px;
+        padding-inline: 5px;
+    }
+    .dashboard-notification-trigger .icon { width: 21px; height: 21px; }
+    .dashboard-notification-trigger .notification-counter { width: 18px; font-size: 10px; }
+    .dashboard-header-actions > .avatar { flex-shrink: 0; }
+    .dashboard-notification-panel { right: 0; }
+}
+@media (max-width: 360px) {
+    .shell .dashboard-header { gap: 6px; }
+    .dashboard-header-actions { gap: 4px; }
+}
