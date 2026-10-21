@@ -635,7 +635,7 @@ export default function Dashboard({
                                 <span className="clients-count" role="status">
                                     {clientSearching ? "Поиск…" : clientQuery.trim()
                                         ? `Найдено: ${visibleClients.length}${visibleClients.length === 100 ? "+" : ""}`
-                                        : `Клиентов: ${visibleClients.length}`}
+                                        : `Показано клиентов: ${visibleClients.length}${visibleClients.length === 200 ? "+" : ""}`}
                                 </span>
                             </div>
                             {clientSearchError ? (
@@ -643,7 +643,9 @@ export default function Dashboard({
                                     {clientSearchError}
                                     <button className="ghost" type="button" onClick={() => setClientSearchRevision(n => n + 1)}>Повторить</button>
                                 </div>
-                            ) : !clientSearching && visibleClients.length === 0 ? (
+                            ) : clientSearching ? (
+                                <div className="clients-empty" role="status">Поиск клиентов…</div>
+                            ) : visibleClients.length === 0 ? (
                                 <div className="clients-empty">
                                     {clientQuery.trim()
                                         ? "Клиенты не найдены. Проверьте имя или номер телефона."
