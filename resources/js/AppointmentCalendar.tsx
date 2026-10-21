@@ -1,3 +1,4 @@
+import CloseButton from "./CloseButton";
 import { timezoneLabel } from "./timezone";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -411,13 +412,7 @@ export default function AppointmentCalendar({
                 >
                     <div className="row between">
                         <h3>Детали записи</h3>
-                        <button
-                            type="button"
-                            className="ghost"
-                            onClick={() => setSelectedId(null)}
-                        >
-                            Закрыть
-                        </button>
+                        <CloseButton label="Закрыть детали записи" onClick={() => setSelectedId(null)} />
                     </div>
                     {renderDetails(selected)}
                 </div>
