@@ -1,4 +1,5 @@
 import axios from "axios";
+import CloseButton from "./CloseButton";
 import { useEffect, useRef, useState } from "react";
 import type { Service } from "./types";
 
@@ -118,7 +119,7 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved,
         onCancel={e => { e.preventDefault(); if (!saving && !actionBusy) onClose(); }}>
         <div className="service-dialog-header">
             <span className="client-card-eyebrow">КЛИЕНТ</span>
-            <button className="ghost" aria-label="Закрыть карточку" type="button" onClick={onClose} disabled={actionBusy}>×</button>
+            <CloseButton label="Закрыть карточку" onClick={onClose} disabled={actionBusy} />
         </div>
         <div className="client-card-body">
             {loading ? <p className="muted" role="status">Загрузка…</p> : error && !detail ? <p role="alert" className="errors">{error}</p> : <>
