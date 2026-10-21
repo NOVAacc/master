@@ -94,7 +94,7 @@ final class BookAppointment
             if ($client) {
                 $clientId = $client->id;
                 DB::table('master_clients')->where('id', $clientId)->update([
-                    'name' => $clientName, 'updated_at' => now(),
+                    'name' => $clientName, 'archived_at' => null, 'updated_at' => now(),
                 ]);
             } else {
                 $clientId = DB::table('master_clients')->insertGetId([
