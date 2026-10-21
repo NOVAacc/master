@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 const paths: Record<string, ReactNode> = {
+    link: <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.71" />,
+    pencil: <><path d="m15 5 4 4M4 20l4.2-.9L19 8.3a2.1 2.1 0 0 0-3-3L5.2 16.1 4 20Z" /></>,
     calendar: (
         <>
             <rect x="3" y="5" width="18" height="16" rx="3" />
