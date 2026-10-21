@@ -7,7 +7,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
-use Inertia\Inertia;
 
 final class ClientController extends Controller
 {
@@ -46,7 +45,7 @@ final class ClientController extends Controller
         if ($request->expectsJson()) {
             return response()->json($payload)->header('Cache-Control', 'private, no-store');
         }
-        return Inertia::render('ClientDetails', $payload);
+        return redirect()->route('dashboard');
     }
 
     public function update(Request $request, int $client)
