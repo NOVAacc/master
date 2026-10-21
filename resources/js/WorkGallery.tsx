@@ -1,3 +1,4 @@
+import CloseButton from "./CloseButton";
 import { useRef, useState } from "react";
 
 export default function WorkGallery({ images }: { images: (string | null | undefined)[] }) {
@@ -18,7 +19,7 @@ export default function WorkGallery({ images }: { images: (string | null | undef
             <dialog className="work-photo-dialog" ref={dialog}
                 aria-label="Просмотр работы мастера"
                 onClick={e => { if (e.target === e.currentTarget) dialog.current?.close(); }}>
-                <button type="button" className="ghost" aria-label="Закрыть просмотр" autoFocus onClick={() => dialog.current?.close()}><span aria-hidden="true">✕</span></button>
+                <CloseButton label="Закрыть просмотр" autoFocus onClick={() => dialog.current?.close()} />
                 {selected && <img src={selected} alt="Работа мастера крупным планом" />}
             </dialog>
         </section>
