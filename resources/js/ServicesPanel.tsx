@@ -1,4 +1,5 @@
 import CloseButton from "./CloseButton";
+import Icon from "./Icon";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "@inertiajs/react";
 import { Errors, Field } from "./Shared";
@@ -317,23 +318,22 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                                         </span>
                                     </td>
                                     <td className="service-action-cell">
-                                        {service.is_active && (
-                                            <button className="ghost" type="button"
-                                                aria-label={`Скопировать ссылку на услугу «${service.name}»`}
-                                                onClick={() => void copyBookingLink([service.id])}>
-                                                Ссылка
+                                        <div className="service-action-buttons">
+                                            {service.is_active && (
+                                                <button className="service-icon-button" type="button"
+                                                    title="Скопировать ссылку"
+                                                    aria-label={`Скопировать ссылку на услугу «${service.name}»`}
+                                                    onClick={() => void copyBookingLink([service.id])}>
+                                                    <Icon name="link" />
+                                                </button>
+                                            )}
+                                            <button type="button" className="service-icon-button"
+                                                title="Изменить услугу"
+                                                aria-label={`Изменить услугу «${service.name}»`}
+                                                onClick={() => setEditor(service.id)}>
+                                                <Icon name="pencil" />
                                             </button>
-                                        )}
-                                        <button
-                                            type="button"
-                                            className="ghost"
-                                            aria-label={`Изменить услугу «${service.name}»`}
-                                            onClick={() =>
-                                                setEditor(service.id)
-                                            }
-                                        >
-                                            Изменить
-                                        </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
