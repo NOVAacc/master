@@ -87,6 +87,7 @@ class DashboardController extends Controller
                 ]),
             'clients' => DB::table('master_clients')
                 ->where('master_profile_id', $master->id)
+                ->whereNull('archived_at')
                 ->orderByDesc('updated_at')
                 ->limit(200)
                 ->get(['id', 'name', 'phone_digits', 'notes']),
