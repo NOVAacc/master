@@ -691,6 +691,7 @@ export default function Dashboard({
             {selectedClient && <ClientCard key={selectedClient.id} client={selectedClient} services={services}
                 onClose={() => setSelectedClient(null)}
                 onSaved={updated => setClientOverrides(old => ({ ...old, [updated.id]: updated }))}
+                onChanged={() => { setSelectedClient(null); router.reload({ only: ["clients", "appointments", "calendarAppointments"], preserveScroll: true }); }}
                 onBook={target => { setBookingClient(target); setSelectedClient(null); setQuickBooking(true); }} />}
             {quickBooking && <QuickBooking services={services} timezone={master.timezone} date={calendarDate}
                 initialClient={bookingClient} onClose={() => { setQuickBooking(false); setBookingClient(null); }} />}
