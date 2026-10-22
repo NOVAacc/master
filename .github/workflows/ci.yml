@@ -46,7 +46,7 @@ jobs:
       - name: Verify migration rollback and re-apply on disposable MySQL 5.7
         run: |
           php artisan migrate:fresh --force
-          php artisan migrate:rollback --step=5 --force
+          php tests/integration/legacy-migration.php downgrade
           php tests/integration/legacy-migration.php seed
           php artisan migrate --force
           php tests/integration/legacy-migration.php verify
