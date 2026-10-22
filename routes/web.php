@@ -8,6 +8,7 @@ use App\Http\Controllers\GroupSessionController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MasterImageController;
 use App\Http\Controllers\PublicBookingController;
+use App\Http\Controllers\SlotStoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
@@ -23,6 +24,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [AccountSecurityController::class, 'reset'])->middleware('throttle:5,10')->name('password.update');
 });
 Route::middleware('auth')->group(function () {
+    Route::get('/stories/availability', [SlotStoryController::class, 'availability'])->middleware('throttle:60,1');
+    Route::put('/stories/preference', [SlotStoryController::class, 'preference'])->middleware('throttle:20,1');
     Route::get('/appointments/clients', [\App\Http\Controllers\ManualBookingController::class, 'clients'])->middleware('throttle:120,1');
     Route::get('/appointments/slots', [\App\Http\Controllers\ManualBookingController::class, 'slots'])->middleware('throttle:120,1');
     Route::post('/appointments', [\App\Http\Controllers\ManualBookingController::class, 'create'])->middleware('throttle:30,1');
