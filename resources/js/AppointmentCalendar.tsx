@@ -42,6 +42,7 @@ export default function AppointmentCalendar({
     loading,
     onNavigate,
     renderDetails,
+    onCreateStory,
 }: {
     appointments: Appointment[];
     blocks: TimeBlock[];
@@ -51,6 +52,7 @@ export default function AppointmentCalendar({
     loading: boolean;
     onNavigate: (date: string) => void;
     renderDetails: (appointment: Appointment) => ReactNode;
+    onCreateStory?: (date: string, time?: string, serviceId?: number) => void;
 }) {
     const root = useRef<HTMLDivElement>(null);
     const detail = useRef<HTMLDivElement>(null);
@@ -224,6 +226,7 @@ export default function AppointmentCalendar({
                     </button>
                 </div>
             </div>
+            {onCreateStory && <button type="button" className="ghost" onClick={() => onCreateStory(date)}>Создать сторис о свободном времени</button>}
             <p className="muted small">
                 {timezoneLabel(timezone)} · сетка по 30 минут. Белые участки рабочего дня
                 свободны; серые — вне расписания. Нажмите запись, чтобы открыть
@@ -301,6 +304,22 @@ export default function AppointmentCalendar({
                                         day: "numeric",
                                         month: "long",
                                     })}
+                                    onClick={event => {
+                                        if (!onCreateStory || loading ||
+                                            (event.target as HTMLElement).closest(".calendar-appointment, .calendar-time-block")) return;
+                                        const y = event.clientY - event.currentTarget.getBoundingClientRect().top;
+                                        const minute = Math.floor((start + y / 1.4) / 30) * 30;
+                                        const availableWork = work.some(h => {
+                                            const starts = clockMinutes(h.starts_at), ends = clockMinutes(h.ends_at);
+                                            const breakStarts = h.break_starts_at ? clockMinutes(h.break_starts_at) : null;
+                                            const breakEnds = h.break_ends_at ? clockMinutes(h.break_ends_at) : null;
+                                            return minute >= starts && minute < ends &&
+                                                !(breakStarts !== null && breakEnds !== null && minute >= breakStarts && minute < breakEnds);
+                                        });
+                                        const occupied = items.some(item => item.start <= minute && item.end > minute &&
+                                            (item.block || (item.appointment && ["pending", "confirmed"].includes(item.appointment.status))));
+                                        if (availableWork && !occupied) onCreateStory(day, minuteLabel(minute));
+                                    }}
                                 >
                                     {work.map((h, i) => (
                                         <div

@@ -30,6 +30,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/appointments/{appointment}/whatsapp', [DashboardController::class, 'retryWhatsApp'])->middleware('throttle:5,1');
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/dashboard', [DashboardController::class, 'show'])->name('dashboard');
+    Route::get('/stories/availability', \App\Http\Controllers\StoryAvailabilityController::class)->middleware('throttle:60,1');
+    Route::post('/stories/style', \App\Http\Controllers\StoryStyleController::class)->middleware('throttle:30,1');
     Route::post('/group-sessions', [GroupSessionController::class, 'create'])->middleware('throttle:20,1');
     Route::post('/group-sessions/{session}/participants/{participant}/cancel', [GroupSessionController::class, 'cancelParticipant'])->whereNumber('session')->whereNumber('participant')->middleware('throttle:20,1');
     Route::get('/clients/search', [ClientController::class, 'search'])->middleware('throttle:120,1');
