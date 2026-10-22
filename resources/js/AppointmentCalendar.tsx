@@ -42,6 +42,7 @@ export default function AppointmentCalendar({
     loading,
     onNavigate,
     renderDetails,
+    onCreateStory,
 }: {
     appointments: Appointment[];
     blocks: TimeBlock[];
@@ -51,6 +52,7 @@ export default function AppointmentCalendar({
     loading: boolean;
     onNavigate: (date: string) => void;
     renderDetails: (appointment: Appointment) => ReactNode;
+    onCreateStory: () => void;
 }) {
     const root = useRef<HTMLDivElement>(null);
     const detail = useRef<HTMLDivElement>(null);
@@ -154,6 +156,7 @@ export default function AppointmentCalendar({
     return (
         <div className="appointment-calendar" ref={root}>
             <div className="calendar-toolbar">
+                <button type="button" className="ghost" onClick={onCreateStory}>Создать сторис</button>
                 <div className="row wrap">
                     <button
                         type="button"
