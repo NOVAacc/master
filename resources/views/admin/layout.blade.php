@@ -18,6 +18,7 @@
         .login{max-width:440px;margin:8vh auto}.login button{margin-top:24px;width:100%}.search{display:flex;gap:10px;margin:24px 0;max-width:520px}
         .cards{display:grid;gap:10px}.user{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:18px;border:1px solid #e8e8e8;border-radius:14px;background:#fff}.user strong{font-size:15px}.user p{margin:5px 0;overflow-wrap:anywhere}.user>div{min-width:0}
         .badge{display:inline-block;background:#f1f1f1;border-radius:999px;padding:3px 9px;font-size:11px}.pagination{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:24px 0}.errors{padding:12px 16px;border-radius:12px;background:#fff0f0;color:#a42e3b;margin:18px 0}.notice{padding:12px 16px;background:#e4f5ed;color:#216c4b;border-radius:12px;margin:18px 0}
+        .danger{background:#fff0f0;color:#a42e3b}.danger-primary{background:#b8323e;color:#fff}.deletion-confirmation{display:flex;align-items:flex-start;gap:10px;font-weight:400}.deletion-confirmation input{width:18px;height:18px;flex-shrink:0;margin-top:2px}.delete-summary{padding-left:20px}.delete-actions{margin-top:24px}
         .password-form{max-width:460px}.password-form button{margin-top:24px}
         @media(max-width:600px){main{padding:24px 12px}header>div{padding:14px 12px;gap:14px}header .wordmark{display:none}nav{gap:14px}.panel{padding:20px}.user{display:block}.user .user-side{margin-top:12px}.user-side{text-align:left}.pagination{font-size:12px}}
     </style>
