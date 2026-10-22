@@ -304,6 +304,22 @@ export default function AppointmentCalendar({
                                         day: "numeric",
                                         month: "long",
                                     })}
+                                    onClick={event => {
+                                        if (!onCreateStory || loading ||
+                                            (event.target as HTMLElement).closest(".calendar-appointment, .calendar-time-block")) return;
+                                        const y = event.clientY - event.currentTarget.getBoundingClientRect().top;
+                                        const minute = Math.floor((start + y / 1.4) / 30) * 30;
+                                        const availableWork = work.some(h => {
+                                            const starts = clockMinutes(h.starts_at), ends = clockMinutes(h.ends_at);
+                                            const breakStarts = h.break_starts_at ? clockMinutes(h.break_starts_at) : null;
+                                            const breakEnds = h.break_ends_at ? clockMinutes(h.break_ends_at) : null;
+                                            return minute >= starts && minute < ends &&
+                                                !(breakStarts !== null && breakEnds !== null && minute >= breakStarts && minute < breakEnds);
+                                        });
+                                        const occupied = items.some(item => item.start <= minute && item.end > minute &&
+                                            (item.block || (item.appointment && ["pending", "confirmed"].includes(item.appointment.status))));
+                                        if (availableWork && !occupied) onCreateStory(day, minuteLabel(minute));
+                                    }}
                                 >
                                     {work.map((h, i) => (
                                         <div
