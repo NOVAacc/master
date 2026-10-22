@@ -88,11 +88,14 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const [style, setStyle] = useState<Style>(master.story_style && master.story_style in palettes ? master.story_style as Style : "minimal");
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
+    const [prepared, setPrepared] = useState<File | null>(null);
     const canvas = useRef<HTMLCanvasElement>(null);
     const service = activeServices.find(s => s.id === serviceId);
     const link = new URL(`/m/${encodeURIComponent(master.slug)}?date=${encodeURIComponent(date)}&service=${serviceId}&time=${encodeURIComponent(time)}`, window.location.origin).toString();
 
     useEffect(() => {
+        setPrepared(null);
+        setError("");
         if (service && canvas.current && /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{2}:\d{2}$/.test(time)) {
             drawStory(canvas.current, master, service, date, time, style, link);
         }
@@ -106,29 +109,41 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         setStyle(next);
         axios.post("/stories/style", { style: next }).catch(() => setError("Не удалось запомнить стиль. Изображение можно сохранить."));
     };
-    async function generate(share: boolean) {
+    async function prepare() {
         if (!service || !canvas.current) return;
         setBusy(true);
         setError("");
+        setPrepared(null);
         try {
             const response = await axios.get<{available: boolean; reason?: string}>("/stories/availability", {params: {service: service.id, date, time}});
             if (!response.data.available) throw new Error(response.data.reason || "Это время сейчас недоступно.");
             drawStory(canvas.current, master, service, date, time, style, link);
             const blob = await toBlob(canvas.current);
-            const file = new File([blob], `bosh-${date}-${time.replace(":", "-")}.png`, { type: "image/png" });
-            if (share && navigator.canShare?.({ files: [file] }) && navigator.share) {
-                try { await navigator.share({ files: [file], title: "Свободное время", text: link }); }
-                catch (e) { if ((e as DOMException).name !== "AbortError") throw e; }
-            } else {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url; a.download = file.name;
-                document.body.append(a); a.click(); a.remove();
-                window.setTimeout(() => URL.revokeObjectURL(url), 10000);
-            }
+            setPrepared(new File([blob], `bosh-${date}-${time.replace(":", "-")}.png`, { type: "image/png" }));
         } catch (e) {
             setError(e instanceof Error ? e.message : "Не удалось создать сторис. Попробуйте снова.");
         } finally { setBusy(false); }
+    }
+    function download() {
+        if (!prepared) return;
+        const url = URL.createObjectURL(prepared);
+        const a = document.createElement("a");
+        a.href = url; a.download = prepared.name;
+        document.body.append(a); a.click(); a.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+    }
+    async function share() {
+        if (!prepared) return;
+        if (!navigator.canShare?.({files: [prepared]}) || !navigator.share) {
+            download();
+            setError("Системная отправка недоступна. PNG сохранён на устройство.");
+            return;
+        }
+        try {
+            await navigator.share({files: [prepared], title: "Свободное время"});
+        } catch (e) {
+            if ((e as DOMException).name !== "AbortError") setError("Не удалось поделиться. Используйте «Скачать PNG».");
+        }
     }
     return <div className="story-overlay" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
         <section className="story-dialog panel" role="dialog" aria-modal="true" aria-label="Создать сторис">
@@ -148,9 +163,10 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                     </div>
                     <p className="muted small">Сторис создаётся в размере 1080 × 1920. Ссылка на запись подготовлена отдельно для стикера Instagram.</p>
                     <div className="row wrap">
-                        <button type="button" className="primary" disabled={busy || !service} onClick={() => generate(false)}>{busy ? "Проверяем время…" : "Скачать PNG"}</button>
-                        <button type="button" className="ghost" disabled={busy || !service} onClick={() => generate(true)}>Поделиться</button>
-                        <button type="button" className="ghost" onClick={() => navigator.clipboard.writeText(link).then(() => setError("Ссылка скопирована.")).catch(() => setError("Не удалось скопировать ссылку."))}>Копировать ссылку</button>
+                        <button type="button" className="primary" disabled={busy || !service} onClick={() => void prepare()}>{busy ? "Проверяем время…" : "Создать сторис"}</button>
+                        {prepared && <button type="button" className="ghost" onClick={download}>Скачать PNG</button>}
+                        {prepared && <button type="button" className="ghost" onClick={() => void share()}>Поделиться</button>}
+                        {prepared && <button type="button" className="ghost" onClick={() => navigator.clipboard.writeText(link).then(() => setError("Ссылка скопирована.")).catch(() => setError("Не удалось скопировать ссылку."))}>Копировать ссылку</button>}
                     </div>
                     {error && <p role="status" className="muted small">{error}</p>}
                 </div>
