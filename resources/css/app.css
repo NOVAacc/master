@@ -3090,7 +3090,7 @@ h2 {
 .landing-example-tag{font-size:8px;letter-spacing:1px;font-weight:650;margin-left:auto;color:#888;background:#efefef;padding:3px 7px;border-radius:5px}
 .landing-example-body{padding:24px}.landing-example-heading{display:flex;align-items:center;gap:12px;margin-bottom:24px}
 .landing-demo-symbol{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#f4f2f0;flex-shrink:0}
-.landing-example-heading h2{font-size:16px;letter-spacing:-.4px;margin:0 0 3px}.landing-example-heading p{font-size:11px;color:#888;margin:0}
+.landing .landing-example-heading h2{font-size:16px;letter-spacing:-.4px;margin:0 0 3px}.landing-example-heading p{font-size:11px;color:#888;margin:0}
 .landing-demo-label{font-size:10px;font-weight:600;color:#aaa;display:flex;align-items:center;gap:8px;margin:18px 0 10px}.landing-demo-label span{color:#666;font-size:11px}
 .landing-example-services{display:grid;gap:8px}.landing-example-services button{display:flex;align-items:center;gap:10px;width:100%;border:1px solid #ececec;border-radius:11px;background:#fff;color:#333;text-align:left;padding:13px 12px}
 .landing-example-services button[aria-pressed="true"]{border-color:#777;background:#fafafa}.landing-example-services button>span:nth-child(2){display:grid;gap:3px}
