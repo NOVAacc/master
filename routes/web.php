@@ -59,3 +59,15 @@ Route::post('/booking/manage/{appointment}', [CustomerBookingController::class, 
     ->whereNumber('appointment')->middleware(['signed', 'throttle:10,1']);
 
 Route::post('/group-sessions/{session}/register', [GroupSessionController::class, 'register'])->whereNumber('session')->middleware('throttle:10,1');
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login', [\App\Http\Controllers\AdminController::class, 'loginPage'])->name('login');
+    Route::post('/login', [\App\Http\Controllers\AdminController::class, 'login'])->middleware('throttle:20,1')->name('login.submit');
+    Route::middleware(\App\Http\Middleware\RequireAdministrator::class)->group(function () {
+        Route::get('/', fn () => redirect()->route('admin.users'))->name('home');
+        Route::get('/users', [\App\Http\Controllers\AdminController::class, 'users'])->name('users');
+        Route::get('/settings', [\App\Http\Controllers\AdminController::class, 'settings'])->name('settings');
+        Route::post('/password', [\App\Http\Controllers\AdminController::class, 'password'])->middleware('throttle:5,10')->name('password');
+        Route::post('/logout', [\App\Http\Controllers\AdminController::class, 'logout'])->name('logout');
+    });
+});

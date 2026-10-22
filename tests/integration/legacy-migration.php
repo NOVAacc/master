@@ -21,6 +21,15 @@ $phone = '996555000444';
 if (DB::getDriverName() !== 'mysql') {
     throw new RuntimeException('A disposable MySQL database is required.');
 }
+if ($mode === 'downgrade') {
+    // Keep this fixture at the pre-CRM boundary even as new migrations are added.
+    $steps = DB::table('migrations')->where('migration', '>=', '2026_10_19_190000')->count();
+    if ($steps > 0) {
+        \Illuminate\Support\Facades\Artisan::call('migrate:rollback', ['--step' => $steps, '--force' => true]);
+        echo \Illuminate\Support\Facades\Artisan::output();
+    }
+    exit(0);
+}
 if ($mode === 'seed') {
     if (Schema::hasTable('master_clients') || Schema::hasColumn('master_appointments', 'master_client_id')) {
         throw new RuntimeException('Refusing to seed: new CRM schema is already present.');
@@ -71,4 +80,4 @@ if ($mode === 'verify') {
     echo "PASS: existing appointment, price and status survived migration; new fields are safe defaults.\n";
     exit(0);
 }
-throw new InvalidArgumentException('Usage: php legacy-migration.php seed|verify');
+throw new InvalidArgumentException('Usage: php legacy-migration.php downgrade|seed|verify');
