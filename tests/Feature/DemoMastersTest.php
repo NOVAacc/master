@@ -32,7 +32,7 @@ class DemoMastersTest extends TestCase
         $this->assertFalse($master->booking_enabled);
         Storage::disk('local')->assertExists($master->avatar_path);
         $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('Home')->has('newMasters', 9));
+            ->component('Home')->missing('newMasters')->missing('topMasters'));
         $this->get('/m/'.$master->slug)->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Booking')->where('master.is_demo', true)->has('services', 4)->has('slots', 0));
         // Even accidentally enabling a demo profile must not collect customer bookings.
