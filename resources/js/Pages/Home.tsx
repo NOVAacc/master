@@ -82,7 +82,6 @@ export default function Home() {
             </header>
             <main>
                 <section className="landing-hero">
-                    <span className="landing-ornament landing-ornament-hero" aria-hidden="true" />
                     <div className="landing-hero-copy">
                         <p className="landing-kicker"><span />ОНЛАЙН-ЗАПИСЬ ДЛЯ ВАШЕГО ДЕЛА</p>
                         <h1>Вы занимаетесь делом.<br /><span>Клиенты записываются сами.</span></h1>
@@ -107,7 +106,6 @@ export default function Home() {
                     </div>
                 </section>
                 <section id="start" className="landing-section landing-start">
-                    <span className="landing-ornament landing-ornament-divider" aria-hidden="true" />
                     <div className="landing-section-heading"><p className="landing-kicker">ОТ ИДЕИ К ПЕРВОЙ ЗАПИСИ</p><h2>Начните с трёх<br /><span>простых шагов.</span></h2></div>
                     <div className="landing-steps">{steps.map((item, i) => <article key={item.title}><span className="landing-step-number">0{i + 1}</span><h3>{item.title}</h3><p>{item.text}</p></article>)}</div>
                     <Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link>
@@ -117,7 +115,7 @@ export default function Home() {
                     <ol><li><span>1</span><div><strong>Открывает вашу страницу</strong><p>По ссылке из соцсетей или сообщения</p></div></li><li><span>2</span><div><strong>Выбирает услугу и время</strong><p>Только доступные для записи часы</p></div></li><li><span>3</span><div><strong>Оставляет имя и телефон</strong><p>А вы видите новую запись в кабинете</p></div></li></ol>
                 </section>
                 <section id="questions" className="landing-section landing-faq"><div className="landing-section-heading"><p className="landing-kicker">ПЕРЕД НАЧАЛОМ</p><h2>Есть вопросы?</h2></div><div>{questions.map(item => <details key={item.title}><summary>{item.title}<span aria-hidden="true">+</span></summary><p>{item.text}</p></details>)}</div></section>
-                <section className="landing-final"><span className="landing-ornament landing-ornament-final-left" aria-hidden="true" /><span className="landing-ornament landing-ornament-final-right" aria-hidden="true" /><p className="landing-kicker">ВАШ СЛЕДУЮЩИЙ ШАГ</p><h2>Пусть запись<br /><span>работает на вас.</span></h2><p>Создайте свою страницу и поделитесь ею с клиентами.</p><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link></section>
+                <section className="landing-final"><p className="landing-kicker">ВАШ СЛЕДУЮЩИЙ ШАГ</p><h2>Пусть запись<br /><span>работает на вас.</span></h2><p>Создайте свою страницу и поделитесь ею с клиентами.</p><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link></section>
             </main>
         </div>
     );
