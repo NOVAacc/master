@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\MasterProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -55,6 +58,55 @@ class AdminController extends Controller
             'total' => User::count(),
             'registeredToday' => User::whereDate('created_at', today())->count(),
         ]);
+    }
+
+    public function confirmDeletion(User $user)
+    {
+        $master = MasterProfile::where('user_id', $user->id)->first();
+        return view('admin.delete-user', [
+            'user' => $user, 'master' => $master,
+            'counts' => $master ? [
+                'Услуги' => $master->services()->count(),
+                'Клиенты' => DB::table('master_clients')->where('master_profile_id', $master->id)->count(),
+                'Записи' => $master->appointments()->count(),
+                'Групповые занятия' => DB::table('master_group_sessions')->where('master_profile_id', $master->id)->count(),
+            ] : [],
+        ]);
+    }
+
+    public function destroyUser(Request $request, User $user)
+    {
+        $request->validate([
+            'confirm_user_id' => ['required', 'integer', \Illuminate\Validation\Rule::in([$user->id])],
+            'confirm_deletion' => ['required', 'accepted'],
+        ]);
+        $masterId = DB::transaction(function () use ($user) {
+            $lockedUser = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+            $master = MasterProfile::where('user_id', $lockedUser->id)->lockForUpdate()->first();
+            DB::table('sessions')->where('user_id', $lockedUser->id)->delete();
+            if ($lockedUser->email !== null) {
+                DB::table('password_reset_tokens')->where('email', $lockedUser->email)->delete();
+            }
+            // Foreign keys cascade through the master's CRM, bookings and notifications.
+            // Administrator accounts live in a different table and cannot be targeted here.
+            $lockedUser->delete();
+            return $master?->id;
+        }, 3);
+
+        // Remove only this master's private upload directory, after the DB commit.
+        // Shared demo assets and other masters' directories are never removed.
+        $message = 'Аккаунт и связанные данные удалены.';
+        if ($masterId !== null) {
+            try {
+                if (!Storage::disk('local')->deleteDirectory('profile-images/'.$masterId)) {
+                    throw new \RuntimeException('Could not remove deleted master upload directory: '.$masterId);
+                }
+            } catch (\Throwable $error) {
+                report($error);
+                $message = 'Аккаунт удалён. Не удалось удалить файлы фотографий; требуется очистка на сервере.';
+            }
+        }
+        return redirect()->route('admin.users')->with('success', $message);
     }
 
     public function settings()

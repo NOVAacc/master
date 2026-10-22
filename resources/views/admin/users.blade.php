@@ -26,6 +26,7 @@
 @else
 <span class="badge">Профиль не заполнен</span>
 @endif
+<p><a class="button danger small" href="{{ route('admin.users.delete', $user->id) }}">Удалить аккаунт</a></p>
 </div>
 </article>
 @empty
