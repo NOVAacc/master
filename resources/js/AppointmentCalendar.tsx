@@ -42,6 +42,7 @@ export default function AppointmentCalendar({
     loading,
     onNavigate,
     renderDetails,
+    onCreateStory,
 }: {
     appointments: Appointment[];
     blocks: TimeBlock[];
@@ -51,6 +52,7 @@ export default function AppointmentCalendar({
     loading: boolean;
     onNavigate: (date: string) => void;
     renderDetails: (appointment: Appointment) => ReactNode;
+    onCreateStory?: (date: string, time?: string, serviceId?: number) => void;
 }) {
     const root = useRef<HTMLDivElement>(null);
     const detail = useRef<HTMLDivElement>(null);
@@ -224,6 +226,7 @@ export default function AppointmentCalendar({
                     </button>
                 </div>
             </div>
+            {onCreateStory && <button type="button" className="ghost" onClick={() => onCreateStory(date)}>Создать сторис о свободном времени</button>}
             <p className="muted small">
                 {timezoneLabel(timezone)} · сетка по 30 минут. Белые участки рабочего дня
                 свободны; серые — вне расписания. Нажмите запись, чтобы открыть
