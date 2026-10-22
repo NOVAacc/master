@@ -10,6 +10,7 @@ import { MasterAvatar } from "../ProfileIdentity";
 import ServicesPanel from "../ServicesPanel";
 import EditAppointmentForm from "../EditAppointmentForm";
 import AppointmentCalendar from "../AppointmentCalendar";
+import SlotStory from "../SlotStory";
 import QuickBooking from "../QuickBooking";
 import ClientCard from "../ClientCard";
 import { Brand, Errors, Field, Notice } from "../Shared";
@@ -154,6 +155,9 @@ export default function Dashboard({
     const [tab, setTab] = useState("appointments");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
+    const [storyOpen, setStoryOpen] = useState(false);
+    const [storyAppointment, setStoryAppointment] = useState<Appointment | null>(null);
+    const openStory = (appointment: Appointment | null = null) => { setStoryAppointment(appointment); setNotificationsOpen(false); setStoryOpen(true); };
     const [appointmentFilter, setAppointmentFilter] = useState<"all" | "upcoming" | "pending">("all");
     useEffect(() => {
         if (!mobileMenuOpen) return;
@@ -242,6 +246,7 @@ export default function Dashboard({
             ["pending", "confirmed"].includes(a.status) &&
             new Date(a.starts_at) > new Date(),
     );
+    const recentCancelled = appointments.filter(a => a.status === "cancelled" && new Date(a.starts_at) > new Date()).slice(0, 5);
     const awaitingConfirmation = appointments.filter(a =>
         a.status === "pending" && new Date(a.starts_at) > new Date()
     );
@@ -306,6 +311,9 @@ export default function Dashboard({
                     <span className={`badge ${a.status}`}>
                         {statuses[a.status]}
                     </span>
+                    {a.status === "cancelled" && new Date(a.starts_at) > new Date() && (
+                        <button type="button" className="ghost" onClick={() => openStory(a)}>Создать сторис об окне</button>
+                    )}
                     {a.status === "confirmed" && a.whatsapp_link && (
                         <a
                             className="ghost"
@@ -472,6 +480,8 @@ export default function Dashboard({
     return (
         <div className="shell">
             <Head title="Кабинет" />
+            {storyOpen && <SlotStory master={master} services={services} initialDate={calendarDate}
+                initialAppointment={storyAppointment ?? undefined} onClose={() => setStoryOpen(false)} />}
             <aside className={`sidebar${mobileMenuOpen ? " mobile-menu-open" : ""}`}>
                 <div className="sidebar-mobile-header">
                     <Brand />
@@ -578,6 +588,12 @@ export default function Dashboard({
                                     <button type="button" onClick={() => showNotificationAppointments("pending")}>
                                         <span>Ждут подтверждения</span><strong>{awaitingConfirmation.length}</strong>
                                     </button>
+                                    {recentCancelled.length > 0 && <div className="story-notification-links">
+                                        <strong>Освободившееся время</strong>
+                                        {recentCancelled.map(a => <button type="button" key={a.id} onClick={() => openStory(a)}>
+                                            <span>{date(a.starts_at)} · Создать сторис</span><Icon name="calendar" />
+                                        </button>)}
+                                    </div>}
                                     <p>Выберите категорию, чтобы увидеть соответствующие записи.</p>
                                 </div>
                             )}
@@ -608,6 +624,7 @@ export default function Dashboard({
                         </h2>
                         {tab === "appointments" && (
                             <div className="row wrap appointment-view-controls">
+                                <button type="button" className="ghost" onClick={() => openStory()}>Создать сторис</button>
                                 <button type="button" className="primary" onClick={() => setQuickBooking(true)} disabled={!services.some(s => s.is_active)}>+ Записать клиента</button>
                                 <div
                                     className="display-switch text-switch"
@@ -646,6 +663,7 @@ export default function Dashboard({
                         <>
                             {appointmentView === "calendar" ? (
                                 <AppointmentCalendar
+                                    onCreateStory={() => openStory()}
                                     appointments={calendarAppointments}
                                     blocks={calendarBlocks}
                                     hours={hours}
