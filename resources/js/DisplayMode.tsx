@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
+import { router } from "@inertiajs/react";
 import { BrandMark } from "./Shared";
 
 type DisplayMode = "auto" | "mobile" | "desktop";
@@ -32,7 +33,12 @@ try {
 }
 applyMode(initialMode);
 
-export default function DisplayModeFooter() {
+export default function DisplayModeFooter({ initialInstagramUsername }: { initialInstagramUsername: string }) {
+    const [instagramUsername, setInstagramUsername] = useState(initialInstagramUsername);
+    useEffect(() => router.on("navigate", event => {
+        const site = event.detail.page.props.site as { instagramUsername?: string } | undefined;
+        if (site?.instagramUsername) setInstagramUsername(site.instagramUsername);
+    }), []);
     const [mode, setMode] = useState<DisplayMode>(initialMode);
 
     useEffect(() => {
@@ -60,6 +66,9 @@ export default function DisplayModeFooter() {
                 <a href="/" aria-label="BOSH — главная страница"><BrandMark small /></a>
                 <p className="muted small">BOSH — время для вашего дела.</p>
             </div>
+            <a className="site-instagram" href={`https://www.instagram.com/${encodeURIComponent(instagramUsername)}/`} target="_blank" rel="noopener noreferrer" aria-label={`Instagram BOSH: @${instagramUsername}`}>
+                <Icon name="instagram" /><span>@{instagramUsername}</span>
+            </a>
             <div
                 className="display-switch"
                 role="group"

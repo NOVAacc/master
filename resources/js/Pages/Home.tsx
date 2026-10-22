@@ -2,6 +2,7 @@ import { Head, Link, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import { Brand } from "../Shared";
 import Icon from "../Icon";
+import useSectionScroll from "../useSectionScroll";
 
 const services = [
     { name: "Стрижка", duration: "45 мин", price: "500 сом" },
@@ -67,6 +68,7 @@ function BookingExample() {
 }
 
 export default function Home() {
+    useSectionScroll();
     const { auth } = usePage<{ auth: { user: { name: string } | null } }>().props;
     const destination = auth.user ? "/dashboard" : "/register";
     const action = auth.user ? "Перейти в кабинет" : "Начать работу";

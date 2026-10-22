@@ -12,7 +12,7 @@ createInertiaApp({
         createRoot(el).render(
             <div className="display-frame">
                 <App {...props} />
-                <DisplayModeFooter />
+                <DisplayModeFooter initialInstagramUsername={(props.initialPage.props.site as { instagramUsername?: string } | undefined)?.instagramUsername ?? "bosh.kgz"} />
             </div>,
         );
     },

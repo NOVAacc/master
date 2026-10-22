@@ -3126,7 +3126,9 @@ h2 {
 @container(max-width:360px){.landing{padding:0 14px}.landing-example-body{padding:18px}.landing-example-top{padding:14px}.landing h1{font-size:34px}.landing-hero-actions{gap:16px}.landing-text-link{font-size:12px}.landing-workspace{padding:18px}.landing-day{padding:12px}}
 
 
-/* Native section links on the service homepage move smoothly. */
-@media (prefers-reduced-motion: no-preference) {
-    html:has(.landing) { scroll-behavior: smooth; }
-}
+/* Homepage anchor duration is controlled by useSectionScroll. */
+html:has(.landing) { scroll-behavior: auto; }
+
+.site-instagram { display: inline-flex; align-items: center; gap: 8px; color: #666; font-size: 12px; }
+.site-instagram .icon { width: 17px; height: 17px; }
+.site-instagram:hover { color: #252525; }

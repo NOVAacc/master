@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\SiteSetting;
 use App\Models\MasterProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -111,7 +112,19 @@ class AdminController extends Controller
 
     public function settings()
     {
-        return view('admin.settings');
+        return view('admin.settings', ['instagramUsername' => SiteSetting::instagramUsername()]);
+    }
+
+    public function socialSettings(Request $request)
+    {
+        if (is_string($request->input('instagram_username'))) {
+            $request->merge(['instagram_username' => ltrim(trim($request->input('instagram_username')), '@')]);
+        }
+        $data = $request->validate([
+            'instagram_username' => ['required', 'string', 'max:30', 'regex:/^(?!\.)(?!.*\.\.)(?!.*\.$)[A-Za-z0-9_.]{1,30}$/'],
+        ]);
+        SiteSetting::updateOrCreate(['key' => 'instagram_username'], ['value' => $data['instagram_username']]);
+        return redirect()->route('admin.settings')->with('success', 'Instagram сайта обновлён.');
     }
 
     public function password(Request $request)
