@@ -72,7 +72,9 @@ function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, 
     ctx.fillText("Записаться", margin + 55, 1594);
     ctx.fillStyle = p.sub;
     ctx.font = "500 28px system-ui, sans-serif";
-    wrappedText(ctx, link, WIDTH - margin * 2, 2).forEach((line, i) => ctx.fillText(line, margin, 1740 + i * 38));
+    const url = new URL(link);
+    const displayLink = url.host + url.pathname;
+    ctx.fillText(displayLink.length > 46 ? displayLink.slice(0, 43) + "…" : displayLink, margin, 1740);
 }
 function toBlob(canvas: HTMLCanvasElement): Promise<Blob> {
     return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Не удалось сохранить PNG.")), "image/png"));
