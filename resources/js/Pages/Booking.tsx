@@ -17,6 +17,7 @@ type Props = {
     minDate: string;
     maxDate: string;
     slots: { value: string; label: string }[];
+    requestedTime?: string | null;
     whatsappAutomatic: boolean;
     bookingReceipt: {
         status: string;
@@ -29,7 +30,7 @@ type Props = {
 export default function Booking(p: Props) {
     const f = useForm({
         service_ids: p.selectedServices,
-        starts_at: "",
+        starts_at: p.slots.find(s => s.label === p.requestedTime)?.value ?? "",
         client_name: "",
         client_phone: "",
         client_comment: "",
@@ -326,6 +327,9 @@ export default function Booking(p: Props) {
                                 </p>
                             )}
                             <p className="field-title">Свободное время</p>
+                            {p.requestedTime && !p.slots.some(s => s.label === p.requestedTime) && (
+                                <p className="notice" role="status">Время {p.requestedTime} уже недоступно. Выберите другое свободное окно.</p>
+                            )}
                             <div className="slots">
                                 {(ready && selected.length ? p.slots : []).map(
                                     (s) => (
