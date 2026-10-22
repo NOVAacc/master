@@ -18,6 +18,7 @@ type Props = {
     maxDate: string;
     slots: { value: string; label: string }[];
     whatsappAutomatic: boolean;
+    storyTime?: string | null;
     bookingReceipt: {
         status: string;
         text: string;
@@ -29,7 +30,7 @@ type Props = {
 export default function Booking(p: Props) {
     const f = useForm({
         service_ids: p.selectedServices,
-        starts_at: "",
+        starts_at: p.storyTime ? (p.slots.find(s => s.label === p.storyTime)?.value ?? "") : "",
         client_name: "",
         client_phone: "",
         client_comment: "",
