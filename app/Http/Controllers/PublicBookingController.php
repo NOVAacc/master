@@ -21,6 +21,7 @@ class PublicBookingController extends Controller
             'date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:'.$today->toDateString(),
                 'before_or_equal:'.$today->addDays(90)->toDateString()],
             'service' => ['nullable', 'integer'],
+            'time' => ['nullable', 'date_format:H:i'],
             'services' => ['sometimes', 'array', 'max:20'],
             'selection' => ['sometimes', 'boolean'],
             'services.*' => ['required', 'integer', 'distinct'],
@@ -76,6 +77,7 @@ class PublicBookingController extends Controller
             'workingDays' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->pluck('weekday')->map(fn ($day) => (int) $day)->all(),
             'date' => $date, 'minDate' => $today->toDateString(),
             'maxDate' => $today->addDays(90)->toDateString(), 'slots' => $slots,
+            'requestedTime' => $data['time'] ?? null,
             'whatsappAutomatic' => app(WhatsApp::class)->configured(),
             'bookingReceipt' => $request->session()->get('booking_receipt.master_slug') === $master->slug ? $request->session()->get('booking_receipt') : null,
         ]);
