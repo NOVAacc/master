@@ -1548,7 +1548,6 @@ h2 {
     z-index: 3;
     border-radius: 7px;
     border: 1px solid #d3e6d9;
-    border-left: 3px solid #5b9f75;
     background: #edf7f0;
     color: #2a6340;
     padding: 7px 6px;
@@ -1596,32 +1595,27 @@ h2 {
 .calendar-appointment.pending {
     background: #fff8e8;
     border-color: #efdfba;
-    border-left-color: #d6a34a;
     color: #8b661e;
 }
 .calendar-appointment.completed {
     background: #edf3ff;
     border-color: #d9e3f5;
-    border-left-color: #6d93ce;
     color: #426393;
 }
 .calendar-appointment.cancelled {
     background: #f4f4f4;
     border-color: #ddd;
-    border-left-color: #aaa;
     color: #888;
     border-style: dashed;
 }
 .calendar-appointment.no_show {
     background: #fff0f0;
     border-color: #f0d6d6;
-    border-left-color: #c67d7d;
     color: #9a5252;
 }
 .calendar-appointment.short {
     padding: 0 3px;
     gap: 0;
-    border-left-width: 2px;
 }
 .calendar-appointment.short strong {
     display: block;
@@ -1636,7 +1630,6 @@ h2 {
 .badge.calendar-past {
     background: #f0f0f0;
     border-color: #d8d8d8;
-    border-left-color: #999;
     color: #656565;
 }
 .calendar-time-block {
@@ -1648,7 +1641,6 @@ h2 {
         #f2f2f2 10px
     );
     border-color: #ccc;
-    border-left-color: #999;
     color: #737373;
 }
 .calendar-legend {
@@ -3112,8 +3104,8 @@ h2 {
 .landing-day{padding:20px;border:1px solid #e3e1df;border-radius:16px;background:#fff;box-shadow:0 12px 35px #00000004}
 .landing-day-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.landing-day-heading>span:first-child{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600}
 .landing-day-row{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;margin-top:10px;align-items:start}.landing-day-row time{font-size:9px;color:#999;padding-top:10px;font-variant-numeric:tabular-nums}
-.landing-day-booking{background:#f1f3f1;border-left:2px solid #7b937b;border-radius:7px;padding:10px}.landing-day-booking strong{font-size:11px;font-weight:600;display:block}.landing-day-booking small{display:flex;justify-content:space-between;gap:6px;font-size:8px;margin-top:5px;flex-wrap:wrap}.landing-day-booking small span{color:#657465}
-.landing-day-booking.pending-example{background:#f8f3ed;border-color:#b19976}.landing-day-booking.pending-example small span{color:#9e8461}
+.landing-day-booking{background:#f1f3f1;border-radius:7px;padding:10px}.landing-day-booking strong{font-size:11px;font-weight:600;display:block}.landing-day-booking small{display:flex;justify-content:space-between;gap:6px;font-size:8px;margin-top:5px;flex-wrap:wrap}.landing-day-booking small span{color:#657465}
+.landing-day-booking.pending-example{background:#f8f3ed}.landing-day-booking.pending-example small span{color:#9e8461}
 .landing-day-free{height:35px;display:flex;align-items:center;gap:7px;color:#aaa;font-size:10px;border:1px dashed #ddd;border-radius:7px;padding:8px 10px}.landing-day-free>span{width:4px;height:4px;border-radius:50%;background:#aaa}
 .landing-day-break{height:35px;display:flex;align-items:center;gap:7px;color:#aaa;font-size:10px;background:repeating-linear-gradient(-45deg,#f8f8f8,#f8f8f8 4px,#f2f2f2 4px,#f2f2f2 5px);border-radius:7px;padding:8px 10px}.landing-day-break .icon{width:12px;height:12px}
 .landing-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;margin-bottom:30px}.landing-step-number{display:block;font-size:36px;line-height:1;font-weight:500;letter-spacing:-1px;color:#ccc;margin-bottom:24px}.landing-steps article{border-top:1px solid #ddd;padding-top:24px}.landing-steps h3{font-size:16px;margin:0 0 10px}.landing-steps p{font-size:13px;color:#818181;line-height:1.8;margin:0}

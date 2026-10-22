@@ -20,6 +20,7 @@ const steps = [
     { title: "Поделитесь ссылкой", text: "Разместите её в соцсетях или отправьте клиентам. Записи появятся в вашем календаре." },
 ];
 const questions = [
+    { title: "Сколько стоит BOSH?", text: "BOSH — бесплатный сервис для мастеров и клиентов." },
     { title: "Нужно ли клиенту регистрироваться?", text: "Нет. Клиент открывает вашу ссылку, выбирает услугу и доступное время, затем указывает имя и телефон." },
     { title: "Можно записать клиента самостоятельно?", text: "Да. В кабинете есть быстрая запись: выберите клиента из своей базы или добавьте нового, укажите услугу и время." },
     { title: "Как подтверждаются записи?", text: "Вы выбираете режим в настройках: автоматическое подтверждение или подтверждение вручную. Ожидающие записи видны в уведомлениях и списке записей." },
@@ -71,16 +72,16 @@ export default function Home() {
     useSectionScroll();
     const { auth } = usePage<{ auth: { user: { name: string } | null } }>().props;
     const destination = auth.user ? "/dashboard" : "/register";
-    const action = auth.user ? "Перейти в кабинет" : "Начать работу";
+    const action = auth.user ? "Перейти в кабинет" : "Начать бесплатно";
     return (
         <div className="landing">
             <Head title="BOSH — онлайн-запись для вашего дела">
-                <meta name="description" content="BOSH — сервис онлайн-записи для мастеров и специалистов. Своя страница, услуги, календарь и клиентская база. Расскажем, как начать принимать записи." />
+                <meta name="description" content="BOSH — бесплатный сервис онлайн-записи для мастеров и специалистов. Своя страница, услуги, календарь и клиентская база. Расскажем, как начать принимать записи." />
             </Head>
             <header className="landing-header">
                 <Brand /><span className="landing-mobile-name">BOSH</span>
                 <nav className="landing-header-sections" aria-label="О сервисе"><a href="#features">Возможности</a><a href="#start">Как начать</a><a href="#questions">Вопросы</a></nav>
-                <div className="landing-header-actions"><Link href={auth.user ? "/dashboard" : "/login"}>{auth.user ? "Мой кабинет" : "Войти"}</Link>{!auth.user && <Link className="primary" href="/register">Начать работу <Icon name="arrow" /></Link>}</div>
+                <div className="landing-header-actions"><Link href={auth.user ? "/dashboard" : "/login"}>{auth.user ? "Мой кабинет" : "Войти"}</Link>{!auth.user && <Link className="primary" href="/register">Начать бесплатно <Icon name="arrow" /></Link>}</div>
             </header>
             <main>
                 <section className="landing-hero">
@@ -89,7 +90,7 @@ export default function Home() {
                         <h1>Вы занимаетесь делом.<br /><span>Клиенты записываются сами.</span></h1>
                         <p className="landing-lead">Ваша страница с услугами, свободное время и записи — в одном месте. Меньше переписок о времени. Больше внимания клиентам.</p>
                         <div className="landing-hero-actions"><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link><a className="landing-text-link" href="#start">Как это работает <span aria-hidden="true">↗</span></a></div>
-                        <p className="landing-hero-note"><Icon name="check" /> Работает на телефоне и компьютере</p>
+                        <p className="landing-hero-note"><Icon name="check" /> Бесплатно. На телефоне и компьютере.</p>
                     </div>
                     <BookingExample />
                 </section>
@@ -117,7 +118,7 @@ export default function Home() {
                     <ol><li><span>1</span><div><strong>Открывает вашу страницу</strong><p>По ссылке из соцсетей или сообщения</p></div></li><li><span>2</span><div><strong>Выбирает услугу и время</strong><p>Только доступные для записи часы</p></div></li><li><span>3</span><div><strong>Оставляет имя и телефон</strong><p>А вы видите новую запись в кабинете</p></div></li></ol>
                 </section>
                 <section id="questions" className="landing-section landing-faq"><div className="landing-section-heading"><p className="landing-kicker">ПЕРЕД НАЧАЛОМ</p><h2>Есть вопросы?</h2></div><div>{questions.map(item => <details key={item.title}><summary>{item.title}<span aria-hidden="true">+</span></summary><p>{item.text}</p></details>)}</div></section>
-                <section className="landing-final"><p className="landing-kicker">ВАШ СЛЕДУЮЩИЙ ШАГ</p><h2>Пусть запись<br /><span>работает на вас.</span></h2><p>Создайте свою страницу и поделитесь ею с клиентами.</p><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link></section>
+                <section className="landing-final"><p className="landing-kicker">ВАШ СЛЕДУЮЩИЙ ШАГ</p><h2>Пусть запись<br /><span>работает на вас.</span></h2><p>Создайте страницу бесплатно и поделитесь ею с клиентами.</p><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link></section>
             </main>
         </div>
     );

@@ -3,6 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=bosh-20261022">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=bosh-20261022">
     <meta name="robots" content="noindex, nofollow">
     <title>@yield('title') · BOSH</title>
     <style>
