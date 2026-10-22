@@ -3124,3 +3124,51 @@ h2 {
 @container(max-width:950px){.landing-header{gap:20px}.landing-header-sections{gap:16px}.landing-hero{gap:32px;padding-top:56px}.landing h1{font-size:40px;letter-spacing:-1.8px}.landing-hero-actions{gap:16px}.landing-workspace{gap:30px;padding:30px}.landing-client{gap:48px}.landing-faq{gap:40px}}
 @container(max-width:700px){.landing{padding:0 20px}.landing-header{min-height:76px;gap:12px}.landing-header .brand{display:none}.landing-mobile-name{display:block;font-weight:800;font-size:18px;letter-spacing:-.7px}.landing-header-sections{display:none}.landing-header-actions{margin-left:auto;gap:16px;font-size:12px}.landing-header-actions .primary{min-height:38px;padding:8px 14px;font-size:11px}.landing-header-actions .primary .icon{display:none}.landing-hero{grid-template-columns:1fr;gap:36px;padding:42px 0 36px}.landing h1{font-size:clamp(36px,7cqw,48px);letter-spacing:-1.8px;max-width:540px}.landing-lead{font-size:14px;max-width:500px}.landing-kicker{font-size:9px;letter-spacing:1px;margin-bottom:18px}.landing-hero-actions{margin:24px 0 16px}.landing-example{max-width:430px;width:100%;margin:auto;transform:none}.landing-audience>div{justify-content:flex-start;gap:12px 20px}.landing-audience span{font-size:11px}.landing-section{padding-top:56px}.landing-section-heading{margin-bottom:24px}.landing h2{font-size:30px;letter-spacing:-1px}.landing-benefits{grid-template-columns:1fr;gap:24px;margin-bottom:30px}.landing-benefits article{display:grid;grid-template-columns:30px minmax(0,1fr);gap:0 12px}.landing-feature-icon{grid-row:span 2;height:28px}.landing-feature-icon .icon{width:21px;height:21px}.landing-benefits h3{margin:3px 0 8px;font-size:15px}.landing-benefits p{font-size:12px}.landing-workspace{grid-template-columns:1fr;gap:28px;padding:24px;border-radius:18px}.landing-workspace-copy h3{font-size:26px}.landing-workspace-copy li{font-size:11px}.landing-day{padding:16px}.landing-steps{grid-template-columns:1fr;gap:22px}.landing-steps article{display:grid;grid-template-columns:36px minmax(0,1fr);column-gap:16px;padding-top:18px}.landing-step-number{grid-row:span 2;font-size:26px;margin:0}.landing-steps h3{font-size:15px}.landing-steps p{font-size:12px}.landing-client{grid-template-columns:1fr;gap:30px;padding:40px 0;margin-top:56px}.landing-faq{grid-template-columns:1fr;gap:0}.landing-faq .landing-section-heading{margin-bottom:8px}.landing-faq summary{font-size:12px;padding:18px 0}.landing-faq details p{font-size:12px}.landing-final{margin-top:56px;padding:36px 20px;border-radius:18px}.landing-final h2{font-size:36px}}
 @container(max-width:360px){.landing{padding:0 14px}.landing-example-body{padding:18px}.landing-example-top{padding:14px}.landing h1{font-size:34px}.landing-hero-actions{gap:16px}.landing-text-link{font-size:12px}.landing-workspace{padding:18px}.landing-day{padding:12px}}
+
+
+/* Restrained Kyrgyz-inspired horn ornaments, kept clear of text and controls. */
+.landing-ornament {
+    display: block;
+    width: 192px;
+    height: 48px;
+    background-color: #a85d57;
+    -webkit-mask: url("/brand/kyrgyz-ornament.svg") center / contain no-repeat;
+    mask: url("/brand/kyrgyz-ornament.svg") center / contain no-repeat;
+    pointer-events: none;
+    user-select: none;
+}
+.landing-hero { position: relative; }
+.landing-ornament-hero {
+    position: absolute;
+    top: 15px;
+    right: 18px;
+    opacity: .18;
+}
+.landing-ornament-divider {
+    width: 144px;
+    height: 36px;
+    margin-bottom: 24px;
+    opacity: .32;
+}
+.landing-final { position: relative; }
+.landing-ornament-final-left,
+.landing-ornament-final-right {
+    position: absolute;
+    top: 34px;
+    width: 144px;
+    height: 36px;
+    opacity: .22;
+}
+.landing-ornament-final-left { left: 32px; }
+.landing-ornament-final-right { right: 32px; transform: scaleX(-1); }
+@container (max-width: 950px) {
+    .landing-ornament-final-left,
+    .landing-ornament-final-right { width: 96px; height: 24px; top: 38px; }
+}
+@container (max-width: 700px) {
+    .landing-ornament-hero { width: 112px; height: 28px; top: 8px; right: 0; opacity: .2; }
+    .landing-ornament-divider { width: 112px; height: 28px; margin-bottom: 20px; }
+    .landing-final { padding-top: 76px; }
+    .landing-ornament-final-left { width: 128px; height: 32px; top: 24px; left: calc(50% - 64px); }
+    .landing-ornament-final-right { display: none; }
+}
