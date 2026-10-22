@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 const paths: Record<string, ReactNode> = {
+    instagram: <><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r=".8" fill="currentColor" stroke="none" /></>,
     bell: <><path d="M18 8a6 6 0 0 0-12 0v3.5c0 1.4-.6 2.7-1.6 3.7L3 17h18l-1.4-1.8a6 6 0 0 1-1.6-3.7V8Z" /><path d="M10 21h4" /></>,
     link: <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.71" />,
     pencil: <><path d="m15 5 4 4M4 20l4.2-.9L19 8.3a2.1 2.1 0 0 0-3-3L5.2 16.1 4 20Z" /></>,

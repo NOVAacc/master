@@ -101,4 +101,28 @@ class AdminTest extends TestCase
             ->assertSessionHasErrors('username');
         $this->assertGuest('admin');
     }
+
+    public function test_instagram_setting_is_admin_only_and_shared_with_site(): void
+    {
+        $this->get('/')->assertInertia(fn (\Inertia\Testing\AssertableInertia $p) => $p->where('site.instagramUsername', 'bosh.kgz'));
+        $this->post('/admin/settings/social', ['instagram_username' => 'unauthorized'])->assertRedirect('/admin/login');
+        $this->actingAs(User::factory()->create(), 'web')
+            ->post('/admin/settings/social', ['instagram_username' => 'unauthorized'])->assertRedirect('/admin/login');
+        $this->signIn($this->admin());
+        $this->get('/admin/settings')->assertOk()->assertSee('bosh.kgz');
+        $this->post('/admin/settings/social', ['instagram_username' => ' @bosh.new '])
+            ->assertSessionHasNoErrors()->assertRedirect('/admin/settings');
+        $this->assertDatabaseHas('site_settings', ['key' => 'instagram_username', 'value' => 'bosh.new']);
+        $this->get('/')->assertInertia(fn (\Inertia\Testing\AssertableInertia $p) => $p->where('site.instagramUsername', 'bosh.new'));
+        $this->get('/admin/settings')->assertSee('bosh.new');
+    }
+
+    public function test_instagram_setting_rejects_urls_and_invalid_names_without_overwriting_value(): void
+    {
+        $this->signIn($this->admin());
+        foreach (['https://evil.example/name', 'bosh/new', 'bosh..new', '.bosh', 'bosh.', '', str_repeat('a', 31)] as $value) {
+            $this->post('/admin/settings/social', ['instagram_username' => $value])->assertSessionHasErrors('instagram_username');
+        }
+        $this->assertDatabaseHas('site_settings', ['key' => 'instagram_username', 'value' => 'bosh.kgz']);
+    }
 }

@@ -69,6 +69,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/users/{user}/delete', [\App\Http\Controllers\AdminController::class, 'confirmDeletion'])->whereNumber('user')->name('users.delete');
         Route::delete('/users/{user}', [\App\Http\Controllers\AdminController::class, 'destroyUser'])->whereNumber('user')->middleware('throttle:10,1')->name('users.destroy');
         Route::get('/settings', [\App\Http\Controllers\AdminController::class, 'settings'])->name('settings');
+        Route::post('/settings/social', [\App\Http\Controllers\AdminController::class, 'socialSettings'])->middleware('throttle:20,1')->name('settings.social');
         Route::post('/password', [\App\Http\Controllers\AdminController::class, 'password'])->middleware('throttle:5,10')->name('password');
         Route::post('/logout', [\App\Http\Controllers\AdminController::class, 'logout'])->name('logout');
     });
