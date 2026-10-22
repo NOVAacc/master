@@ -48,29 +48,29 @@ class MasterTest extends TestCase
             'client_phone' => '+996 555 123456', 'consent' => true];
     }
 
-    public function test_home_lists_ready_profiles_and_ranks_only_completed_bookings(): void
+    public function test_home_introduces_service_without_publishing_master_or_customer_records(): void
     {
-        [$user, $older, $service] = $this->master('older');
-        $older->forceFill(['created_at' => now()->subDay()])->save();
-        [, $newer] = $this->master('newer');
-        [, $disabled] = $this->master('disabled');
-        $disabled->update(['booking_enabled' => false]);
-        [, $inactive, $inactiveService] = $this->master('inactive');
-        $inactiveService->update(['is_active' => false]);
-        $older->services()->create(['name' => 'Hidden cheap service', 'duration_minutes' => 30,
-            'price_som' => 1, 'is_active' => false]);
-        $appointment = app(BookAppointment::class)->create($older, $service,
+        [$user, $master, $service] = $this->master('private-directory-fixture');
+        $master->update(['display_name' => 'Private Master Fixture']);
+        app(BookAppointment::class)->create($master, $service,
             CarbonImmutable::parse('2026-10-19 04:00:00', 'UTC'), 'Secret Customer', '+996555999888');
-        $appointment->update(['status' => 'completed']);
-        $this->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Home')
-            ->has('newMasters', 2)->where('newMasters.0.slug', 'newer')
-            ->where('newMasters.1.price_from', 800)->missing('newMasters.0.phone')
-            ->missing('newMasters.0.user_id')->has('topMasters', 1)
-            ->where('topMasters.0.slug', 'older')->where('topMasters.0.completed_count', 1))
+        DB::enableQueryLog();
+        $response = $this->get('/');
+        $queries = DB::getQueryLog();
+        DB::disableQueryLog();
+        $response->assertOk()->assertInertia(fn (Assert $page) => $page->component('Home')
+            ->missing('newMasters')->missing('topMasters')->missing('industries')->missing('filters'))
+            ->assertDontSee('Private Master Fixture')->assertDontSee('private-directory-fixture')
             ->assertDontSee('Secret Customer')->assertDontSee('+996555999888')->assertDontSee($user->email);
-        $this->actingAs($user)->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Home'));
-        $appointment->update(['status' => 'cancelled']);
-        $this->get('/')->assertInertia(fn (Assert $page) => $page->has('topMasters', 0));
+        foreach ($queries as $query) {
+            $this->assertStringNotContainsString('master_profiles', $query['query']);
+            $this->assertStringNotContainsString('master_appointments', $query['query']);
+        }
+        // Direct booking links and the master's private cabinet still work.
+        $this->get('/m/'.$master->slug)->assertOk()->assertInertia(fn (Assert $page) => $page->component('Booking'));
+        $this->actingAs($user)->get('/')->assertOk()->assertInertia(fn (Assert $page) => $page->component('Home')
+            ->missing('newMasters')->missing('topMasters'));
+        $this->get('/dashboard')->assertOk();
     }
 
     public function test_old_registration_endpoint_is_disabled_and_sms_profiles_have_private_cabinets(): void

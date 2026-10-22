@@ -12,21 +12,17 @@ class IndustryTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_full_taxonomy_and_catalog_filters_work_before_the_result_limit(): void
+    public function test_legacy_catalog_query_parameters_do_not_publish_master_records(): void
     {
         $industries = config('industries');
         $this->assertCount(6, $industries);
         $this->assertSame(56, array_sum(array_map(fn ($i) => count($i['activities']), $industries)));
-        $target = $this->profile('barbertarget', 'beauty', 'barber');
-        for ($i = 0; $i < 13; $i++) $this->profile('nails'.$i, 'beauty', 'nails');
-        $this->profile('massage', 'medicine', 'massage');
-        $this->get('/?industry=beauty&activity=barber')->assertInertia(fn (Assert $p) => $p
-            ->component('Home')->has('newMasters', 1)->where('newMasters.0.slug', $target->slug)
-            ->where('filters.activity', 'barber')->has('industries', 6));
-        $this->get('/?industry=medicine')->assertInertia(fn (Assert $p) => $p
-            ->has('newMasters', 1)->where('newMasters.0.slug', 'massage'));
-        $this->get('/?industry=education')->assertInertia(fn (Assert $p) => $p->has('newMasters', 0));
-        $this->get('/?industry=medicine&activity=barber')->assertSessionHasErrors('activity');
+        $this->profile('barbertarget', 'beauty', 'barber');
+        foreach (['/?industry=beauty&activity=barber', '/?industry=medicine', '/?industry=medicine&activity=barber'] as $url) {
+            $this->get($url)->assertOk()->assertInertia(fn (Assert $p) => $p
+                ->component('Home')->missing('newMasters')->missing('topMasters')->missing('filters'))
+                ->assertDontSee('barbertarget');
+        }
     }
 
     public function test_profile_saves_only_matching_industry_activity_pairs_and_can_clear_them(): void
