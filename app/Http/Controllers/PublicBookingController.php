@@ -76,7 +76,7 @@ class PublicBookingController extends Controller
             'selectedServices' => $selected->pluck('id')->all(),
             'workingDays' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->pluck('weekday')->map(fn ($day) => (int) $day)->all(),
             'storyTime' => $data['time'] ?? null,
-            'date' => $date, 'minDate => $today->toDateString(),
+            'date' => $date, 'minDate' => $today->toDateString(),
             'maxDate' => $today->addDays(90)->toDateString(), 'slots' => $slots,
             'whatsappAutomatic' => app(WhatsApp::class)->configured(),
             'bookingReceipt' => $request->session()->get('booking_receipt.master_slug') === $master->slug ? $request->session()->get('booking_receipt') : null,
