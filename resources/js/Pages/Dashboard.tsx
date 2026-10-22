@@ -11,6 +11,7 @@ import ServicesPanel from "../ServicesPanel";
 import EditAppointmentForm from "../EditAppointmentForm";
 import AppointmentCalendar from "../AppointmentCalendar";
 import QuickBooking from "../QuickBooking";
+import StoryCreator from "../StoryCreator";
 import ClientCard from "../ClientCard";
 import { Brand, Errors, Field, Notice } from "../Shared";
 import type { Appointment, Hour, Master, Service } from "../types";
@@ -173,6 +174,13 @@ export default function Dashboard({
         }
     };
     const [quickBooking, setQuickBooking] = useState(false);
+    const [storySeed, setStorySeed] = useState<{date?: string; time?: string; service?: number} | null>(null);
+    const openStoryFromAppointment = (a: Appointment) => {
+        const local = new Intl.DateTimeFormat("en-CA", {timeZone: master.timezone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).formatToParts(new Date(a.starts_at));
+        const part = (type: string) => local.find(p => p.type === type)?.value || "";
+        setStorySeed({date: `${part("year")}-${part("month")}-${part("day")}`, time: `${part("hour")}:${part("minute")}`, service: a.master_service_id ?? undefined});
+        setNotificationsOpen(false);
+    };
     const [selectedClient, setSelectedClient] = useState<(typeof clients)[number] | null>(null);
     const [bookingClient, setBookingClient] = useState<(typeof clients)[number] | null>(null);
     const [clientOverrides, setClientOverrides] = useState<Record<number, (typeof clients)[number]>>({});
@@ -306,6 +314,7 @@ export default function Dashboard({
                     <span className={`badge ${a.status}`}>
                         {statuses[a.status]}
                     </span>
+                    {a.status === "cancelled" && new Date(a.starts_at) > new Date() && <button type="button" className="ghost" onClick={() => openStoryFromAppointment(a)}>Создать сторис об освободившемся времени</button>}
                     {a.status === "confirmed" && a.whatsapp_link && (
                         <a
                             className="ghost"
@@ -578,6 +587,7 @@ export default function Dashboard({
                                     <button type="button" onClick={() => showNotificationAppointments("pending")}>
                                         <span>Ждут подтверждения</span><strong>{awaitingConfirmation.length}</strong>
                                     </button>
+                                    <button type="button" onClick={() => { setStorySeed({}); setNotificationsOpen(false); }}>Создать сторис о свободном времени</button>
                                     <p>Выберите категорию, чтобы увидеть соответствующие записи.</p>
                                 </div>
                             )}
@@ -609,6 +619,7 @@ export default function Dashboard({
                         {tab === "appointments" && (
                             <div className="row wrap appointment-view-controls">
                                 <button type="button" className="primary" onClick={() => setQuickBooking(true)} disabled={!services.some(s => s.is_active)}>+ Записать клиента</button>
+                                <button type="button" className="ghost" onClick={() => setStorySeed({})} disabled={!services.some(s => s.is_active)}>Создать сторис</button>
                                 <div
                                     className="display-switch text-switch"
                                     role="group"
@@ -654,6 +665,7 @@ export default function Dashboard({
                                     loading={calendarLoading}
                                     onNavigate={navigateCalendar}
                                     renderDetails={renderAppointment}
+                                    onCreateStory={(date, time, service) => setStorySeed({date, time, service})}
                                 />
                             ) : (
                                 <>
@@ -833,6 +845,7 @@ export default function Dashboard({
                 onSaved={updated => setClientOverrides(old => ({ ...old, [updated.id]: updated }))}
                 onChanged={() => { setSelectedClient(null); setClientSearchRevision(n => n + 1); router.reload({ only: ["clients", "appointments", "calendarAppointments"] }); }}
                 onBook={target => { setBookingClient(target); setSelectedClient(null); setQuickBooking(true); }} />}
+            {storySeed && <StoryCreator master={master} services={services} initialDate={storySeed.date} initialTime={storySeed.time} initialService={storySeed.service} onClose={() => setStorySeed(null)} />}
             {quickBooking && <QuickBooking services={services} timezone={master.timezone} date={calendarDate}
                 initialClient={bookingClient} onClose={() => { setQuickBooking(false); setBookingClient(null); }} />}
         </div>
