@@ -28,7 +28,7 @@
 .story-edit-title small{display:inline-block;margin-top:5px;font-size:11px}
 .story-frame .story-edit-details{top:63.5%;font-size:22px;font-weight:800}
 .story-edit-details small{font-size:10px;display:block;margin-top:6px}
-.story-edit-details span{display:block;margin-top:18px;text-align:center;padding:8px 4px;background:#2a2a2c;color:white;border-radius:50px;font-size:12px;text-shadow:none}
+.story-edit-details span{position:static;bottom:auto;left:auto;z-index:auto;display:block;margin-top:18px;text-align:center;padding:8px 4px;background:#2a2a2c;color:white;border-radius:50px;font-size:12px;text-shadow:none}
 .story-edit-title:hover,.story-edit-details:hover{outline:1px dashed #717171;border-radius:3px}
 .story-positions{border:1px solid #e5e5e5;border-radius:12px;margin-top:12px;padding:10px}
 .story-positions legend{padding:0 5px;font-size:12px;font-weight:650}
