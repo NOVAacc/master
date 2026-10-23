@@ -27,7 +27,9 @@ class RestrictUploads
         foreach ($files as $field => $file) {
             if (! in_array($field, $allowed, true) || is_array($file)) {
                 throw ValidationException::withMessages([
-                    $field => 'Неверное поле загрузки или количество файлов.',
+                    $profile ? 'avatar' : 'image' => $profile
+                        ? 'Допустимы аватар, обложка и три фотографии работ — по одному файлу в каждом поле.'
+                        : 'Для шаблонов сторис допустимо одно изображение в поле image.',
                 ]);
             }
         }
