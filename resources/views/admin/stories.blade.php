@@ -29,7 +29,7 @@
 <span>12:30</span>
 </div>
 <div>
-<h3>{{ $template }}</h3>
+<h3>{{ $labels[$theme][$template] ?? $template }}</h3><p class="muted">ID: {{ $template }}</p>
 <p class="muted">{{ $config['image_url'] ? 'Загружено своё изображение' : 'Используется стандартное фото' }}</p>
 <form action="{{ route('admin.stories.update', ['theme' => $theme, 'template' => $template]) }}" method="post" enctype="multipart/form-data">
 @csrf
