@@ -74,6 +74,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/users/{user}/delete', [\App\Http\Controllers\AdminController::class, 'confirmDeletion'])->whereNumber('user')->name('users.delete');
         Route::delete('/users/{user}', [\App\Http\Controllers\AdminController::class, 'destroyUser'])->whereNumber('user')->middleware('throttle:10,1')->name('users.destroy');
         Route::get('/stories', [\App\Http\Controllers\StoryTemplateAdminController::class, 'index'])->name('stories');
+        Route::get('/stories/{theme}/{template}', [\App\Http\Controllers\StoryTemplateAdminController::class, 'edit'])->name('stories.edit');
         Route::post('/stories/{theme}/{template}', [\App\Http\Controllers\StoryTemplateAdminController::class, 'update'])
             ->middleware('throttle:20,1')->name('stories.update');
         Route::get('/settings', [\App\Http\Controllers\AdminController::class, 'settings'])->name('settings');
