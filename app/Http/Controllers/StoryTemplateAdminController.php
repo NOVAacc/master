@@ -27,7 +27,7 @@ class StoryTemplateAdminController extends Controller
         'hair' => ['nude' => 'photo-1562322140-8baeececf3df', 'romantic' => 'photo-1519699047748-de8e457a634e', 'brunette' => 'photo-1522337360788-8b13dee7a37e', 'bold' => 'photo-1607779097040-26e80aa78e66', 'bridal' => 'photo-1560869713-7d563336772e', 'cozy' => 'photo-1633681926022-84c23e8cb2d6', 'urban' => 'photo-1605497788044-5a32c7078486', 'chrome' => 'photo-1521590832167-7bcbfaa6381f']
     ];
     public const FONTS = ['system' => 'Современный', 'serif' => 'Редакционный', 'rounded' => 'Мягкий'];
-    public const DEFAULTS = ['font' => 'system', 'scale' => 100, 'text_color' => ''];
+    public const DEFAULTS = ['font' => 'system', 'scale' => 100, 'text_color' => '', 'focal_x' => 50, 'focal_y' => 50, 'title_x' => 0, 'title_y' => 0, 'details_x' => 0, 'details_y' => 0];
 
     private static function settingKey(string $theme, string $template): string
     {
@@ -66,6 +66,12 @@ class StoryTemplateAdminController extends Controller
                     'font' => in_array($cfg['font'], array_keys(self::FONTS), true) ? $cfg['font'] : 'system',
                     'scale' => max(80, min(120, (int) $cfg['scale'])),
                     'text_color' => preg_match('/^#[0-9a-fA-F]{6}$/D', (string) $cfg['text_color']) ? $cfg['text_color'] : '',
+                    'focal_x' => max(0, min(100, (int) $cfg['focal_x'])),
+                    'focal_y' => max(0, min(100, (int) $cfg['focal_y'])),
+                    'title_x' => max(-50, min(50, (int) $cfg['title_x'])),
+                    'title_y' => max(-50, min(50, (int) $cfg['title_y'])),
+                    'details_x' => max(-50, min(50, (int) $cfg['details_x'])),
+                    'details_y' => max(-30, min(30, (int) $cfg['details_y'])),
                     'image_url' => $path && Storage::disk('local')->exists($path)
                         ? route('stories.template.image', ['theme' => $theme, 'template' => $id, 'version' => pathinfo($path, PATHINFO_FILENAME)])
                         : null,
@@ -89,6 +95,12 @@ class StoryTemplateAdminController extends Controller
             'font' => ['required', Rule::in(array_keys(self::FONTS))],
             'scale' => ['required', 'integer', 'between:80,120'],
             'text_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/D'],
+            'focal_x' => ['required', 'integer', 'between:0,100'],
+            'focal_y' => ['required', 'integer', 'between:0,100'],
+            'title_x' => ['required', 'integer', 'between:-50,50'],
+            'title_y' => ['required', 'integer', 'between:-50,50'],
+            'details_x' => ['required', 'integer', 'between:-50,50'],
+            'details_y' => ['required', 'integer', 'between:-30,30'],
         ]);
         $old = self::config($theme, $template);
         $oldPath = self::photoPath($theme, $template, $old);
@@ -97,6 +109,12 @@ class StoryTemplateAdminController extends Controller
             'font' => $data['font'],
             'scale' => (int) $data['scale'],
             'text_color' => strtoupper($data['text_color'] ?? ''),
+            'focal_x' => (int) $data['focal_x'],
+            'focal_y' => (int) $data['focal_y'],
+            'title_x' => (int) $data['title_x'],
+            'title_y' => (int) $data['title_y'],
+            'details_x' => (int) $data['details_x'],
+            'details_y' => (int) $data['details_y'],
             'path' => ($data['remove_image'] ?? false) ? null : $oldPath,
         ];
         if ($request->hasFile('image')) {
