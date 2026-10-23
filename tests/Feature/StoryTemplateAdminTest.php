@@ -57,10 +57,14 @@ class StoryTemplateAdminTest extends TestCase
     {
         Storage::fake('local');
         $this->admin();
-        $this->post('/admin/stories/brows/soft-pink', [
+        $upload = $this->post('/admin/stories/brows/soft-pink', [
             'font'=>'rounded','scale'=>100,
             'image'=>UploadedFile::fake()->image('portrait.jpg',1080,1920),
-        ])->assertRedirect('/admin/stories');
+        ]);
+        if ($upload->status() !== 302) {
+            fwrite(STDERR, "Story image upload response: ".$upload->getContent()."\n");
+        }
+        $upload->assertRedirect('/admin/stories');
         $entry=json_decode(\App\Models\SiteSetting::whereKey('story.brows.soft-pink')->value('value'),true);
         $this->assertNotEmpty($entry['path']);
         Storage::disk('local')->assertExists($entry['path']);
