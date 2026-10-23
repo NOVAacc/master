@@ -3168,3 +3168,113 @@ html:has(.landing) { scroll-behavior: auto; }
 .story-brow-thumb { position: relative; overflow: hidden; display: grid; place-items: center; }
 .story-brow-arch { position: absolute; width: 68%; height: 20%; top: 35%; left: 16%; border-top: 6px solid; border-radius: 75% 75% 0 0; transform: rotate(-8deg); }
 .story-brow-eye { position: absolute; width: 55%; height: 16%; top: 55%; left: 22%; border-top: 3px solid; border-bottom: 2px solid; border-radius: 50%; }
+
+
+/* BOSH Stories: fixed-height layout without a vertical modal scrollbar.
+   Mobile separates editing and full-size preview; template choices scroll horizontally. */
+.story-overlay { overflow: hidden; }
+.story-dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(920px, 100%);
+  height: min(790px, calc(100dvh - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+  padding: 16px 18px;
+}
+.story-dialog > .row { flex: 0 0 auto; margin-bottom: 8px; }
+.story-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.18fr) minmax(0, .70fr);
+  align-items: stretch;
+  gap: 16px;
+}
+.story-fields {
+  min-height: 0;
+  overflow: hidden;
+  gap: 8px;
+  align-content: start;
+}
+.story-fields label { gap: 4px; font-size: 12px; }
+.story-fields input, .story-fields select { padding: 7px 9px; }
+.story-input-row { gap: 8px; }
+.story-nail-templates { gap: 5px; }
+.story-nail-template { padding: 3px; font-size: 10px; gap: 3px; }
+.story-nail-thumb { aspect-ratio: 9/9; }
+.story-nail-template > span:last-child { min-height: 0; }
+.story-preview {
+  width: auto;
+  max-width: 100%;
+  height: 100%;
+  max-height: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: contain;
+  justify-self: center;
+  align-self: center;
+}
+.story-mobile-tabs { display: none; }
+@media (max-width: 680px) {
+  .story-overlay { padding: 0; align-items: stretch; }
+  .story-dialog {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: 12px 14px max(12px, env(safe-area-inset-bottom));
+    border-radius: 0;
+  }
+  .story-dialog > .row { margin-bottom: 7px; }
+  .story-dialog > .row h2 { font-size: 18px; }
+  .story-mobile-tabs {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 3px;
+    padding: 3px;
+    margin-bottom: 7px;
+    border-radius: 10px;
+    background: #f3f3f4;
+  }
+  .story-mobile-tabs button { padding: 7px; border: 0; background: transparent; border-radius: 8px; color: #62626b; }
+  .story-mobile-tabs button.selected { color: #24242a; background: #fff; box-shadow: 0 1px 3px #0000000f; }
+  .story-grid { display: block; min-height: 0; flex: 1 1 auto; overflow: hidden; }
+  .story-fields { gap: 6px; min-height: 0; overflow: hidden; }
+  .story-fields label { font-size: 11px; gap: 3px; }
+  .story-fields input, .story-fields select { padding: 7px 8px; font-size: 13px; }
+  .story-fields > p.muted.small { margin: 0; font-size: 10px; line-height: 1.25; }
+  .story-fields .row.wrap { gap: 5px; }
+  .story-fields .row.wrap button { padding: 8px 10px; font-size: 12px; }
+  .story-nail-templates {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-width: 100%;
+    padding: 1px 0 5px;
+    scrollbar-width: thin;
+  }
+  .story-nail-template { flex: 0 0 72px; width: 72px; font-size: 9px; }
+  .story-nail-thumb { aspect-ratio: 9/8; }
+  .story-nail-template > span:last-child { min-height: 0; }
+  .story-view-edit .story-preview { display: none; }
+  .story-view-preview .story-fields { display: none; }
+  .story-view-preview .story-grid { display: grid; place-items: center; }
+  .story-view-preview .story-preview {
+    display: block;
+    grid-row: auto;
+    width: auto;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin: 0 auto;
+  }
+}
+@media (max-width: 680px) and (max-height: 650px) {
+  .story-dialog { padding-top: 7px; padding-bottom: max(7px,env(safe-area-inset-bottom)); }
+  .story-dialog > .row { margin-bottom: 4px; }
+  .story-mobile-tabs { margin-bottom: 4px; }
+  .story-fields { gap: 4px; }
+  .story-nail-template { flex-basis: 60px; width: 60px; font-size: 8px; }
+  .story-nail-thumb { aspect-ratio: 9/7; }
+}
