@@ -35,7 +35,7 @@ class StoryTemplateAdminTest extends TestCase
         $this->get('/admin/stories')->assertOk()->assertSee('Шаблоны сторис');
         $this->post('/admin/stories/hair/nude', [
             'font'=>'serif','scale'=>110,'text_color'=>'#112233',
-        ])->assertRedirect('/admin/stories');
+        ])->assertRedirect('/admin/stories/hair/nude');
         $this->assertDatabaseHas('site_settings', ['key'=>'story.hair.nude']);
         $this->actingAs(User::factory()->create(), 'web')
             ->getJson('/stories/templates/catalog')->assertOk()
@@ -61,7 +61,7 @@ class StoryTemplateAdminTest extends TestCase
             'font'=>'rounded','scale'=>100,
             'image'=>UploadedFile::fake()->image('portrait.jpg',1080,1920),
         ]);
-        $upload->assertRedirect('/admin/stories');
+        $upload->assertRedirect('/admin/stories/brows/soft-pink');
         $entry=json_decode(\App\Models\SiteSetting::whereKey('story.brows.soft-pink')->value('value'),true);
         $this->assertNotEmpty($entry['path']);
         Storage::disk('local')->assertExists($entry['path']);
@@ -73,8 +73,26 @@ class StoryTemplateAdminTest extends TestCase
         $this->admin();
         $this->post('/admin/stories/brows/soft-pink', [
             'font'=>'system','scale'=>100,'remove_image'=>1,
-        ])->assertRedirect('/admin/stories');
+        ])->assertRedirect('/admin/stories/brows/soft-pink');
         Storage::disk('local')->assertMissing($entry['path']);
         $this->get($url)->assertNotFound();
     }
+    public function test_nine_categories_have_one_template_edit_page_each(): void
+    {
+        $this->admin();
+        $this->get('/admin/stories')->assertOk()->assertSee('Ресницы')->assertSee('Эпиляция')
+            ->assertSee('/admin/stories/barber/classic')
+            ->assertDontSee('name="image"', false);
+        $this->get('/admin/stories/lashes/nude')->assertOk()
+            ->assertSee('Лёгкий нюд')
+            ->assertSee('name="image"', false)
+            ->assertDontSee('story-positions');
+        $this->get('/admin/stories/invalid/nude')->assertNotFound();
+        $this->actingAs(User::factory()->create(), 'web')
+            ->getJson('/stories/templates/catalog')->assertOk()
+            ->assertJsonCount(8, 'lashes')->assertJsonCount(8, 'makeup')
+            ->assertJsonCount(8, 'massage')->assertJsonCount(8, 'skin')
+            ->assertJsonCount(8, 'barber')->assertJsonCount(8, 'smooth');
+    }
+
 }
