@@ -61,9 +61,6 @@ class StoryTemplateAdminTest extends TestCase
             'font'=>'rounded','scale'=>100,
             'image'=>UploadedFile::fake()->image('portrait.jpg',1080,1920),
         ]);
-        if ($upload->status() !== 302) {
-            fwrite(STDERR, "Story image upload response: ".$upload->getContent()."\n");
-        }
         $upload->assertRedirect('/admin/stories');
         $entry=json_decode(\App\Models\SiteSetting::whereKey('story.brows.soft-pink')->value('value'),true);
         $this->assertNotEmpty($entry['path']);
