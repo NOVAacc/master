@@ -3162,3 +3162,9 @@ html:has(.landing) { scroll-behavior: auto; }
 .story-hair-thumb{position:relative;overflow:hidden;isolation:isolate}
 .story-hair-strand{position:absolute;left:23%;top:14%;width:60%;height:78%;border-radius:48% 45% 24% 38%;transform:rotate(-13deg)}
 .story-hair-strand:before{content:"";position:absolute;left:17%;top:24%;width:52%;height:42%;border-radius:50%;background:rgba(244,203,183,.82)}
+
+
+/* Brow collection swatches: editorial eyebrow/eye preview without remote assets. */
+.story-brow-thumb { position: relative; overflow: hidden; display: grid; place-items: center; }
+.story-brow-arch { position: absolute; width: 68%; height: 20%; top: 35%; left: 16%; border-top: 6px solid; border-radius: 75% 75% 0 0; transform: rotate(-8deg); }
+.story-brow-eye { position: absolute; width: 55%; height: 16%; top: 55%; left: 22%; border-top: 3px solid; border-bottom: 2px solid; border-radius: 50%; }
