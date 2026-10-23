@@ -439,7 +439,19 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                         </div>
                         <p className="muted small" role="status">{savingTemplate?"Сохраняем шаблон…":savedTemplate===BROW_COLLECTION.slug+":"+browTemplate?"Шаблон сохранён":""}</p>
                     </div>}
-                    {theme!=="nails" && theme!=="hair" && theme!=="brows" && <div className="story-palettes" role="group" aria-label="Стиль сторис">
+                    {isExtraTheme(theme) && <div>
+                        <p className="muted small">{extraCollections[theme].title} · 8 оформлений</p>
+                        <div className="story-nail-templates" role="group" aria-label={extraCollections[theme].title}>
+                            {extraCollections[theme].templates.map((t,i)=><button type="button" key={t.id} aria-pressed={extraId===t.id}
+                                className={extraId===t.id?"story-nail-template selected":"story-nail-template"} disabled={savingTemplate}
+                                onClick={()=>{setExtraSelections(current=>({...current,[theme]:t.id}));void saveTemplate(extraCollections[theme].slug,t.id);}}>
+                                <span className="story-nail-thumb" style={{backgroundImage:catalog[theme]?.[t.id]?.photo_url?`linear-gradient(180deg,transparent,rgba(0,0,0,.45)),url("${catalog[theme]?.[t.id]?.photo_url}")`:undefined,backgroundColor:extraPalette(theme,i).bg}}/>
+                                <span>{t.name}</span>
+                            </button>)}
+                        </div>
+                        <p className="muted small" role="status">{savingTemplate?"Сохраняем шаблон…":savedTemplate===extraCollections[theme].slug+":"+extraId?"Шаблон сохранён":""}</p>
+                    </div>}
+                    {theme==="general" && <div className="story-palettes" role="group" aria-label="Стиль сторис">
                         {(Object.entries(palettes) as [Style, typeof palettes[Style]][]).map(([key, p]) =>
                             <button type="button" key={key} className={style === key ? "story-palette selected" : "story-palette"} aria-pressed={style === key} onClick={() => chooseStyle(key)}>
                                 <span className="story-color" style={{background: p.bg, color: p.fg}}>Aa</span><span>{p.name}</span>
