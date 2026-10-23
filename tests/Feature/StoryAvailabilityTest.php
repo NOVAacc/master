@@ -103,4 +103,19 @@ class StoryAvailabilityTest extends TestCase
         $this->assertDatabaseHas('master_profiles', ['id' => $master->id, 'story_style' => 'premium']);
     }
 
+    public function test_brow_templates_are_saved_and_validated_without_affecting_other_masters(): void
+    {
+        [$user, $master] = $this->setupStoryMaster();
+        [, $other] = $this->setupStoryMaster('brow-template-other');
+        $templates = ['nude', 'soft-pink', 'luxury', 'bold', 'natural', 'cozy', 'urban', 'editorial'];
+        foreach ($templates as $template) {
+            $this->actingAs($user)->postJson('/stories/style', ['template' => 'bosh-brow-trends:'.$template])
+                ->assertOk()->assertJsonPath('template', 'bosh-brow-trends:'.$template);
+        }
+        $this->assertDatabaseHas('master_profiles', ['id' => $master->id, 'story_template' => 'bosh-brow-trends:editorial']);
+        $this->assertDatabaseHas('master_profiles', ['id' => $other->id, 'story_template' => null]);
+        $this->postJson('/stories/style', ['template' => 'bosh-brow-trends:invalid'])->assertUnprocessable();
+        $this->postJson('/stories/style', ['template' => 'bosh-brow-trends:../../test'])->assertUnprocessable();
+    }
+
 }
