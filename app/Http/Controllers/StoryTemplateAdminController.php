@@ -95,7 +95,24 @@ class StoryTemplateAdminController extends Controller
 
     public function index()
     {
-        return view('admin.stories', ['collections' => self::COLLECTIONS, 'catalog' => self::catalog(), 'fonts' => self::FONTS, 'labels' => self::LABELS, 'photos' => self::DEFAULT_PHOTOS]);
+        return view('admin.stories', [
+            'collections' => self::COLLECTIONS, 'catalog' => self::catalog(),
+            'labels' => self::LABELS, 'photos' => self::DEFAULT_PHOTOS,
+        ]);
+    }
+
+    public function edit(string $theme, string $template)
+    {
+        abort_unless(self::allowed($theme, $template), 404);
+
+        return view('admin.story-edit', [
+            'theme' => $theme, 'template' => $template,
+            'title' => self::COLLECTIONS[$theme]['title'],
+            'label' => self::LABELS[$theme][$template],
+            'config' => self::catalog()[$theme][$template],
+            'photo' => self::DEFAULT_PHOTOS[$theme][$template],
+            'fonts' => self::FONTS,
+        ]);
     }
 
     public function update(Request $request, string $theme, string $template)
@@ -133,7 +150,7 @@ class StoryTemplateAdminController extends Controller
             throw $e;
         }
         if ($oldPath && $oldPath !== $config['path']) Storage::disk('local')->delete($oldPath);
-        return redirect()->route('admin.stories')->with('success', 'Шаблон сохранён.');
+        return redirect()->route('admin.stories.edit', ['theme' => $theme, 'template' => $template])->with('success', 'Шаблон сохранён.');
     }
 
     public function image(string $theme, string $template, string $version)
