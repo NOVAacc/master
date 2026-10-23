@@ -4,10 +4,11 @@ import CloseButton from "./CloseButton";
 import type { Master, Service } from "./types";
 
 type Style = "minimal" | "dark" | "soft" | "accent" | "premium";
-type TemplateSetting = { image_url: string | null; font: "system" | "serif" | "rounded"; scale: number; text_color: string };
-type StoryCatalog = Partial<Record<"nails" | "brows" | "hair", Record<string,TemplateSetting>>>;
+type TemplateSetting = { photo_url?: string; image_url: string | null; font: "system" | "serif" | "rounded"; scale: number; text_color: string };
+type ExtraTheme = "lashes"|"makeup"|"massage"|"skin"|"barber"|"smooth";
+type StoryCatalog = Partial<Record<"nails"|"brows"|"hair"|ExtraTheme, Record<string,TemplateSetting>>>;
 const fontFace=(font:TemplateSetting["font"]|undefined)=>font==="serif"?'Georgia, "Times New Roman", serif':font==="rounded"?'Trebuchet MS, Arial, sans-serif':'system-ui, sans-serif';
-const photoSource=(catalog:StoryCatalog,theme:"nails"|"hair"|"brows",id:string,fallback:string)=>catalog[theme]?.[id]?.image_url||fallback;
+const photoSource=(catalog:StoryCatalog,theme:"nails"|"hair"|"brows"|ExtraTheme,id:string,fallback:string)=>catalog[theme]?.[id]?.image_url||fallback;
 const palettes: Record<Style, { name: string; bg: string; fg: string; sub: string; action: string; actionText: string }> = {
     minimal: { name: "Минимализм", bg: "#F5F4F1", fg: "#202020", sub: "#76716D", action: "#202020", actionText: "#FFFFFF" },
     dark: { name: "Графит", bg: "#1B1D22", fg: "#FFFFFF", sub: "#B8BAC0", action: "#FFFFFF", actionText: "#1B1D22" },
@@ -16,14 +17,16 @@ const palettes: Record<Style, { name: string; bg: string; fg: string; sub: strin
     premium: { name: "Премиум", bg: "#26342D", fg: "#F3EAD7", sub: "#C9BBA3", action: "#DDC390", actionText: "#26342D" },
 };
 
-type Theme = "nails"|"hair"|"barber"|"brows"|"makeup"|"massage"|"skin"|"general";
-const themes: Record<Theme,string> = {nails:"Маникюр",hair:"Волосы",barber:"Барбер",brows:"Брови",makeup:"Макияж",massage:"Массаж",skin:"Косметология",general:"Универсальный"};
+type Theme = "nails"|"hair"|"barber"|"brows"|"lashes"|"makeup"|"massage"|"skin"|"smooth"|"general";
+const themes: Record<Theme,string> = {nails:"Маникюр",hair:"Волосы",barber:"Барбер",brows:"Брови",lashes:"Ресницы",makeup:"Макияж",massage:"Массаж",skin:"Косметология",smooth:"Эпиляция",general:"Универсальный"};
 const rules: [Theme,string[]][]=[
  ["nails",["маникюр","педикюр","ногт","nail","шеллак","гель лак"]],
  ["brows",["бров","brow","окрашивание бровей","коррекция бровей"]],
+ ["lashes",["ресниц","lash"]],
  ["makeup",["визаж","макияж","makeup","мейкап"]],
  ["massage",["массаж","спа","spa","релакс"]],
- ["skin",["косметолог","пилинг","чистка лица","эпиляц","депиляц"]],
+ ["smooth",["эпиляц","депиляц","шугаринг","waxing"]],
+ ["skin",["косметолог","пилинг","чистка лица"]],
  ["barber",["барбер","бород","фейд","fade","мужская стрижка","брить"]],
  ["hair",["стриж","окрашив","волос","причес","причёс","парикмах","hair"]]
 ];
@@ -36,7 +39,7 @@ export function storyTheme(service:Service,master:Master):Theme {
 }
 function drawArt(ctx:CanvasRenderingContext2D,theme:Theme){
  ctx.save();ctx.translate(725,710);ctx.globalAlpha=.36;
- const c:Record<Theme,string>={nails:"#C73855",hair:"#65413D",barber:"#353C44",brows:"#6D453D",makeup:"#B84963",massage:"#A27868",skin:"#BB8B7A",general:"#A5636A"};
+ const c:Record<Theme,string>={nails:"#C73855",hair:"#65413D",barber:"#353C44",brows:"#6D453D",makeup:"#B84963",massage:"#A27868",skin:"#BB8B7A",lashes:"#905B71",smooth:"#A4817E",general:"#A5636A"};
  ctx.fillStyle=c[theme];ctx.strokeStyle=c[theme];ctx.lineCap="round";ctx.lineJoin="round";
  if(theme==="nails"){
   ctx.rotate(-.22);ctx.beginPath();ctx.moveTo(-150,180);ctx.lineTo(-125,-95);ctx.quadraticCurveTo(-118,-156,-87,-143);ctx.quadraticCurveTo(-63,-138,-70,-102);ctx.lineTo(-72,27);ctx.lineTo(-38,-205);ctx.quadraticCurveTo(-28,-253,5,-235);ctx.quadraticCurveTo(24,-226,17,-190);ctx.lineTo(-7,29);ctx.lineTo(46,-219);ctx.quadraticCurveTo(60,-267,91,-244);ctx.quadraticCurveTo(110,-230,99,-195);ctx.lineTo(55,34);ctx.lineTo(113,-149);ctx.quadraticCurveTo(128,-186,156,-163);ctx.quadraticCurveTo(171,-147,157,-117);ctx.lineTo(87,100);ctx.quadraticCurveTo(186,29,214,77);ctx.quadraticCurveTo(232,109,196,140);ctx.lineTo(106,236);ctx.quadraticCurveTo(-45,292,-150,180);ctx.fill();
