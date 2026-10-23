@@ -12,15 +12,15 @@ use Illuminate\Validation\Rule;
 class StoryTemplateAdminController extends Controller
 {
     public const COLLECTIONS = [
-        'nails' => ['title' => 'Маникюр', 'ids' => ['nude','floral','luxury','red','bridal','cozy','urban','chrome']],
-        'brows' => ['title' => 'Брови', 'ids' => ['nude','soft-pink','luxury','bold','natural','cozy','urban','editorial']],
-        'hair' => ['title' => 'Волосы', 'ids' => ['nude','romantic','brunette','bold','bridal','cozy','urban','chrome']],
-        'lashes' => ['title' => 'Ресницы', 'slug' => 'BOSH Lash Trends', 'ids' => ['nude','romantic','luxury','glam','natural','soft','urban','evening']],
-        'makeup' => ['title' => 'Макияж', 'slug' => 'BOSH Makeup Trends', 'ids' => ['nude','blush','luxury','red','bridal','warm','urban','editorial']],
-        'massage' => ['title' => 'Массаж', 'slug' => 'BOSH Massage Calm', 'ids' => ['minimal','relax','spa','recovery','natural','cozy','urban','luxury']],
-        'skin' => ['title' => 'Косметология', 'slug' => 'BOSH Skin Aesthetics', 'ids' => ['clean','glow','premium','bold','natural','ritual','urban','advanced']],
-        'barber' => ['title' => 'Барбер', 'slug' => 'BOSH Barber Style', 'ids' => ['classic','gentleman','luxury','street','beard','vintage','urban','creative']],
-        'smooth' => ['title' => 'Эпиляция', 'slug' => 'BOSH Smooth Skin', 'ids' => ['nude','soft','premium','bold','natural','care','urban','luxury']],
+        'nails' => ['title' => 'Маникюр', 'slug' => 'bosh-nail-trends' 'ids' => ['nude','floral','luxury','red','bridal','cozy','urban','chrome']],
+        'brows' => ['title' => 'Брови', 'slug' => 'bosh-brow-trends' 'ids' => ['nude','soft-pink','luxury','bold','natural','cozy','urban','editorial']],
+        'hair' => ['title' => 'Волосы', 'slug' => 'bosh-hair-trends' 'ids' => ['nude','romantic','brunette','bold','bridal','cozy','urban','chrome']],
+        'lashes' => ['title' => 'Ресницы' 'slug' => 'bosh-lash-trends', 'ids' => ['nude','romantic','luxury','glam','natural','soft','urban','evening']],
+        'makeup' => ['title' => 'Макияж' 'slug' => 'bosh-makeup-trends', 'ids' => ['nude','blush','luxury','red','bridal','warm','urban','editorial']],
+        'massage' => ['title' => 'Массаж' 'slug' => 'bosh-massage-calm', 'ids' => ['minimal','relax','spa','recovery','natural','cozy','urban','luxury']],
+        'skin' => ['title' => 'Косметология' 'slug' => 'bosh-skin-aesthetics', 'ids' => ['clean','glow','premium','bold','natural','ritual','urban','advanced']],
+        'barber' => ['title' => 'Барбер' 'slug' => 'bosh-barber-style', 'ids' => ['classic','gentleman','luxury','street','beard','vintage','urban','creative']],
+        'smooth' => ['title' => 'Эпиляция' 'slug' => 'bosh-smooth-skin', 'ids' => ['nude','soft','premium','bold','natural','care','urban','luxury']],
     ];
     public const LABELS = [
         'nails' => ['nude'=>'Нюд','floral'=>'Цветочный','luxury'=>'Чёрное золото','red'=>'Красный акцент','bridal'=>'Невеста','cozy'=>'Тёплый уют','urban'=>'Городской','chrome'=>'Хром'],
