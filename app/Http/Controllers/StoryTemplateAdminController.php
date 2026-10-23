@@ -95,12 +95,12 @@ class StoryTemplateAdminController extends Controller
             'font' => ['required', Rule::in(array_keys(self::FONTS))],
             'scale' => ['required', 'integer', 'between:80,120'],
             'text_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/D'],
-            'focal_x' => ['required', 'integer', 'between:0,100'],
-            'focal_y' => ['required', 'integer', 'between:0,100'],
-            'title_x' => ['required', 'integer', 'between:-50,50'],
-            'title_y' => ['required', 'integer', 'between:-50,50'],
-            'details_x' => ['required', 'integer', 'between:-50,50'],
-            'details_y' => ['required', 'integer', 'between:-30,30'],
+            'focal_x' => ['sometimes', 'integer', 'between:0,100'],
+            'focal_y' => ['sometimes', 'integer', 'between:0,100'],
+            'title_x' => ['sometimes', 'integer', 'between:-50,50'],
+            'title_y' => ['sometimes', 'integer', 'between:-50,50'],
+            'details_x' => ['sometimes', 'integer', 'between:-50,50'],
+            'details_y' => ['sometimes', 'integer', 'between:-30,30'],
         ]);
         $old = self::config($theme, $template);
         $oldPath = self::photoPath($theme, $template, $old);
@@ -109,12 +109,12 @@ class StoryTemplateAdminController extends Controller
             'font' => $data['font'],
             'scale' => (int) $data['scale'],
             'text_color' => strtoupper($data['text_color'] ?? ''),
-            'focal_x' => (int) $data['focal_x'],
-            'focal_y' => (int) $data['focal_y'],
-            'title_x' => (int) $data['title_x'],
-            'title_y' => (int) $data['title_y'],
-            'details_x' => (int) $data['details_x'],
-            'details_y' => (int) $data['details_y'],
+            'focal_x' => (int) ($data['focal_x'] ?? $old['focal_x'] ?? 50),
+            'focal_y' => (int) ($data['focal_y'] ?? $old['focal_y'] ?? 50),
+            'title_x' => (int) ($data['title_x'] ?? $old['title_x'] ?? 0),
+            'title_y' => (int) ($data['title_y'] ?? $old['title_y'] ?? 0),
+            'details_x' => (int) ($data['details_x'] ?? $old['details_x'] ?? 0),
+            'details_y' => (int) ($data['details_y'] ?? $old['details_y'] ?? 0),
             'path' => ($data['remove_image'] ?? false) ? null : $oldPath,
         ];
         if ($request->hasFile('image')) {
