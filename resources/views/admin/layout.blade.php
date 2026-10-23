@@ -30,6 +30,7 @@
 @auth('admin')
 <nav aria-label="Администрирование">
 <a href="{{ route('admin.users') }}" @if(request()->routeIs('admin.users')) aria-current="page" @endif>Пользователи</a>
+<a href="{{ route('admin.stories') }}" @if(request()->routeIs('admin.stories*')) aria-current="page" @endif>Сторис</a>
 <a href="{{ route('admin.settings') }}" @if(request()->routeIs('admin.settings')) aria-current="page" @endif>Настройки</a>
 </nav>
 <form method="post" action="{{ route('admin.logout') }}">@csrf<button>Выйти</button></form>
