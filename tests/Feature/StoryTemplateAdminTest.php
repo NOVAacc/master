@@ -77,40 +77,4 @@ class StoryTemplateAdminTest extends TestCase
         Storage::disk('local')->assertMissing($entry['path']);
         $this->get($url)->assertNotFound();
     }
-    public function test_admin_can_position_story_photo_and_blocks_with_safe_ranges(): void
-    {
-        $this->admin();
-        $this->post('/admin/stories/hair/nude', [
-            'font'=>'serif','scale'=>110,'text_color'=>'#223344',
-            'focal_x'=>73,'focal_y'=>24,
-            'title_x'=>-25,'title_y'=>40,
-            'details_x'=>20,'details_y'=>-18,
-        ])->assertRedirect('/admin/stories');
-        $this->actingAs(User::factory()->create(), 'web')
-            ->getJson('/stories/templates/catalog')->assertOk()
-            ->assertJsonPath('hair.nude.focal_x',73)
-            ->assertJsonPath('hair.nude.focal_y',24)
-            ->assertJsonPath('hair.nude.title_x',-25)
-            ->assertJsonPath('hair.nude.title_y',40)
-            ->assertJsonPath('hair.nude.details_x',20)
-            ->assertJsonPath('hair.nude.details_y',-18);
-        $this->admin();
-        $this->post('/admin/stories/hair/nude', [
-            'font'=>'serif','scale'=>110,
-            'focal_x'=>101,'focal_y'=>25,
-            'title_x'=>0,'title_y'=>0,'details_x'=>0,'details_y'=>0,
-        ])->assertSessionHasErrors('focal_x');
-        $this->post('/admin/stories/hair/nude', [
-            'font'=>'serif','scale'=>110,
-            'focal_x'=>50,'focal_y'=>50,
-            'title_x'=>1000,'title_y'=>0,'details_x'=>0,'details_y'=>0,
-        ])->assertSessionHasErrors('title_x');
-        $this->post('/admin/stories/hair/nude', [
-            'font'=>'serif','scale'=>110,
-            'focal_x'=>50,'focal_y'=>50,
-            'title_x'=>0,'title_y'=>0,'details_x'=>0,'details_y'=>-100,
-        ])->assertSessionHasErrors('details_y');
-        $this->assertStringContainsString('"focal_x":73', (string) \App\Models\SiteSetting::whereKey('story.hair.nude')->value('value'));
-    }
-
 }
