@@ -77,7 +77,7 @@ image.src="https://images.unsplash.com/"+t.photo+"?auto=format&fit=crop&w=1080&h
 try{
  await new Promise<void>((resolve,reject)=>{image.onload=()=>resolve();image.onerror=()=>reject(new Error("Image not available"));});
  ctx.save();ctx.globalAlpha=t.id==="urban"?.82:.87;coverImage(ctx,image,0,0,1080,1920);ctx.restore();
-}catch{ /* Network/offline fallback retains gradient and drawn manicure theme. */ }
+}catch{ drawArt(ctx,"nails"); /* Retain an illustrated fallback offline. */ }
 const wash=ctx.createLinearGradient(0,0,0,1920);
 if(["luxury","red","cozy","urban","chrome"].includes(t.id)){
  wash.addColorStop(0,"rgba(0,0,0,.64)");wash.addColorStop(.35,"rgba(0,0,0,.40)");wash.addColorStop(.72,"rgba(0,0,0,.55)");wash.addColorStop(1,"rgba(0,0,0,.78)");
@@ -123,7 +123,16 @@ async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Ser
     ctx.textBaseline = "top";
     ctx.fillStyle = p.fg;
     ctx.font = "bold 45px system-ui, sans-serif";
-    ctx.fillText("BOSH.", margin, 132);
+    // Render the real BOSH mark next to the brand name (fallback keeps the wordmark).
+    const brandIcon=new Image();
+    brandIcon.src="/brand/bosh-mark-v2.svg";
+    try {
+        await brandIcon.decode();
+        ctx.fillStyle="#FFFFFF";ctx.beginPath();ctx.arc(margin+24,158,33,0,Math.PI*2);ctx.fill();
+        ctx.drawImage(brandIcon,margin+2,136,44,44);
+    } catch { /* Keep the wordmark if the icon is unavailable. */ }
+    ctx.fillStyle=p.fg;
+    ctx.fillText("BOSH", margin+75, 132);
     ctx.font = "500 36px system-ui, sans-serif";
     const mast = wrappedText(ctx, master.display_name, 650, 2);
     mast.forEach((line, i) => ctx.fillText(line, margin, 235 + i * 48));
@@ -132,7 +141,7 @@ async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Ser
     ctx.fillText("ЕСТЬ СВОБОДНОЕ ВРЕМЯ", margin, 580);
     ctx.fillStyle = p.fg;
     ctx.font = "bold 94px system-ui, sans-serif";
-    wrappedText(ctx, "Освободилось окно", 870, 3).forEach((line, i) => ctx.fillText(line, margin, 690 + i * 112));
+    wrappedText(ctx, theme==="nails" ? "Маникюр" : "Освободилось окно", 870, 3).forEach((line, i) => ctx.fillText(line, margin, 690 + i * 112));
     ctx.font = "600 54px system-ui, sans-serif";
     wrappedText(ctx, service.name, 860, 2).forEach((line, i) => ctx.fillText(line, margin, 1030 + i * 68));
     const niceDate = new Date(date + "T12:00:00Z").toLocaleDateString("ru-RU", { timeZone: "UTC", day: "numeric", month: "long" });
