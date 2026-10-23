@@ -24,7 +24,8 @@
 @foreach($collection['ids'] as $template)
 @php($config = $catalog[$theme][$template])
 <article class="story-item">
-<div class="story-frame" @if($config['image_url']) style="background-image:url('{{ $config['image_url'] }}')" @endif>
+@php($previewImage = $config['image_url'] ?: 'https://images.unsplash.com/'.$photos[$theme][$template].'?auto=format&fit=crop&w=200&h=360&q=60')
+<div class="story-frame" style="background-image:url('{{ $previewImage }}')">
 <strong style="font-family:{{ $config['font'] === 'serif' ? 'Georgia,serif' : ($config['font'] === 'rounded' ? 'Trebuchet MS,sans-serif' : 'system-ui,sans-serif') }};color:{{ $config['text_color'] ?: '#272727' }}">BOSH</strong>
 <span>12:30</span>
 </div>
