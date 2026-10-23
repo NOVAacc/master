@@ -164,6 +164,20 @@ function coverImage(ctx:CanvasRenderingContext2D,img:HTMLImageElement,x:number,y
 const scale=Math.max(w/img.naturalWidth,h/img.naturalHeight),sw=w/scale,sh=h/scale;
 ctx.drawImage(img,(img.naturalWidth-sw)/2,(img.naturalHeight-sh)/2,sw,sh,x,y,w,h);
 }
+async function drawExtraBackground(ctx:CanvasRenderingContext2D,theme:ExtraTheme,index:number,url?:string){
+ const p=extraPalette(theme,index);
+ ctx.fillStyle=p.bg;ctx.fillRect(0,0,1080,1920);
+ if(url){
+  const image=new Image();image.crossOrigin="anonymous";image.src=url;
+  try{await image.decode();coverImage(ctx,image,0,0,1080,1920);}
+  catch{drawArt(ctx,theme);}
+ }else drawArt(ctx,theme);
+ const dark=[2,3,6,7].includes(index),wash=ctx.createLinearGradient(0,0,0,1920);
+ wash.addColorStop(0,dark?"rgba(15,10,17,.76)":"rgba(255,250,247,.88)");
+ wash.addColorStop(.4,dark?"rgba(15,10,17,.40)":"rgba(255,250,247,.40)");
+ wash.addColorStop(1,dark?"rgba(15,10,17,.84)":"rgba(255,250,247,.93)");
+ ctx.fillStyle=wash;ctx.fillRect(0,0,1080,1920);
+}
 async function drawNailBackground(ctx:CanvasRenderingContext2D,template:NailTemplateId,imageUrl?:string){
 const t=nailTemplates.find(x=>x.id===template)??nailTemplates[0];
 const gradient=ctx.createLinearGradient(0,0,0,1920);
@@ -207,7 +221,7 @@ function wrappedText(ctx: CanvasRenderingContext2D, value: string, maxWidth: num
     }
     return clipped;
 }
-async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId, hairTemplate: HairTemplateId, browTemplate: BrowTemplateId, catalog:StoryCatalog) {
+async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId, hairTemplate: HairTemplateId, browTemplate: BrowTemplateId, extraId:string, catalog:StoryCatalog) {
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
     const ctx = canvas.getContext("2d");
@@ -216,13 +230,16 @@ async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Ser
     const hairDesign = hairTemplates.find(t=>t.id===hairTemplate)??hairTemplates[0];
     const browDesign = browTemplates.find(t=>t.id===browTemplate)??browTemplates[0];
     const templateId=theme==="nails"?nailTemplate:theme==="hair"?hairTemplate:theme==="brows"?browTemplate:null;
-    const editor=templateId && (theme==="nails"||theme==="hair"||theme==="brows")?catalog[theme]?.[templateId]:undefined;
+    const extraTheme=isExtraTheme(theme)?theme:null;
+    const extraIndex=extraTheme?Math.max(0,extraCollections[extraTheme].templates.findIndex(t=>t.id===extraId)):0;
+    const editor=extraTheme?catalog[extraTheme]?.[extraId]:templateId && (theme==="nails"||theme==="hair"||theme==="brows")?catalog[theme]?.[templateId]:undefined;
     const family=fontFace(editor?.font);
     const headingSize=Math.max(80,Math.min(120,editor?.scale??100))/100;
-    const p = theme==="brows" ? {bg:browDesign.top,fg:browDesign.ink,sub:browDesign.muted,action:browDesign.button,actionText:browDesign.buttonInk} : theme==="hair" ? {bg:hairDesign.top,fg:hairDesign.ink,sub:hairDesign.muted,action:hairDesign.button,actionText:hairDesign.buttonInk} : theme==="nails" ? {bg:design.top,fg:design.ink,sub:design.muted,action:design.button,actionText:design.buttonInk} : palettes[style];
+    const p = extraTheme ? extraPalette(extraTheme,extraIndex) : theme==="brows" ? {bg:browDesign.top,fg:browDesign.ink,sub:browDesign.muted,action:browDesign.button,actionText:browDesign.buttonInk} : theme==="hair" ? {bg:hairDesign.top,fg:hairDesign.ink,sub:hairDesign.muted,action:hairDesign.button,actionText:hairDesign.buttonInk} : theme==="nails" ? {bg:design.top,fg:design.ink,sub:design.muted,action:design.button,actionText:design.buttonInk} : palettes[style];
     if(theme==="nails") await drawNailBackground(ctx,nailTemplate,editor?.image_url??undefined);
     else if(theme==="hair") await drawHairBackground(ctx,hairTemplate,editor?.image_url??undefined);
     else if(theme==="brows") await drawBrowBackground(ctx,browTemplate,editor?.image_url??undefined);
+    else if(extraTheme) await drawExtraBackground(ctx,extraTheme,extraIndex,editor?.photo_url);
     else {ctx.fillStyle=p.bg;ctx.fillRect(0,0,WIDTH,HEIGHT);drawArt(ctx,theme);}
     if(editor?.text_color && /^#[0-9a-fA-F]{6}$/.test(editor.text_color)){p.fg=editor.text_color;p.sub=editor.text_color;}
     const margin = 100;
@@ -247,7 +264,7 @@ async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Ser
     ctx.fillText("ЕСТЬ СВОБОДНОЕ ВРЕМЯ", margin, 580);
     ctx.fillStyle = p.fg;
     ctx.font = `bold ${Math.round(94*headingSize)}px ${family}`;
-    wrappedText(ctx, theme==="nails" ? "Маникюр" : theme==="hair" ? "Волосы" : theme==="brows" ? "Брови" : "Освободилось окно", 870, 3).forEach((line, i) => ctx.fillText(line, margin, 690 + i * 112));
+    wrappedText(ctx, theme==="nails" ? "Маникюр" : theme==="hair" ? "Волосы" : theme==="brows" ? "Брови" : extraTheme ? themes[extraTheme] : "Освободилось окно", 870, 3).forEach((line, i) => ctx.fillText(line, margin, 690 + i * 112));
     ctx.font = `600 54px ${family}`;
     wrappedText(ctx, service.name, 860, 2).forEach((line, i) => ctx.fillText(line, margin, 1030 + i * 68));
     const niceDate = new Date(date + "T12:00:00Z").toLocaleDateString("ru-RU", { timeZone: "UTC", day: "numeric", month: "long" });
