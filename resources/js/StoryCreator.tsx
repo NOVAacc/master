@@ -60,6 +60,20 @@ function drawArt(ctx:CanvasRenderingContext2D,theme:Theme){
 
 
 
+const extraCollections:Record<ExtraTheme,{title:string;slug:string;templates:{id:string;name:string}[]}>={
+lashes:{title:"Ресницы",slug:"bosh-lash-trends",templates:[{id:"nude",name:"Лёгкий нюд"},{id:"romantic",name:"Романтика"},{id:"luxury",name:"Чёрный люкс"},{id:"glam",name:"Гламур"},{id:"natural",name:"Естественная красота"},{id:"soft",name:"Мягкий свет"},{id:"urban",name:"Городской шик"},{id:"evening",name:"Вечерний образ"}]},
+makeup:{title:"Макияж",slug:"bosh-makeup-trends",templates:[{id:"nude",name:"Чистый нюд"},{id:"blush",name:"Розовый румянец"},{id:"luxury",name:"Вечерний люкс"},{id:"red",name:"Красный акцент"},{id:"bridal",name:"Невеста"},{id:"warm",name:"Тёплые оттенки"},{id:"urban",name:"Городской стиль"},{id:"editorial",name:"Арт-макияж"}]},
+massage:{title:"Массаж",slug:"bosh-massage-calm",templates:[{id:"minimal",name:"Спокойствие"},{id:"relax",name:"Релакс"},{id:"spa",name:"SPA-ритуал"},{id:"recovery",name:"Восстановление"},{id:"natural",name:"Гармония природы"},{id:"cozy",name:"Тёплый уют"},{id:"urban",name:"Современный wellness"},{id:"luxury",name:"Премиум SPA"}]},
+skin:{title:"Косметология",slug:"bosh-skin-aesthetics",templates:[{id:"clean",name:"Чистая кожа"},{id:"glow",name:"Сияние"},{id:"premium",name:"Эстетика премиум"},{id:"bold",name:"Beauty-акцент"},{id:"natural",name:"Естественность"},{id:"ritual",name:"Ритуал ухода"},{id:"urban",name:"Современная эстетика"},{id:"advanced",name:"Новая красота"}]},
+barber:{title:"Барбер",slug:"bosh-barber-style",templates:[{id:"classic",name:"Классика"},{id:"gentleman",name:"Джентльмен"},{id:"luxury",name:"Чёрный премиум"},{id:"street",name:"Уличный стиль"},{id:"beard",name:"Борода и стиль"},{id:"vintage",name:"Винтаж"},{id:"urban",name:"Городской барбер"},{id:"creative",name:"Креативная стрижка"}]},
+smooth:{title:"Эпиляция",slug:"bosh-smooth-skin",templates:[{id:"nude",name:"Мягкий нюд"},{id:"soft",name:"Нежность"},{id:"premium",name:"Премиум уход"},{id:"bold",name:"Яркий beauty"},{id:"natural",name:"Натуральность"},{id:"care",name:"Забота о себе"},{id:"urban",name:"Современный стиль"},{id:"luxury",name:"Эстетика тела"}]}
+};
+const isExtraTheme=(theme:Theme):theme is ExtraTheme=>Object.prototype.hasOwnProperty.call(extraCollections,theme);
+const extraPalette=(theme:ExtraTheme,index:number)=>{
+ const accents:Record<ExtraTheme,string>={lashes:"#784359",makeup:"#AA4867",massage:"#7B6856",skin:"#5B8278",barber:"#42464B",smooth:"#AD7F86"};
+ return [2,3,6,7].includes(index)?{bg:"#262129",fg:"#FFF8F2",sub:"#E9D7D8",action:"#F7EFE7",actionText:"#292329"}:{bg:"#F7EEE8",fg:accents[theme],sub:accents[theme],action:accents[theme],actionText:"#FFFFFF"};
+};
+
 type BrowTemplateId = "nude" | "soft-pink" | "luxury" | "bold" | "natural" | "cozy" | "urban" | "editorial";
 const BROW_COLLECTION = { name: "BOSH Brow Trends", slug: "bosh-brow-trends" } as const;
 const browTemplates: {id:BrowTemplateId; name:string; top:string; bottom:string; ink:string; muted:string; button:string; buttonInk:string; skin:string; brows:string; detail:string; photo:string; photoCredit:string}[] = [
