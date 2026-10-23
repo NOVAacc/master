@@ -56,14 +56,14 @@ function drawArt(ctx:CanvasRenderingContext2D,theme:Theme){
 type BrowTemplateId = "nude" | "soft-pink" | "luxury" | "bold" | "natural" | "cozy" | "urban" | "editorial";
 const BROW_COLLECTION = { name: "BOSH Brow Trends", slug: "bosh-brow-trends" } as const;
 const browTemplates: {id:BrowTemplateId; name:string; top:string; bottom:string; ink:string; muted:string; button:string; buttonInk:string; skin:string; brows:string; detail:string; photo:string; photoCredit:string}[] = [
- {id:"nude",name:"Нюд",top:"#F7EEE7",bottom:"#DDC4B5",ink:"#352B2B",muted:"#6B5551",button:"#5E453D",buttonInk:"#FFFFFF",skin:"#EFC6B2",brows:"#503A34",detail:"#CBA38E",photo:"photo-1614179927453-b9f340aa0a83",photoCredit:"Valeria Filatova"},
- {id:"soft-pink",name:"Нежный розовый",top:"#FFF1F5",bottom:"#EDBFCE",ink:"#6A304A",muted:"#98627A",button:"#B25C80",buttonInk:"#FFFFFF",skin:"#F4CCBD",brows:"#714B46",detail:"#F3AFC9",photo:"photo-1761475011451-8ba8cb188699",photoCredit:"Selma DA SILVA"},
- {id:"luxury",name:"Премиум",top:"#211B22",bottom:"#513B43",ink:"#FFF2E2",muted:"#E8CDB9",button:"#DEBB88",buttonInk:"#362126",skin:"#DCAC94",brows:"#40272A",detail:"#C99C73",photo:"photo-1519415387722-a1c3bbef716c",photoCredit:"Rune Enstad"},
- {id:"bold",name:"Яркий акцент",top:"#922E50",bottom:"#DD6682",ink:"#FFFFFF",muted:"#FFE2EC",button:"#FFFFFF",buttonInk:"#8A2444",skin:"#E7ACAB",brows:"#4F2032",detail:"#FFB4D0",photo:"photo-1542833807-ad5af0977050",photoCredit:"Linh Ha"},
- {id:"natural",name:"Натуральный",top:"#ECE6DD",bottom:"#B7BBA9",ink:"#384037",muted:"#697166",button:"#53614C",buttonInk:"#FFFFFF",skin:"#E8C7AF",brows:"#605447",detail:"#CBD2BE",photo:"photo-1645927790904-b307b37e276a",photoCredit:"Ahmad Mohammadnejad"},
- {id:"cozy",name:"Тёплый уют",top:"#E9D2BF",bottom:"#B88872",ink:"#56392F",muted:"#80574A",button:"#8A5747",buttonInk:"#FFFFFF",skin:"#EDC3A9",brows:"#584039",detail:"#E7BB9E",photo:"photo-1569103585828-6a7af4cd7ca4",photoCredit:"Fekete Zsombor"},
- {id:"urban",name:"Городской стиль",top:"#DFD5D5",bottom:"#81808B",ink:"#26242E",muted:"#4F4A55",button:"#26242E",buttonInk:"#FFFFFF",skin:"#D9AF9C",brows:"#312D35",detail:"#C8BCC4",photo:"photo-1758272421073-27709802a105",photoCredit:"Vitaly Gariev"},
- {id:"editorial",name:"Fashion",top:"#392239",bottom:"#A95783",ink:"#FFF1F7",muted:"#F0C4DB",button:"#F2C7DF",buttonInk:"#3F2840",skin:"#DBA7B0",brows:"#473045",detail:"#EAA9CD",photo:"photo-1735151225868-3f40c5b51396",photoCredit:"Victor Sirbu"}
+ {id:"nude",name:"Нюд",top:"#F7EEE7",bottom:"#DDC4B5",ink:"#352B2B",muted:"#6B5551",button:"#5E453D",buttonInk:"#FFFFFF",skin:"#EFC6B2",brows:"#503A34",detail:"#CBA38E",photo:"photo-1516220362602-dba5272034e7",photoCredit:"Amanda Dalbjörn"},
+ {id:"soft-pink",name:"Нежный розовый",top:"#FFF1F5",bottom:"#EDBFCE",ink:"#6A304A",muted:"#98627A",button:"#B25C80",buttonInk:"#FFFFFF",skin:"#F4CCBD",brows:"#714B46",detail:"#F3AFC9",photo:"photo-1728767593550-705d6ebbf1d6",photoCredit:"Nastia Petruk"},
+ {id:"luxury",name:"Премиум",top:"#211B22",bottom:"#513B43",ink:"#FFF2E2",muted:"#E8CDB9",button:"#DEBB88",buttonInk:"#362126",skin:"#DCAC94",brows:"#40272A",detail:"#C99C73",photo:"photo-1729886771704-3a9f5a613d40",photoCredit:"Nastia Petruk"},
+ {id:"bold",name:"Яркий акцент",top:"#922E50",bottom:"#DD6682",ink:"#FFFFFF",muted:"#FFE2EC",button:"#FFFFFF",buttonInk:"#8A2444",skin:"#E7ACAB",brows:"#4F2032",detail:"#FFB4D0",photo:"photo-1738594399272-f05ad0a5ba8a",photoCredit:"Mohamed Marey"},
+ {id:"natural",name:"Натуральный",top:"#ECE6DD",bottom:"#B7BBA9",ink:"#384037",muted:"#697166",button:"#53614C",buttonInk:"#FFFFFF",skin:"#E8C7AF",brows:"#605447",detail:"#CBD2BE",photo:"photo-1781503056004-53972080018b",photoCredit:"Emily Horne"},
+ {id:"cozy",name:"Тёплый уют",top:"#E9D2BF",bottom:"#B88872",ink:"#56392F",muted:"#80574A",button:"#8A5747",buttonInk:"#FFFFFF",skin:"#EDC3A9",brows:"#584039",detail:"#E7BB9E",photo:"photo-1731284450430-484343eec537",photoCredit:"Özgür Avşar"},
+ {id:"urban",name:"Городской стиль",top:"#DFD5D5",bottom:"#81808B",ink:"#26242E",muted:"#4F4A55",button:"#26242E",buttonInk:"#FFFFFF",skin:"#D9AF9C",brows:"#312D35",detail:"#C8BCC4",photo:"photo-1725886260675-7156c4b56b84",photoCredit:"Alireza Bp"},
+ {id:"editorial",name:"Fashion",top:"#392239",bottom:"#A95783",ink:"#FFF1F7",muted:"#F0C4DB",button:"#F2C7DF",buttonInk:"#3F2840",skin:"#DBA7B0",brows:"#473045",detail:"#EAA9CD",photo:"photo-1569597212855-f10721b2e1ac",photoCredit:"Julia Kuzenkov"}
 ];
 async function drawBrowBackground(ctx:CanvasRenderingContext2D,id:BrowTemplateId){
  const t=browTemplates.find(x=>x.id===id)??browTemplates[0];
@@ -263,6 +263,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const [style, setStyle] = useState<Style>(master.story_style && master.story_style in palettes ? master.story_style as Style : "minimal");
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
+    const [mobileStoryView, setMobileStoryView] = useState<"edit" | "preview">("edit");
     const [prepared, setPrepared] = useState<File | null>(null);
     const canvas = useRef<HTMLCanvasElement>(null);
     const [themeChoice,setThemeChoice]=useState<Theme|null>(null);
@@ -349,8 +350,12 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         }
     }
     return <div className="story-overlay" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
-        <section className="story-dialog panel" role="dialog" aria-modal="true" aria-label="Создать сторис">
+        <section className={`story-dialog panel story-view-${mobileStoryView}`} role="dialog" aria-modal="true" aria-label="Создать сторис">
             <div className="row between"><h2>Сторис об окне</h2><CloseButton onClick={onClose} label="Закрыть" /></div>
+            <div className="story-mobile-tabs" role="group" aria-label="Режим просмотра сторис">
+                <button type="button" className={mobileStoryView === "edit" ? "selected" : ""} aria-pressed={mobileStoryView === "edit"} onClick={() => setMobileStoryView("edit")}>Настройки</button>
+                <button type="button" className={mobileStoryView === "preview" ? "selected" : ""} aria-pressed={mobileStoryView === "preview"} onClick={() => setMobileStoryView("preview")}>Превью</button>
+            </div>
             <div className="story-grid">
                 <div className="story-fields">
                     <label>Услуга<select value={serviceId} onChange={e => setServiceId(Number(e.target.value))}>{activeServices.map(s => <option key={s.id} value={s.id}>{s.name} · {s.price_som.toLocaleString("ru-RU")} сом</option>)}</select></label>
