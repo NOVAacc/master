@@ -84,6 +84,9 @@ class StoryTemplateAdminController extends Controller
                     'font' => in_array($cfg['font'], array_keys(self::FONTS), true) ? $cfg['font'] : 'system',
                     'scale' => max(80, min(120, (int) $cfg['scale'])),
                     'text_color' => preg_match('/^#[0-9a-fA-F]{6}$/D', (string) $cfg['text_color']) ? $cfg['text_color'] : '',
+                    'photo_url' => $path && Storage::disk('local')->exists($path)
+                        ? route('stories.template.image', ['theme' => $theme, 'template' => $id, 'version' => pathinfo($path, PATHINFO_FILENAME)])
+                        : 'https://images.unsplash.com/'.self::DEFAULT_PHOTOS[$theme][$id].'?auto=format&fit=crop&w=1080&h=1920&q=85',
                     'image_url' => $path && Storage::disk('local')->exists($path)
                         ? route('stories.template.image', ['theme' => $theme, 'template' => $id, 'version' => pathinfo($path, PATHINFO_FILENAME)])
                         : null,
