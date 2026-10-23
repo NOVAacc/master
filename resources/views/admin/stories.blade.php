@@ -51,4 +51,31 @@
 @endforeach
 </div>
 <p class="muted small">Текст в генераторе: название услуги, мастер, дата, время, цена и ссылка формируются автоматически. Новые фотографии показываются и в превью, и в PNG; при ошибке загрузки используется исходный шаблон.</p>
+<script>
+document.querySelectorAll('.story-item').forEach(card => {
+    const form = card.querySelector('form');
+    const frame = card.querySelector('.story-frame');
+    const wordmark = frame.querySelector('strong');
+    const controls = {font:form.elements.namedItem('font'),scale:form.elements.namedItem('scale'),color:form.elements.namedItem('text_color'),image:form.elements.namedItem('image')};
+    const initialImage = frame.style.backgroundImage;
+    let previewUrl = null;
+    const render = () => {
+        const fonts = {system:'system-ui,sans-serif',serif:'Georgia,serif',rounded:'Trebuchet MS,sans-serif'};
+        wordmark.style.fontFamily = fonts[controls.font.value] || fonts.system;
+        wordmark.style.fontSize = String(13 * (Number(controls.scale.value) / 100)) + 'px';
+        if (/^#[a-fA-F0-9]{6}$/.test(controls.color.value)) wordmark.style.color = controls.color.value;
+    };
+    ['font','scale','color'].forEach(key => controls[key].addEventListener('input',render));
+    controls.image.addEventListener('change',() => {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = null;
+        const file = controls.image.files[0];
+        if (file && ['image/jpeg','image/png','image/webp'].includes(file.type)) {
+            previewUrl = URL.createObjectURL(file);
+            frame.style.backgroundImage = 'url("' + previewUrl + '")';
+        } else frame.style.backgroundImage = initialImage;
+    });
+    render();
+});
+</script>
 @endsection
