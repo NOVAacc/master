@@ -21,6 +21,11 @@ class StoryTemplateAdminController extends Controller
         'brows' => ['nude'=>'Нюд','soft-pink'=>'Нежный розовый','luxury'=>'Премиум','bold'=>'Яркий акцент','natural'=>'Натуральный','cozy'=>'Тёплый уют','urban'=>'Городской стиль','editorial'=>'Fashion'],
         'hair' => ['nude'=>'Нюд','romantic'=>'Романтика','brunette'=>'Тёмный премиум','bold'=>'Яркое окрашивание','bridal'=>'Свадебный','cozy'=>'Тёплый сезон','urban'=>'Городской','chrome'=>'Креатив'],
     ];
+    public const DEFAULT_PHOTOS = [
+        'nails' => ['nude' => 'photo-1727199433231-346fd8101839', 'floral' => 'photo-1674383600495-bfa0405f3c93', 'luxury' => 'photo-1736434518489-0eb84070017f', 'red' => 'photo-1637851362556-46d07c374023', 'bridal' => 'photo-1680540441735-2cdc020037c8', 'cozy' => 'photo-1736434518489-0eb84070017f', 'urban' => 'photo-1727199433231-346fd8101839', 'chrome' => 'photo-1684609365994-a144ee021c88'],
+        'brows' => ['nude' => 'photo-1516220362602-dba5272034e7', 'soft-pink' => 'photo-1728767593550-705d6ebbf1d6', 'luxury' => 'photo-1729886771704-3a9f5a613d40', 'bold' => 'photo-1738594399272-f05ad0a5ba8a', 'natural' => 'photo-1781503056004-53972080018b', 'cozy' => 'photo-1731284450430-484343eec537', 'urban' => 'photo-1725886260675-7156c4b56b84', 'editorial' => 'photo-1569597212855-f10721b2e1ac'],
+        'hair' => ['nude' => 'photo-1562322140-8baeececf3df', 'romantic' => 'photo-1519699047748-de8e457a634e', 'brunette' => 'photo-1522337360788-8b13dee7a37e', 'bold' => 'photo-1607779097040-26e80aa78e66', 'bridal' => 'photo-1560869713-7d563336772e', 'cozy' => 'photo-1633681926022-84c23e8cb2d6', 'urban' => 'photo-1605497788044-5a32c7078486', 'chrome' => 'photo-1521590832167-7bcbfaa6381f']
+    ];
     public const FONTS = ['system' => 'Современный', 'serif' => 'Редакционный', 'rounded' => 'Мягкий'];
     public const DEFAULTS = ['font' => 'system', 'scale' => 100, 'text_color' => ''];
 
@@ -72,7 +77,7 @@ class StoryTemplateAdminController extends Controller
 
     public function index()
     {
-        return view('admin.stories', ['collections' => self::COLLECTIONS, 'catalog' => self::catalog(), 'fonts' => self::FONTS, 'labels' => self::LABELS]);
+        return view('admin.stories', ['collections' => self::COLLECTIONS, 'catalog' => self::catalog(), 'fonts' => self::FONTS, 'labels' => self::LABELS, 'photos' => self::DEFAULT_PHOTOS]);
     }
 
     public function update(Request $request, string $theme, string $template)
