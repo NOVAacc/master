@@ -49,6 +49,9 @@ Route::middleware('auth')->group(function () {
     Route::match(['put', 'post'], '/schedule', [DashboardController::class, 'schedule']);
     Route::match(['put', 'post'], '/appointments/{appointment}', [DashboardController::class, 'status']);
 });
+Route::get('/stories/templates/catalog', fn () => response()->json(\App\Http\Controllers\StoryTemplateAdminController::catalog()))->middleware(['auth', 'throttle:60,1'])->name('stories.template.catalog');
+Route::get('/stories/templates/{theme}/{template}/{version}', [\App\Http\Controllers\StoryTemplateAdminController::class, 'image'])
+    ->where('version', '[a-f0-9]{40}')->name('stories.template.image');
 Route::get('/security/email/verify/{user}/{hash}', [AccountSecurityController::class, 'verify'])->middleware('signed')->name('security.email.verify');
 Route::get('/m/{master:slug}', [PublicBookingController::class, 'show'])->name('public.master');
 Route::post('/m/{master:slug}/book', [PublicBookingController::class, 'book'])->middleware('throttle:10,1');
@@ -70,6 +73,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/users', [\App\Http\Controllers\AdminController::class, 'users'])->name('users');
         Route::get('/users/{user}/delete', [\App\Http\Controllers\AdminController::class, 'confirmDeletion'])->whereNumber('user')->name('users.delete');
         Route::delete('/users/{user}', [\App\Http\Controllers\AdminController::class, 'destroyUser'])->whereNumber('user')->middleware('throttle:10,1')->name('users.destroy');
+        Route::get('/stories', [\App\Http\Controllers\StoryTemplateAdminController::class, 'index'])->name('stories');
+        Route::post('/stories/{theme}/{template}', [\App\Http\Controllers\StoryTemplateAdminController::class, 'update'])
+            ->middleware('throttle:20,1')->name('stories.update');
         Route::get('/settings', [\App\Http\Controllers\AdminController::class, 'settings'])->name('settings');
         Route::post('/settings/social', [\App\Http\Controllers\AdminController::class, 'socialSettings'])->middleware('throttle:20,1')->name('settings.social');
         Route::post('/password', [\App\Http\Controllers\AdminController::class, 'password'])->middleware('throttle:5,10')->name('password');
