@@ -52,6 +52,51 @@ function drawArt(ctx:CanvasRenderingContext2D,theme:Theme){
 }
 
 
+
+type HairTemplateId = "nude" | "romantic" | "brunette" | "bold" | "bridal" | "cozy" | "urban" | "chrome";
+const HAIR_COLLECTION = { name: "BOSH Hair Trends", slug: "bosh-hair-trends" } as const;
+const hairTemplates: {id:HairTemplateId; name:string; top:string; bottom:string; ink:string; muted:string; button:string; buttonInk:string; hair:string; highlight:string}[] = [
+ {id:"nude",name:"Nude minimal",top:"#F4ECE6",bottom:"#D7C5BC",ink:"#332D2B",muted:"#6F5C57",button:"#302C2A",buttonInk:"#FFFFFF",hair:"#836351",highlight:"#B8927D"},
+ {id:"romantic",name:"Romantic soft",top:"#F6E9ED",bottom:"#E7BFC9",ink:"#5B3945",muted:"#8D5C6B",button:"#AA667F",buttonInk:"#FFFFFF",hair:"#78505B",highlight:"#C596AA"},
+ {id:"brunette",name:"Luxury brunette",top:"#201B19",bottom:"#3A2924",ink:"#F7ECD9",muted:"#D7C0A7",button:"#D9BA86",buttonInk:"#231A15",hair:"#33201B",highlight:"#9B6950"},
+ {id:"bold",name:"Bold color fashion",top:"#AE284E",bottom:"#48134B",ink:"#FFF4FA",muted:"#F6CDE5",button:"#FFFFFF",buttonInk:"#721546",hair:"#9E286A",highlight:"#F58CD7"},
+ {id:"bridal",name:"Bridal / natural",top:"#FFF9F0",bottom:"#E9DDD1",ink:"#53443C",muted:"#7B665D",button:"#DED0BC",buttonInk:"#40342D",hair:"#957B64",highlight:"#D8BE9A"},
+ {id:"cozy",name:"Cozy seasonal",top:"#D5B59E",bottom:"#765141",ink:"#FFF7ED",muted:"#F5DCCA",button:"#FFF4E6",buttonInk:"#543629",hair:"#4E302A",highlight:"#B27D60"},
+ {id:"urban",name:"Urban trendy",top:"#D9D8D6",bottom:"#717078",ink:"#202127",muted:"#44464C",button:"#202127",buttonInk:"#FFFFFF",hair:"#292B31",highlight:"#A9A8B1"},
+ {id:"chrome",name:"Creative party / chrome",top:"#211B38",bottom:"#66417C",ink:"#FCF4FF",muted:"#E5CBF6",button:"#D7BBEF",buttonInk:"#221932",hair:"#565577",highlight:"#CFB4F4"}
+];
+function drawHairBackground(ctx: CanvasRenderingContext2D, id: HairTemplateId) {
+ const t=hairTemplates.find(x=>x.id===id)??hairTemplates[0];
+ const g=ctx.createLinearGradient(0,0,1080,1920);g.addColorStop(0,t.top);g.addColorStop(1,t.bottom);
+ ctx.fillStyle=g;ctx.fillRect(0,0,1080,1920);
+ // Locally rendered editorial hair illustration; deterministic, exportable without network/CORS.
+ ctx.save();ctx.translate(740,790);
+ if(id==="bold")ctx.rotate(-.18);if(id==="urban")ctx.rotate(.12);
+ const hair=ctx.createLinearGradient(-350,-420,380,700);
+ hair.addColorStop(0,t.highlight);hair.addColorStop(.42,t.hair);hair.addColorStop(1,t.highlight);
+ ctx.fillStyle=hair;
+ ctx.beginPath();ctx.moveTo(-260,540);ctx.bezierCurveTo(-420,140,-390,-440,-90,-525);
+ ctx.bezierCurveTo(210,-600,400,-340,335,40);ctx.bezierCurveTo(290,260,410,550,320,690);
+ ctx.lineTo(-260,690);ctx.closePath();ctx.fill();
+ ctx.fillStyle=id==="brunette"?"#BD8D76":"#E7BEA9";
+ ctx.beginPath();ctx.ellipse(6,-90,176,255,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle=hair;ctx.beginPath();ctx.moveTo(-210,-335);ctx.bezierCurveTo(-145,-560,260,-520,254,-283);
+ ctx.bezierCurveTo(150,-340,95,-440,25,-407);ctx.bezierCurveTo(-52,-335,-88,-280,-210,-270);ctx.closePath();ctx.fill();
+ ctx.lineWidth=24;ctx.strokeStyle=t.highlight;ctx.globalAlpha=.5;
+ for(let i=0;i<7;i++){ctx.beginPath();ctx.moveTo(-245+i*79,-212+(i%3)*21);ctx.bezierCurveTo(-355+i*63,105,-255+i*77,360,-232+i*77,650);ctx.stroke();}
+ if(id==="bridal"){ctx.strokeStyle="#FFFFFF";ctx.lineWidth=12;ctx.beginPath();ctx.arc(-15,-375,205,Math.PI*1.1,Math.PI*1.9);ctx.stroke();}
+ if(id==="chrome"){ctx.strokeStyle="#EBCFFE";ctx.lineWidth=21;ctx.beginPath();ctx.moveTo(-260,350);ctx.quadraticCurveTo(50,590,320,360);ctx.stroke();}
+ if(id==="cozy"){ctx.fillStyle="#C9A27F";ctx.fillRect(-330,585,660,150);}
+ ctx.restore();
+ const wash=ctx.createLinearGradient(0,0,0,1920);
+ const dark=["brunette","bold","cozy","chrome"].includes(id);
+ wash.addColorStop(0,dark?"rgba(0,0,0,.22)":"rgba(255,255,255,.12)");
+ wash.addColorStop(.33,"rgba(0,0,0,0)");
+ wash.addColorStop(.7,dark?"rgba(0,0,0,.35)":"rgba(255,255,255,.22)");
+ wash.addColorStop(1,dark?"rgba(0,0,0,.63)":"rgba(255,255,255,.65)");
+ ctx.fillStyle=wash;ctx.fillRect(0,0,1080,1920);
+}
+
 type NailTemplateId="nude"|"floral"|"luxury"|"red"|"bridal"|"cozy"|"urban"|"chrome";
 const nailTemplates:{id:NailTemplateId;name:string;photo:string;top:string;bottom:string;ink:string;muted:string;button:string;buttonInk:string;photoCredit:string}[]=[
 {id:"nude",name:"Nude minimal",photo:"photo-1727199433231-346fd8101839",top:"#F9F1E9",bottom:"#E7C5B9",ink:"#342B2A",muted:"#695954",button:"#EAC0B4",buttonInk:"#302622",photoCredit:"Maria Lupan / Unsplash"},
@@ -110,14 +155,16 @@ function wrappedText(ctx: CanvasRenderingContext2D, value: string, maxWidth: num
     }
     return clipped;
 }
-async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId) {
+async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId, hairTemplate: HairTemplateId) {
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Браузер не поддерживает создание изображений.");
     const design = nailTemplates.find(t=>t.id===nailTemplate)??nailTemplates[0];
-    const p = theme==="nails" ? {bg:design.top,fg:design.ink,sub:design.muted,action:design.button,actionText:design.buttonInk} : palettes[style];
+    const hairDesign = hairTemplates.find(t=>t.id===hairTemplate)??hairTemplates[0];
+    const p = theme==="hair" ? {bg:hairDesign.top,fg:hairDesign.ink,sub:hairDesign.muted,action:hairDesign.button,actionText:hairDesign.buttonInk} : theme==="nails" ? {bg:design.top,fg:design.ink,sub:design.muted,action:design.button,actionText:design.buttonInk} : palettes[style];
     if(theme==="nails") await drawNailBackground(ctx,nailTemplate);
+    else if(theme==="hair") drawHairBackground(ctx,hairTemplate);
     else {ctx.fillStyle=p.bg;ctx.fillRect(0,0,WIDTH,HEIGHT);drawArt(ctx,theme);}
     const margin = 100;
     ctx.textBaseline = "top";
@@ -141,7 +188,7 @@ async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Ser
     ctx.fillText("ЕСТЬ СВОБОДНОЕ ВРЕМЯ", margin, 580);
     ctx.fillStyle = p.fg;
     ctx.font = "bold 94px system-ui, sans-serif";
-    wrappedText(ctx, theme==="nails" ? "Маникюр" : "Освободилось окно", 870, 3).forEach((line, i) => ctx.fillText(line, margin, 690 + i * 112));
+    wrappedText(ctx, theme==="nails" ? "Маникюр" : theme==="hair" ? "Волосы" : "Освободилось окно", 870, 3).forEach((line, i) => ctx.fillText(line, margin, 690 + i * 112));
     ctx.font = "600 54px system-ui, sans-serif";
     wrappedText(ctx, service.name, 860, 2).forEach((line, i) => ctx.fillText(line, margin, 1030 + i * 68));
     const niceDate = new Date(date + "T12:00:00Z").toLocaleDateString("ru-RU", { timeZone: "UTC", day: "numeric", month: "long" });
@@ -179,7 +226,10 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const [prepared, setPrepared] = useState<File | null>(null);
     const canvas = useRef<HTMLCanvasElement>(null);
     const [themeChoice,setThemeChoice]=useState<Theme|null>(null);
-    const [nailTemplate,setNailTemplate]=useState<NailTemplateId>("nude");
+    const [nailTemplate,setNailTemplate]=useState<NailTemplateId>(()=> master.story_template?.startsWith("bosh-nail-trends:") ? (master.story_template.split(":")[1] as NailTemplateId) : "nude");
+    const [hairTemplate,setHairTemplate]=useState<HairTemplateId>(()=> master.story_template?.startsWith(HAIR_COLLECTION.slug+":") && hairTemplates.some(t=>t.id===master.story_template?.split(":")[1]) ? master.story_template.split(":")[1] as HairTemplateId : "nude");
+    const [savingTemplate,setSavingTemplate]=useState(false);
+    const [savedTemplate,setSavedTemplate]=useState<string|null>(master.story_template??null);
     const renderSequence=useRef(0);
     const service = activeServices.find(s => s.id === serviceId);
     const theme=themeChoice ?? (service ? storyTheme(service,master) : "general");
@@ -194,11 +244,11 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
             const preview=canvas.current;
             // A temporary canvas prevents late image loads from overwriting a newer template.
             const offscreen=document.createElement("canvas");
-            void drawStory(offscreen,master,service,date,time,style,link,theme,nailTemplate)
+            void drawStory(offscreen,master,service,date,time,style,link,theme,nailTemplate,hairTemplate)
                 .then(()=>{if(sequence!==renderSequence.current)return;const c=preview.getContext("2d");if(c){preview.width=offscreen.width;preview.height=offscreen.height;c.drawImage(offscreen,0,0);}})
                 .catch(()=>{if(sequence===renderSequence.current)setError("Не удалось отобразить сторис.");});
         }
-    }, [master, service, date, time, style, link, theme, nailTemplate]);
+    }, [master, service, date, time, style, link, theme, nailTemplate, hairTemplate]);
     useEffect(() => {
         const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
         window.addEventListener("keydown", handleKey);
@@ -208,6 +258,18 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         setStyle(next);
         axios.post("/stories/style", { style: next }).catch(() => setError("Не удалось запомнить стиль. Изображение можно сохранить."));
     };
+
+    const saveTemplate=async(collection:string,id:string)=>{
+        const selected=collection+":"+id;
+        setSavedTemplate(null);
+        setSavingTemplate(true);
+        try{
+            const {data}=await axios.post<{template:string}>("/stories/style",{template:selected});
+            setSavedTemplate(data.template);
+        }catch{
+            setError("Не удалось сохранить выбранный шаблон. Проверьте соединение.");
+        }finally{setSavingTemplate(false);}
+    };
     async function prepare() {
         if (!service || !canvas.current) return;
         setBusy(true);
@@ -216,8 +278,9 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         try {
             const response = await axios.get<{available: boolean; reason?: string}>("/stories/availability", {params: {service: service.id, date, time}});
             if (!response.data.available) throw new Error(response.data.reason || "Это время сейчас недоступно.");
-            await drawStory(canvas.current, master, service, date, time, style, link, theme, nailTemplate);
+            await drawStory(canvas.current, master, service, date, time, style, link, theme, nailTemplate, hairTemplate);
             const blob = await toBlob(canvas.current);
+            if(blob.size===0) throw new Error("PNG пустой.");
             setPrepared(new File([blob], `bosh-${date}-${time.replace(":", "-")}.png`, { type: "image/png" }));
         } catch (e) {
             setError(e instanceof Error ? e.message : "Не удалось создать сторис. Попробуйте снова.");
@@ -257,12 +320,22 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                     <label>Тематика изображения<select value={theme} onChange={e=>setThemeChoice(e.target.value as Theme)}>{(Object.keys(themes) as Theme[]).map(key=><option key={key} value={key}>{themes[key]}</option>)}</select></label>
                     <p className="muted small">Тематика подобрана по услуге автоматически. Можно изменить.</p>
                     {theme==="nails" && <div className="story-nail-templates" role="group" aria-label="Маникюрные шаблоны">
-                        {nailTemplates.map(t=><button type="button" key={t.id} aria-pressed={nailTemplate===t.id} className={nailTemplate===t.id?"story-nail-template selected":"story-nail-template"} onClick={()=>setNailTemplate(t.id)}>
+                        {nailTemplates.map(t=><button type="button" key={t.id} aria-pressed={nailTemplate===t.id} className={nailTemplate===t.id?"story-nail-template selected":"story-nail-template"} onClick={()=>{setNailTemplate(t.id);void saveTemplate("bosh-nail-trends",t.id);}}>
                             <span className="story-nail-thumb" style={{backgroundImage:"linear-gradient(180deg,transparent,rgba(0,0,0,.45)),url(https://images.unsplash.com/"+t.photo+"?auto=format&fit=crop&w=160&h=260&q=55)"}}/>
                             <span>{t.name}</span>
                         </button>)}
                     </div>}
-                    {theme!=="nails" && <div className="story-palettes" role="group" aria-label="Стиль сторис">
+                    {theme==="hair" && <div>
+                        <p className="muted small">{HAIR_COLLECTION.name}</p>
+                        <div className="story-nail-templates" role="group" aria-label={HAIR_COLLECTION.name}>
+                            {hairTemplates.map(t=><button type="button" key={t.id} aria-pressed={hairTemplate===t.id} className={hairTemplate===t.id?"story-nail-template selected":"story-nail-template"} disabled={savingTemplate} onClick={()=>{setHairTemplate(t.id);void saveTemplate(HAIR_COLLECTION.slug,t.id);}}>
+                                <span className="story-nail-thumb story-hair-thumb" style={{background:`linear-gradient(145deg,${t.top},${t.bottom})`}}><span className="story-hair-strand" style={{background:t.hair,boxShadow:`inset -9px -2px 0 ${t.highlight}`}}/></span>
+                                <span>{t.name}</span>
+                            </button>)}
+                        </div>
+                        <p className="muted small" role="status">{savingTemplate?"Сохраняем шаблон…":savedTemplate===HAIR_COLLECTION.slug+":"+hairTemplate?"Шаблон сохранён":""}</p>
+                    </div>}
+                    {theme!=="nails" && theme!=="hair" && <div className="story-palettes" role="group" aria-label="Стиль сторис">
                         {(Object.entries(palettes) as [Style, typeof palettes[Style]][]).map(([key, p]) =>
                             <button type="button" key={key} className={style === key ? "story-palette selected" : "story-palette"} aria-pressed={style === key} onClick={() => chooseStyle(key)}>
                                 <span className="story-color" style={{background: p.bg, color: p.fg}}>Aa</span><span>{p.name}</span>

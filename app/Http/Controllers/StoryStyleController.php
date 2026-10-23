@@ -10,9 +10,20 @@ class StoryStyleController extends Controller
 {
     public function __invoke(Request $request)
     {
-        $data = $request->validate(['style' => ['required', Rule::in(['minimal', 'dark', 'soft', 'accent', 'premium'])]]);
-        MasterProfile::where('user_id', $request->user()->id)->firstOrFail()->update(['story_style' => $data['style']]);
+        $data = $request->validate([
+            'style' => ['required_without:template', 'sometimes', Rule::in(['minimal','dark','soft','accent','premium'])],
+            'template' => ['required_without:style', 'sometimes', 'string', 'max:64', Rule::in([
+                'bosh-nail-trends:nude','bosh-nail-trends:floral','bosh-nail-trends:luxury','bosh-nail-trends:red',
+                'bosh-nail-trends:bridal','bosh-nail-trends:cozy','bosh-nail-trends:urban','bosh-nail-trends:chrome',
+                'bosh-hair-trends:nude','bosh-hair-trends:romantic','bosh-hair-trends:brunette','bosh-hair-trends:bold',
+                'bosh-hair-trends:bridal','bosh-hair-trends:cozy','bosh-hair-trends:urban','bosh-hair-trends:chrome',
+            ])],
+        ]);
+        $master = MasterProfile::where('user_id', $request->user()->id)->firstOrFail();
+        if (array_key_exists('style', $data)) $master->story_style = $data['style'];
+        if (array_key_exists('template', $data)) $master->story_template = $data['template'];
+        $master->save();
 
-        return response()->json(['style' => $data['style']]);
+        return response()->json(['style' => $master->story_style, 'template' => $master->story_template]);
     }
 }

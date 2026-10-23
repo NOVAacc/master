@@ -89,4 +89,18 @@ class StoryAvailabilityTest extends TestCase
         $this->assertDatabaseHas('master_profiles', ['id' => $other->id, 'story_style' => 'minimal']);
         $this->postJson('/stories/style', ['style' => 'invalid'])->assertUnprocessable();
     }
+    public function test_hair_template_is_saved_and_restricted_to_own_profile(): void
+    {
+        [$user, $master] = $this->setupStoryMaster();
+        [, $other] = $this->setupStoryMaster('hair-template-other');
+        $this->actingAs($user)->postJson('/stories/style', ['template' => 'bosh-hair-trends:brunette'])
+            ->assertOk()->assertJsonPath('template', 'bosh-hair-trends:brunette');
+        $this->assertDatabaseHas('master_profiles', ['id' => $master->id, 'story_template' => 'bosh-hair-trends:brunette']);
+        $this->assertDatabaseHas('master_profiles', ['id' => $other->id, 'story_template' => null]);
+        $this->postJson('/stories/style', ['template' => 'bosh-hair-trends:unknown'])->assertUnprocessable();
+        $this->postJson('/stories/style', ['template' => '../../malicious'])->assertUnprocessable();
+        $this->postJson('/stories/style', ['style' => 'premium'])->assertOk()->assertJsonPath('template', 'bosh-hair-trends:brunette');
+        $this->assertDatabaseHas('master_profiles', ['id' => $master->id, 'story_style' => 'premium']);
+    }
+
 }

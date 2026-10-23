@@ -3157,3 +3157,8 @@ html:has(.landing) { scroll-behavior: auto; }
 .story-nail-thumb{display:block;width:100%;aspect-ratio:9/14;border-radius:6px;background-size:cover;background-position:center;background-color:#f0dfd9}
 .story-nail-template>span:last-child{min-height:27px;line-height:1.25;overflow-wrap:anywhere}
 @media(max-width:450px){.story-nail-templates{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.story-nail-template{font-size:9px;padding:3px}}
+
+/* BOSH Hair Trends - an editorial, responsive preview gallery */
+.story-hair-thumb{position:relative;overflow:hidden;isolation:isolate}
+.story-hair-strand{position:absolute;left:23%;top:14%;width:60%;height:78%;border-radius:48% 45% 24% 38%;transform:rotate(-13deg)}
+.story-hair-strand:before{content:"";position:absolute;left:17%;top:24%;width:52%;height:42%;border-radius:50%;background:rgba(244,203,183,.82)}
