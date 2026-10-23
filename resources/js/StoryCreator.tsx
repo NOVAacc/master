@@ -11,6 +11,46 @@ const palettes: Record<Style, { name: string; bg: string; fg: string; sub: strin
     accent: { name: "Акцент", bg: "#CE303E", fg: "#FFFFFF", sub: "#FBE5E7", action: "#FFFFFF", actionText: "#AE2632" },
     premium: { name: "Премиум", bg: "#26342D", fg: "#F3EAD7", sub: "#C9BBA3", action: "#DDC390", actionText: "#26342D" },
 };
+
+type Theme = "nails"|"hair"|"barber"|"brows"|"makeup"|"massage"|"skin"|"general";
+const themes: Record<Theme,string> = {nails:"Маникюр",hair:"Волосы",barber:"Барбер",brows:"Брови и ресницы",makeup:"Макияж",massage:"Массаж",skin:"Косметология",general:"Универсальный"};
+const rules: [Theme,string[]][]=[
+ ["nails",["маникюр","педикюр","ногт","nail","шеллак","гель лак"]],
+ ["brows",["бров","ресниц","lash","brow","ламинирован"]],
+ ["makeup",["визаж","макияж","makeup","мейкап"]],
+ ["massage",["массаж","спа","spa","релакс"]],
+ ["skin",["косметолог","пилинг","чистка лица","эпиляц","депиляц"]],
+ ["barber",["барбер","бород","фейд","fade","мужская стрижка","брить"]],
+ ["hair",["стриж","окрашив","волос","причес","причёс","парикмах","hair"]]
+];
+const norm = (v:string) => v.toLowerCase().replace(/ё/g,"е");
+export function storyTheme(service:Service,master:Master):Theme {
+ for(const value of [service.name,service.description||"",[master.specialty,master.activity,master.industry].filter(Boolean).join(" ")]) {
+  for(const [theme,words] of rules) if(words.some(word=>norm(value).includes(norm(word)))) return theme;
+ }
+ return "general";
+}
+function drawArt(ctx:CanvasRenderingContext2D,theme:Theme){
+ ctx.save();ctx.translate(725,710);ctx.globalAlpha=.36;
+ const c:Record<Theme,string>={nails:"#C73855",hair:"#65413D",barber:"#353C44",brows:"#6D453D",makeup:"#B84963",massage:"#A27868",skin:"#BB8B7A",general:"#A5636A"};
+ ctx.fillStyle=c[theme];ctx.strokeStyle=c[theme];ctx.lineCap="round";ctx.lineJoin="round";
+ if(theme==="nails"){
+  ctx.rotate(-.22);ctx.beginPath();ctx.moveTo(-150,180);ctx.lineTo(-125,-95);ctx.quadraticCurveTo(-118,-156,-87,-143);ctx.quadraticCurveTo(-63,-138,-70,-102);ctx.lineTo(-72,27);ctx.lineTo(-38,-205);ctx.quadraticCurveTo(-28,-253,5,-235);ctx.quadraticCurveTo(24,-226,17,-190);ctx.lineTo(-7,29);ctx.lineTo(46,-219);ctx.quadraticCurveTo(60,-267,91,-244);ctx.quadraticCurveTo(110,-230,99,-195);ctx.lineTo(55,34);ctx.lineTo(113,-149);ctx.quadraticCurveTo(128,-186,156,-163);ctx.quadraticCurveTo(171,-147,157,-117);ctx.lineTo(87,100);ctx.quadraticCurveTo(186,29,214,77);ctx.quadraticCurveTo(232,109,196,140);ctx.lineTo(106,236);ctx.quadraticCurveTo(-45,292,-150,180);ctx.fill();
+  ctx.globalAlpha=.95;ctx.fillStyle="#F8D5D9";for(const [x,y] of [[-99,-122],[-8,-214],[69,-224],[132,-148]]){ctx.beginPath();ctx.roundRect(x-18,y-8,37,65,18);ctx.fill();}
+ } else if(theme==="hair"||theme==="barber"){
+  ctx.beginPath();ctx.arc(0,12,194,Math.PI,0);ctx.lineTo(165,208);ctx.lineTo(-161,208);ctx.closePath();ctx.fill();ctx.globalAlpha=.7;ctx.fillStyle="#D5AE98";ctx.beginPath();ctx.ellipse(0,10,121,169,0,0,Math.PI*2);ctx.fill();
+  if(theme==="barber"){ctx.fillStyle="#363A41";ctx.fillRect(90,-230,78,238);for(let x=98;x<166;x+=13)ctx.fillRect(x,-260,6,32);}
+ }else if(theme==="brows"||theme==="makeup"||theme==="skin"){
+  ctx.beginPath();ctx.ellipse(0,0,207,245,0,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=.7;ctx.fillStyle="#F2CFBE";ctx.beginPath();ctx.ellipse(0,0,161,208,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="#573E3C";ctx.lineWidth=22;ctx.beginPath();ctx.moveTo(-124,-49);ctx.quadraticCurveTo(-71,-88,-27,-55);ctx.moveTo(28,-55);ctx.quadraticCurveTo(75,-88,125,-49);ctx.stroke();
+  if(theme==="makeup"){ctx.fillStyle="#B83D5B";ctx.fillRect(122,68,36,144);}
+ }else if(theme==="massage"){
+  ctx.beginPath();ctx.arc(0,-142,82,0,Math.PI*2);ctx.fill();ctx.lineWidth=85;ctx.beginPath();ctx.moveTo(-160,172);ctx.quadraticCurveTo(-65,-10,16,90);ctx.quadraticCurveTo(118,176,199,39);ctx.stroke();
+ }else{ctx.lineWidth=30;ctx.beginPath();ctx.arc(0,0,207,0,Math.PI*2);ctx.moveTo(0,-134);ctx.lineTo(0,0);ctx.lineTo(120,82);ctx.stroke();}
+ ctx.restore();
+}
+
 const WIDTH = 1080;
 const HEIGHT = 1920;
 
@@ -34,7 +74,7 @@ function wrappedText(ctx: CanvasRenderingContext2D, value: string, maxWidth: num
     }
     return clipped;
 }
-function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string) {
+function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme) {
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
     const ctx = canvas.getContext("2d");
@@ -42,6 +82,7 @@ function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, 
     const p = palettes[style];
     ctx.fillStyle = p.bg;
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    drawArt(ctx, theme);
     const margin = 100;
     ctx.textBaseline = "top";
     ctx.fillStyle = p.fg;
@@ -92,16 +133,19 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const [busy, setBusy] = useState(false);
     const [prepared, setPrepared] = useState<File | null>(null);
     const canvas = useRef<HTMLCanvasElement>(null);
+    const [themeChoice,setThemeChoice]=useState<Theme|null>(null);
     const service = activeServices.find(s => s.id === serviceId);
+    const theme=themeChoice ?? (service ? storyTheme(service,master) : "general");
+    useEffect(()=>setThemeChoice(null),[serviceId]);
     const link = new URL(`/m/${encodeURIComponent(master.slug)}?date=${encodeURIComponent(date)}&service=${serviceId}&time=${encodeURIComponent(time)}`, window.location.origin).toString();
 
     useEffect(() => {
         setPrepared(null);
         setError("");
         if (service && canvas.current && /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{2}:\d{2}$/.test(time)) {
-            drawStory(canvas.current, master, service, date, time, style, link);
+            drawStory(canvas.current, master, service, date, time, style, link, theme);
         }
-    }, [master, service, date, time, style, link]);
+    }, [master, service, date, time, style, link, theme]);
     useEffect(() => {
         const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
         window.addEventListener("keydown", handleKey);
@@ -119,7 +163,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         try {
             const response = await axios.get<{available: boolean; reason?: string}>("/stories/availability", {params: {service: service.id, date, time}});
             if (!response.data.available) throw new Error(response.data.reason || "Это время сейчас недоступно.");
-            drawStory(canvas.current, master, service, date, time, style, link);
+            drawStory(canvas.current, master, service, date, time, style, link, theme);
             const blob = await toBlob(canvas.current);
             setPrepared(new File([blob], `bosh-${date}-${time.replace(":", "-")}.png`, { type: "image/png" }));
         } catch (e) {
@@ -157,6 +201,8 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                         <label>Дата<input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
                         <label>Время<input type="time" step="1800" value={time} onChange={e => setTime(e.target.value)} /></label>
                     </div>
+                    <label>Тематика изображения<select value={theme} onChange={e=>setThemeChoice(e.target.value as Theme)}>{(Object.keys(themes) as Theme[]).map(key=><option key={key} value={key}>{themes[key]}</option>)}</select></label>
+                    <p className="muted small">Тематика подобрана по услуге автоматически. Можно изменить.</p>
                     <div className="story-palettes" role="group" aria-label="Стиль сторис">
                         {(Object.entries(palettes) as [Style, typeof palettes[Style]][]).map(([key, p]) =>
                             <button type="button" key={key} className={style === key ? "story-palette selected" : "story-palette"} aria-pressed={style === key} onClick={() => chooseStyle(key)}>
