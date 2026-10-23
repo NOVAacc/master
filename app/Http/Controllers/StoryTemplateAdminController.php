@@ -16,6 +16,11 @@ class StoryTemplateAdminController extends Controller
         'brows' => ['title' => 'Брови', 'ids' => ['nude','soft-pink','luxury','bold','natural','cozy','urban','editorial']],
         'hair' => ['title' => 'Волосы', 'ids' => ['nude','romantic','brunette','bold','bridal','cozy','urban','chrome']],
     ];
+    public const LABELS = [
+        'nails' => ['nude'=>'Нюд','floral'=>'Цветочный','luxury'=>'Чёрное золото','red'=>'Красный акцент','bridal'=>'Невеста','cozy'=>'Тёплый уют','urban'=>'Городской','chrome'=>'Хром'],
+        'brows' => ['nude'=>'Нюд','soft-pink'=>'Нежный розовый','luxury'=>'Премиум','bold'=>'Яркий акцент','natural'=>'Натуральный','cozy'=>'Тёплый уют','urban'=>'Городской стиль','editorial'=>'Fashion'],
+        'hair' => ['nude'=>'Нюд','romantic'=>'Романтика','brunette'=>'Тёмный премиум','bold'=>'Яркое окрашивание','bridal'=>'Свадебный','cozy'=>'Тёплый сезон','urban'=>'Городской','chrome'=>'Креатив'],
+    ];
     public const FONTS = ['system' => 'Современный', 'serif' => 'Редакционный', 'rounded' => 'Мягкий'];
     public const DEFAULTS = ['font' => 'system', 'scale' => 100, 'text_color' => ''];
 
@@ -67,7 +72,7 @@ class StoryTemplateAdminController extends Controller
 
     public function index()
     {
-        return view('admin.stories', ['collections' => self::COLLECTIONS, 'catalog' => self::catalog(), 'fonts' => self::FONTS]);
+        return view('admin.stories', ['collections' => self::COLLECTIONS, 'catalog' => self::catalog(), 'fonts' => self::FONTS, 'labels' => self::LABELS]);
     }
 
     public function update(Request $request, string $theme, string $template)
