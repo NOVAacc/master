@@ -51,6 +51,42 @@ function drawArt(ctx:CanvasRenderingContext2D,theme:Theme){
  ctx.restore();
 }
 
+
+type NailTemplateId="nude"|"floral"|"luxury"|"red"|"bridal"|"cozy"|"urban"|"chrome";
+const nailTemplates:{id:NailTemplateId;name:string;photo:string;top:string;bottom:string;ink:string;muted:string;button:string;buttonInk:string;photoCredit:string}[]=[
+{id:"nude",name:"Nude minimal",photo:"photo-1727199433231-346fd8101839",top:"#F9F1E9",bottom:"#E7C5B9",ink:"#342B2A",muted:"#695954",button:"#EAC0B4",buttonInk:"#302622",photoCredit:"Maria Lupan / Unsplash"},
+{id:"floral",name:"Romantic floral",photo:"photo-1674383600495-bfa0405f3c93",top:"#FCE5EB",bottom:"#EB9CAD",ink:"#692A3F",muted:"#7D4255",button:"#D96182",buttonInk:"#FFFFFF",photoCredit:"Evita Tomševica / Unsplash"},
+{id:"luxury",name:"Luxury black & gold",photo:"photo-1736434518489-0eb84070017f",top:"#181310",bottom:"#302218",ink:"#F8E8C7",muted:"#E7CFA3",button:"#E8BE74",buttonInk:"#221810",photoCredit:"Caroline Badran / Unsplash"},
+{id:"red",name:"Bold red fashion",photo:"photo-1637851362556-46d07c374023",top:"#640611",bottom:"#9B0B25",ink:"#FFF5F1",muted:"#FFD1CB",button:"#EC173A",buttonInk:"#FFFFFF",photoCredit:"Reece van der Merwe / Unsplash"},
+{id:"bridal",name:"Bridal / natural",photo:"photo-1680540441735-2cdc020037c8",top:"#FAF4EF",bottom:"#EDE1D9",ink:"#45382F",muted:"#786A5E",button:"#E9D2C6",buttonInk:"#3E302A",photoCredit:"Maria Sime / Unsplash"},
+{id:"cozy",name:"Уютный сезонный",photo:"photo-1736434518489-0eb84070017f",top:"#3C251B",bottom:"#754A39",ink:"#FFF4EA",muted:"#EACDBB",button:"#B96E58",buttonInk:"#FFFFFF",photoCredit:"Caroline Badran / Unsplash"},
+{id:"urban",name:"Urban trendy",photo:"photo-1727199433231-346fd8101839",top:"#23232A",bottom:"#4B4B54",ink:"#FFFFFF",muted:"#E4E1E8",button:"#FFFFFF",buttonInk:"#24232A",photoCredit:"Maria Lupan / Unsplash"},
+{id:"chrome",name:"Creative chrome / party",photo:"photo-1684609365994-a144ee021c88",top:"#211239",bottom:"#50317C",ink:"#FDEBFF",muted:"#DEB9FE",button:"#CDA0FA",buttonInk:"#26113C",photoCredit:"Noel Oviedo / Unsplash"}
+];
+function coverImage(ctx:CanvasRenderingContext2D,img:HTMLImageElement,x:number,y:number,w:number,h:number){
+const scale=Math.max(w/img.naturalWidth,h/img.naturalHeight),sw=w/scale,sh=h/scale;
+ctx.drawImage(img,(img.naturalWidth-sw)/2,(img.naturalHeight-sh)/2,sw,sh,x,y,w,h);
+}
+async function drawNailBackground(ctx:CanvasRenderingContext2D,template:NailTemplateId){
+const t=nailTemplates.find(x=>x.id===template)??nailTemplates[0];
+const gradient=ctx.createLinearGradient(0,0,0,1920);
+gradient.addColorStop(0,t.top);gradient.addColorStop(1,t.bottom);
+ctx.fillStyle=gradient;ctx.fillRect(0,0,1080,1920);
+const image=new Image();image.crossOrigin="anonymous";
+image.src="https://images.unsplash.com/"+t.photo+"?auto=format&fit=crop&w=1080&h=1920&q=85";
+try{
+ await new Promise<void>((resolve,reject)=>{image.onload=()=>resolve();image.onerror=()=>reject(new Error("Image not available"));});
+ ctx.save();ctx.globalAlpha=t.id==="urban"?.82:.87;coverImage(ctx,image,0,0,1080,1920);ctx.restore();
+}catch{ /* Network/offline fallback retains gradient and drawn manicure theme. */ }
+const wash=ctx.createLinearGradient(0,0,0,1920);
+if(["luxury","red","cozy","urban","chrome"].includes(t.id)){
+ wash.addColorStop(0,"rgba(0,0,0,.64)");wash.addColorStop(.35,"rgba(0,0,0,.40)");wash.addColorStop(.72,"rgba(0,0,0,.55)");wash.addColorStop(1,"rgba(0,0,0,.78)");
+}else{
+ wash.addColorStop(0,"rgba(255,249,246,.83)");wash.addColorStop(.33,"rgba(255,248,243,.45)");wash.addColorStop(.70,"rgba(255,248,243,.69)");wash.addColorStop(1,"rgba(255,248,243,.92)");
+}
+ctx.fillStyle=wash;ctx.fillRect(0,0,1080,1920);
+}
+
 const WIDTH = 1080;
 const HEIGHT = 1920;
 
@@ -74,15 +110,15 @@ function wrappedText(ctx: CanvasRenderingContext2D, value: string, maxWidth: num
     }
     return clipped;
 }
-function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme) {
+async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId) {
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Браузер не поддерживает создание изображений.");
-    const p = palettes[style];
-    ctx.fillStyle = p.bg;
-    ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    drawArt(ctx, theme);
+    const design = nailTemplates.find(t=>t.id===nailTemplate)??nailTemplates[0];
+    const p = theme==="nails" ? {bg:design.top,fg:design.ink,sub:design.muted,action:design.button,actionText:design.buttonInk} : palettes[style];
+    if(theme==="nails") await drawNailBackground(ctx,nailTemplate);
+    else {ctx.fillStyle=p.bg;ctx.fillRect(0,0,WIDTH,HEIGHT);drawArt(ctx,theme);}
     const margin = 100;
     ctx.textBaseline = "top";
     ctx.fillStyle = p.fg;
@@ -134,18 +170,26 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const [prepared, setPrepared] = useState<File | null>(null);
     const canvas = useRef<HTMLCanvasElement>(null);
     const [themeChoice,setThemeChoice]=useState<Theme|null>(null);
+    const [nailTemplate,setNailTemplate]=useState<NailTemplateId>("nude");
+    const renderSequence=useRef(0);
     const service = activeServices.find(s => s.id === serviceId);
     const theme=themeChoice ?? (service ? storyTheme(service,master) : "general");
     useEffect(()=>setThemeChoice(null),[serviceId]);
     const link = new URL(`/m/${encodeURIComponent(master.slug)}?date=${encodeURIComponent(date)}&service=${serviceId}&time=${encodeURIComponent(time)}`, window.location.origin).toString();
 
     useEffect(() => {
+        const sequence=++renderSequence.current;
         setPrepared(null);
         setError("");
         if (service && canvas.current && /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{2}:\d{2}$/.test(time)) {
-            drawStory(canvas.current, master, service, date, time, style, link, theme);
+            const preview=canvas.current;
+            // A temporary canvas prevents late image loads from overwriting a newer template.
+            const offscreen=document.createElement("canvas");
+            void drawStory(offscreen,master,service,date,time,style,link,theme,nailTemplate)
+                .then(()=>{if(sequence!==renderSequence.current)return;const c=preview.getContext("2d");if(c){preview.width=offscreen.width;preview.height=offscreen.height;c.drawImage(offscreen,0,0);}})
+                .catch(()=>{if(sequence===renderSequence.current)setError("Не удалось отобразить сторис.");});
         }
-    }, [master, service, date, time, style, link, theme]);
+    }, [master, service, date, time, style, link, theme, nailTemplate]);
     useEffect(() => {
         const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
         window.addEventListener("keydown", handleKey);
@@ -163,7 +207,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         try {
             const response = await axios.get<{available: boolean; reason?: string}>("/stories/availability", {params: {service: service.id, date, time}});
             if (!response.data.available) throw new Error(response.data.reason || "Это время сейчас недоступно.");
-            drawStory(canvas.current, master, service, date, time, style, link, theme);
+            await drawStory(canvas.current, master, service, date, time, style, link, theme, nailTemplate);
             const blob = await toBlob(canvas.current);
             setPrepared(new File([blob], `bosh-${date}-${time.replace(":", "-")}.png`, { type: "image/png" }));
         } catch (e) {
@@ -203,12 +247,18 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                     </div>
                     <label>Тематика изображения<select value={theme} onChange={e=>setThemeChoice(e.target.value as Theme)}>{(Object.keys(themes) as Theme[]).map(key=><option key={key} value={key}>{themes[key]}</option>)}</select></label>
                     <p className="muted small">Тематика подобрана по услуге автоматически. Можно изменить.</p>
-                    <div className="story-palettes" role="group" aria-label="Стиль сторис">
+                    {theme==="nails" && <div className="story-nail-templates" role="group" aria-label="Маникюрные шаблоны">
+                        {nailTemplates.map(t=><button type="button" key={t.id} aria-pressed={nailTemplate===t.id} className={nailTemplate===t.id?"story-nail-template selected":"story-nail-template"} onClick={()=>setNailTemplate(t.id)}>
+                            <span className="story-nail-thumb" style={{backgroundImage:"linear-gradient(180deg,transparent,rgba(0,0,0,.45)),url(https://images.unsplash.com/"+t.photo+"?auto=format&fit=crop&w=160&h=260&q=55)"}}/>
+                            <span>{t.name}</span>
+                        </button>)}
+                    </div>}
+                    {theme!=="nails" && <div className="story-palettes" role="group" aria-label="Стиль сторис">
                         {(Object.entries(palettes) as [Style, typeof palettes[Style]][]).map(([key, p]) =>
                             <button type="button" key={key} className={style === key ? "story-palette selected" : "story-palette"} aria-pressed={style === key} onClick={() => chooseStyle(key)}>
                                 <span className="story-color" style={{background: p.bg, color: p.fg}}>Aa</span><span>{p.name}</span>
                             </button>)}
-                    </div>
+                    </div>}
                     <p className="muted small">Сторис создаётся в размере 1080 × 1920. Ссылка на запись подготовлена отдельно для стикера Instagram.</p>
                     <div className="row wrap">
                         <button type="button" className="primary" disabled={busy || !service} onClick={() => void prepare()}>{busy ? "Проверяем время…" : "Создать сторис"}</button>
