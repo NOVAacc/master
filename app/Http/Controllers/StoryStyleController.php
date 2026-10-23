@@ -17,6 +17,8 @@ class StoryStyleController extends Controller
                 'bosh-nail-trends:bridal','bosh-nail-trends:cozy','bosh-nail-trends:urban','bosh-nail-trends:chrome',
                 'bosh-hair-trends:nude','bosh-hair-trends:romantic','bosh-hair-trends:brunette','bosh-hair-trends:bold',
                 'bosh-hair-trends:bridal','bosh-hair-trends:cozy','bosh-hair-trends:urban','bosh-hair-trends:chrome',
+                'bosh-brow-trends:nude','bosh-brow-trends:soft-pink','bosh-brow-trends:luxury','bosh-brow-trends:bold',
+                'bosh-brow-trends:natural','bosh-brow-trends:cozy','bosh-brow-trends:urban','bosh-brow-trends:editorial',
             ])],
         ]);
         $master = MasterProfile::where('user_id', $request->user()->id)->firstOrFail();
