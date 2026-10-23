@@ -3148,3 +3148,12 @@ html:has(.landing) { scroll-behavior: auto; }
     .story-palettes { gap: 6px; }
     .story-palette { padding: 5px; }
 }
+
+
+/* Service-specific nail story presets; the existing story dialog remains minimal. */
+.story-nail-templates{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.story-nail-template{display:flex;flex-direction:column;gap:5px;min-width:0;padding:5px;border:1px solid #ded9d9;border-radius:10px;background:#fff;color:#333;text-align:center;font-size:10px;cursor:pointer}
+.story-nail-template.selected{border-color:#2c2c30;box-shadow:inset 0 0 0 1px #2c2c30}
+.story-nail-thumb{display:block;width:100%;aspect-ratio:9/14;border-radius:6px;background-size:cover;background-position:center;background-color:#f0dfd9}
+.story-nail-template>span:last-child{min-height:27px;line-height:1.25;overflow-wrap:anywhere}
+@media(max-width:450px){.story-nail-templates{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.story-nail-template{font-size:9px;padding:3px}}
