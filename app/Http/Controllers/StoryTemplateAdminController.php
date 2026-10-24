@@ -102,9 +102,15 @@ class StoryTemplateAdminController extends Controller
 
     public function index()
     {
+        $photoCounts = [];
+        foreach (self::DEFAULT_PHOTOS as $photos) {
+            foreach ($photos as $photo) {
+                $photoCounts[$photo] = ($photoCounts[$photo] ?? 0) + 1;
+            }
+        }
         return view('admin.stories', [
             'collections' => self::COLLECTIONS, 'catalog' => self::catalog(),
-            'labels' => self::LABELS, 'photos' => self::DEFAULT_PHOTOS,
+            'labels' => self::LABELS, 'photos' => self::DEFAULT_PHOTOS, 'photoCounts' => $photoCounts,
         ]);
     }
 
