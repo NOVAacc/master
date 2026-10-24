@@ -63,6 +63,9 @@ class CuratedCategoryStoryPhotoTest extends TestCase
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('sport', 'dance'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('auto', 'tires'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'spa'));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'tanning'));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('sport', 'stretching'));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('education', 'driving'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'tattoo'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'waxing'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('sport', 'trainer'));
@@ -77,9 +80,9 @@ class CuratedCategoryStoryPhotoTest extends TestCase
                 }
             }
         }
-        $this->assertCount(160, $allIds);
-        $this->assertCount(160, array_unique($allIds));
-        $this->assertNull(CategoryStoryPhotoLibrary::get('beauty', 'tanning', 'editorial'));
+        $this->assertCount(184, $allIds);
+        $this->assertCount(184, array_unique($allIds));
+        $this->assertNull(CategoryStoryPhotoLibrary::get('beauty', 'salon', 'editorial'));
     }
 
     public function test_curated_image_is_proxied_with_validation_and_cached_without_outbound_repeats(): void
