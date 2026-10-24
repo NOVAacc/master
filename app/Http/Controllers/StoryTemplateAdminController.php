@@ -146,7 +146,36 @@ class StoryTemplateAdminController extends Controller
             $counts[$group->industry][$group->activity] = (int) $group->total;
         }
 
+        $uploaded = [];
+        foreach (SiteSetting::query()->where('key', 'like', 'category-story.%')->get(['key', 'value']) as $entry) {
+            $parts = explode('.', $entry->key);
+            if (count($parts) !== 4) continue;
+            [, $industry, $activity, $role] = $parts;
+            if (! \App\Http\Controllers\CategoryStoryTemplateController::allowed($industry, $activity, $role)) continue;
+            $saved = json_decode((string) $entry->value, true);
+            $path = is_array($saved) ? ($saved['path'] ?? null) : null;
+            if (is_string($path) && preg_match('~^category-stories/'.preg_quote($industry,'~').'/'.preg_quote($activity,'~').'/'.preg_quote($role,'~').'/[a-f0-9]{40}\.(?:jpg|jpeg|png|webp)$~D', $path)
+                && Storage::disk('local')->exists($path)) {
+                $uploaded[$industry][$activity][$role] = true;
+            }
+        }
+        $photoCoverage = [];
+        $photoTotal = 0;
+        foreach ($industries as $industry => $spec) {
+            foreach ($spec['activities'] as $activity => $_) {
+                $filled = 0;
+                foreach (array_keys(\App\Support\CategoryStoryCatalog::ROLES) as $role) {
+                    if (($uploaded[$industry][$activity][$role] ?? false)
+                        || \App\Support\CategoryStoryPhotoLibrary::get($industry, $activity, $role)) $filled++;
+                }
+                $photoCoverage[$industry][$activity] = $filled;
+                $photoTotal += $filled;
+            }
+        }
+
         return view('admin.categories', [
+            'photoCoverage' => $photoCoverage,
+            'photoTotal' => $photoTotal,
             'industries' => $industries,
             'counts' => $counts,
             'storyThemes' => [

@@ -40,7 +40,10 @@
 <label for="image">Фотография (JPG, PNG, WebP, до 4 МБ)</label>
 <input id="image" type="file" name="image" accept="image/jpeg,image/png,image/webp">
 <p class="muted small">Рекомендуем вертикальный кадр 9:16, живую фотографию процесса или результата. Фотография хранится отдельно для этого шаблона.</p>
-<label style="display:flex;align-items:center;gap:8px;font-weight:400"><input id="remove_image" name="remove_image" type="checkbox" value="1"> Убрать фотографию и вернуть фон концепции</label>
+@if($curated)
+<p class="muted small">Подборка BOSH: <a href="{{ $curated['page'] }}" target="_blank" rel="noopener noreferrer">{{ $curated['title'] }}</a> · {{ $curated['author'] }} / Pexels. Можно заменить собственной фотографией.</p>
+@endif
+<label style="display:flex;align-items:center;gap:8px;font-weight:400"><input id="remove_image" name="remove_image" type="checkbox" value="1"> {{ $curated ? 'Вернуть рекомендованную фотографию' : 'Убрать фотографию и вернуть фон концепции' }}</label>
 <label for="font">Шрифт</label>
 <select name="font" id="font">@foreach($fonts as $id=>$name)<option value="{{ $id }}" @selected($config['font']===$id)>{{ $name }}</option>@endforeach</select>
 <label for="scale">Размер заголовка</label>
