@@ -28,6 +28,19 @@
 @endforeach
 </select>
 <p class="muted small">Выберите, какая часть изображения останется видна после обрезки до 9:16. Настройка применяется и к скачанному PNG.</p>
+<label for="image_horizontal">Смещение фотографии</label>
+<select id="image_horizontal" name="image_horizontal">
+@foreach(['left' => 'Влево', 'center' => 'По центру', 'right' => 'Вправо'] as $value => $name)
+<option value="{{ $value }}" @selected(($config['image_horizontal'] ?? 'center') === $value)>{{ $name }}</option>
+@endforeach
+</select>
+<label for="image_zoom">Увеличение фотографии</label>
+<select id="image_zoom" name="image_zoom">
+@foreach([100,110,120,130,140,150] as $size)
+<option value="{{ $size }}" @selected(($config['image_zoom'] ?? 100) === $size)>{{ $size }}%</option>
+@endforeach
+</select>
+<p class="muted small">Масштаб и положение применяются только к фону. Текст и логотип остаются на месте.</p>
 <label for="shade">Дополнительный контраст фотографии</label>
 <select id="shade" name="shade">
 @foreach([0 => 'Без изменений', 10 => 'Лёгкий — 10%', 20 => 'Средний — 20%', 30 => 'Сильный — 30%', 40 => 'Максимальный — 40%'] as $value => $description)
@@ -59,6 +72,8 @@ $storyPreviewData = [
     'default_photo_url' => 'https://images.unsplash.com/'.$photo.'?auto=format&fit=crop&w=1080&h=1920&q=85',
     'image_url' => $config['image_url'],
     'image_position' => $config['image_position'],
+    'image_horizontal' => $config['image_horizontal'],
+    'image_zoom' => $config['image_zoom'],
     'font' => $config['font'],
     'scale' => $config['scale'],
     'shade' => $config['shade'],
