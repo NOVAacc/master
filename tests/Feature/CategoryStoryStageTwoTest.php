@@ -133,7 +133,10 @@ class CategoryStoryStageTwoTest extends TestCase
         $catalog = $this->getJson('/stories/category/catalog')->assertOk()
             ->assertJsonPath('category.name', 'Ногтевой сервис')
             ->assertJsonCount(8, 'templates')
-            ->assertJsonPath('templates.0.id', 'editorial');
+            ->assertJsonPath('templates.0.id', 'editorial')
+            ->assertJsonPath('editor_options.fonts', \App\Http\Controllers\StoryTemplateAdminController::FONTS)
+            ->assertJsonPath('editor_options.colors', \App\Http\Controllers\StoryTemplateAdminController::TEXT_COLORS)
+            ->assertJsonPath('editor_options.shades', [0, 10, 20, 30, 40]);
         $url = $catalog->json('templates.0.image_url');
         $this->assertStringContainsString('/stories/category/beauty/nails/editorial/image/', $url);
         $this->get($url)->assertOk()->assertHeader('X-Content-Type-Options', 'nosniff');

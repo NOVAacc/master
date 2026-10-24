@@ -23,8 +23,15 @@ class MasterCategoryStoryController extends Controller
         foreach (config('industries', []) as $id => $definition) {
             $groups[] = ['id' => $id, 'name' => $definition['name'], 'activities' => $definition['activities']];
         }
+        $editorOptions = [
+            'fonts' => StoryTemplateAdminController::FONTS,
+            'colors' => StoryTemplateAdminController::TEXT_COLORS,
+            'scales' => [80, 90, 100, 110, 120],
+            'shades' => [0, 10, 20, 30, 40],
+            'zooms' => [100, 110, 120, 130, 140, 150],
+        ];
         if (! $category) {
-            return response()->json(['category' => null, 'templates' => [], 'groups' => $groups]);
+            return response()->json(['category' => null, 'templates' => [], 'groups' => $groups, 'editor_options' => $editorOptions]);
         }
         $templates = [];
         foreach ($category['templates'] as $role) {
@@ -46,6 +53,7 @@ class MasterCategoryStoryController extends Controller
             ],
             'templates' => $templates,
             'groups' => $groups,
+            'editor_options' => $editorOptions,
         ]);
     }
 
