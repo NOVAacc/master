@@ -4,10 +4,18 @@ import CloseButton from "./CloseButton";
 import type { Master, Service } from "./types";
 
 type Style = "minimal" | "dark" | "soft" | "accent" | "premium";
-type TemplateSetting = { photo_url?: string; image_url: string | null; font: "system" | "serif" | "rounded"; scale: number; text_color: string; image_position?: "top" | "center" | "bottom"; image_horizontal?: "left" | "center" | "right"; image_zoom?: number; shade?: number };
+type TemplateSetting = { photo_url?: string; image_url: string | null; font: "system" | "serif" | "rounded" | "elegant" | "classic" | "bold" | "mono"; scale: number; text_color: string; image_position?: "top" | "center" | "bottom"; image_horizontal?: "left" | "center" | "right"; image_zoom?: number; shade?: number };
 type ExtraTheme = "lashes"|"makeup"|"massage"|"skin"|"barber"|"smooth";
 type StoryCatalog = Partial<Record<"nails"|"brows"|"hair"|ExtraTheme, Record<string,TemplateSetting>>>;
-const fontFace=(font:TemplateSetting["font"]|undefined)=>font==="serif"?'Georgia, "Times New Roman", serif':font==="rounded"?'Trebuchet MS, Arial, sans-serif':'system-ui, sans-serif';
+const fontFace=(font:TemplateSetting["font"]|undefined)=>({
+  system: 'system-ui, sans-serif',
+  serif: 'Georgia, "Times New Roman", serif',
+  rounded: '"Trebuchet MS", Arial, sans-serif',
+  elegant: '"Palatino Linotype", "Book Antiqua", Georgia, serif',
+  classic: 'Baskerville, "Times New Roman", serif',
+  bold: '"Arial Black", Arial, sans-serif',
+  mono: '"Courier New", monospace',
+}[font??"system"] ?? 'system-ui, sans-serif');
 const photoSource=(catalog:StoryCatalog,theme:"nails"|"hair"|"brows"|ExtraTheme,id:string,fallback:string)=>catalog[theme]?.[id]?.image_url||fallback;
 const palettes: Record<Style, { name: string; bg: string; fg: string; sub: string; action: string; actionText: string }> = {
     minimal: { name: "Минимализм", bg: "#F5F4F1", fg: "#202020", sub: "#76716D", action: "#202020", actionText: "#FFFFFF" },
