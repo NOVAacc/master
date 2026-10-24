@@ -11,6 +11,16 @@ final class CategoryStoryPhotoLibrary
 {
     public const COLLECTIONS = [
         'beauty' => [
+            'kids-hair' => [
+                'editorial' => ['id' => 36741613, 'title' => 'Детская стрижка в светлом салоне', 'author' => 'Usama Mazhar'],
+                'proof' => ['id' => 29317630, 'title' => 'Барбер аккуратно подстригает ребёнка', 'author' => 'Hashtag Melvin'],
+                'premium' => ['id' => 29317627, 'title' => 'Точная детская стрижка крупным планом', 'author' => 'Hashtag Melvin'],
+                'warm' => ['id' => 7697348, 'title' => 'Стилист укладывает волосы мальчика', 'author' => 'RDNE Stock project'],
+                'urban' => ['id' => 7697354, 'title' => 'Стрижка мальчика в салоне', 'author' => 'RDNE Stock project'],
+                'soft' => ['id' => 7697358, 'title' => 'Мальчик на стрижке у барбера', 'author' => 'RDNE Stock project'],
+                'promo' => ['id' => 7697356, 'title' => 'Подготовка ребёнка к стрижке', 'author' => 'RDNE Stock project'],
+                'seasonal' => ['id' => 19664862, 'title' => 'Стрижка ребёнка в спокойном интерьере', 'author' => 'Kawê Rodrigues'],
+            ],
             'tanning' => [
                 'editorial' => ['id' => 16645419, 'title' => 'Солярий и зона ухода — спокойные синие тона', 'author' => 'Boris Hamer'],
                 'proof' => ['id' => 14256895, 'title' => 'Процедура в вертикальном солярии, крупный план', 'author' => 'John (Giannis) Tekeridis'],
@@ -191,6 +201,16 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'auto' => [
+            'mechanic' => [
+                'editorial' => ['id' => 37809544, 'title' => 'Механик работает с чёрным автомобилем', 'author' => 'Bulat843'],
+                'proof' => ['id' => 37809582, 'title' => 'Осмотр автомобиля в тёмной мастерской', 'author' => 'Bulat843'],
+                'premium' => ['id' => 33559651, 'title' => 'Точный ремонт блока двигателя', 'author' => 'Auto Tech'],
+                'warm' => ['id' => 34011409, 'title' => 'Монохромный портрет автомеханика', 'author' => 'Yetkin Ağaç'],
+                'urban' => ['id' => 8478254, 'title' => 'Ремонт двигателя автомобиля в гараже', 'author' => 'Sergey Meshkov'],
+                'soft' => ['id' => 31759179, 'title' => 'Механики обслуживают внедорожник', 'author' => 'shoreline vehicles'],
+                'promo' => ['id' => 8470688, 'title' => 'Работа мастера под капотом', 'author' => 'Anastasia Shuraeva'],
+                'seasonal' => ['id' => 8470251, 'title' => 'Ремонт машины в приглушённом свете', 'author' => 'Anastasia Shuraeva'],
+            ],
             'tires' => [
                 'editorial' => ['id' => 34357281, 'title' => 'Шины и колесо в сдержанной серой композиции', 'author' => 'Erik Mclean'],
                 'proof' => ['id' => 34642048, 'title' => 'Мастер ремонтирует шину на станке', 'author' => 'Aayurdha Binoy'],
@@ -214,6 +234,16 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'sport' => [
+            'racket' => [
+                'editorial' => ['id' => 35694287, 'title' => 'Один теннисный мяч на спокойном корте', 'author' => 'Murun. E'],
+                'proof' => ['id' => 36531590, 'title' => 'Ракетка и мяч на однотонном корте', 'author' => 'Roberto Angel Rosas'],
+                'premium' => ['id' => 36258640, 'title' => 'Ракетка и мяч в сдержанной палитре', 'author' => 'Eddie O.'],
+                'warm' => ['id' => 36156260, 'title' => 'Инвентарь для тенниса в студии', 'author' => 'Florencia Pérez'],
+                'urban' => ['id' => 39905010, 'title' => 'Теннисный инвентарь на синем корте', 'author' => 'Doruk Aksel Anıl'],
+                'soft' => ['id' => 27152933, 'title' => 'Ракетки и мяч на песочном корте', 'author' => 'Ömer Derinyar'],
+                'promo' => ['id' => 24194315, 'title' => 'Корзина теннисных мячей на корте', 'author' => 'Maria Ravanelli'],
+                'seasonal' => ['id' => 32968890, 'title' => 'Макро теннисного мяча на ракетке', 'author' => 'Vinícius Vieira ft'],
+            ],
             'stretching' => [
                 'editorial' => ['id' => 35553892, 'title' => 'Стретчинг на реформере в студии 2026', 'author' => 'khezez | خزاز'],
                 'proof' => ['id' => 25596675, 'title' => 'Занятие растяжкой на пилатес-реформере', 'author' => 'Ahmet Kurt'],
