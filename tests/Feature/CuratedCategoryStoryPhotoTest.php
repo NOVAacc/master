@@ -66,6 +66,9 @@ class CuratedCategoryStoryPhotoTest extends TestCase
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'tanning'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('sport', 'stretching'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('education', 'driving'));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'kids-hair'));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('auto', 'mechanic'));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('sport', 'racket'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'tattoo'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'waxing'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('sport', 'trainer'));
@@ -80,8 +83,8 @@ class CuratedCategoryStoryPhotoTest extends TestCase
                 }
             }
         }
-        $this->assertCount(184, $allIds);
-        $this->assertCount(184, array_unique($allIds));
+        $this->assertCount(208, $allIds);
+        $this->assertCount(208, array_unique($allIds));
         $this->assertNull(CategoryStoryPhotoLibrary::get('beauty', 'salon', 'editorial'));
     }
 
