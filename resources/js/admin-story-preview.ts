@@ -10,7 +10,7 @@ type Config = {
   image_position: "top" | "center" | "bottom";
   image_horizontal: "left" | "center" | "right";
   image_zoom: number;
-  font: "system" | "serif" | "rounded";
+  font: "system" | "serif" | "rounded" | "elegant" | "classic" | "bold" | "mono";
   scale: number;
   shade: number;
   text_color: string;
