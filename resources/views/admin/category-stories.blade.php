@@ -3,7 +3,7 @@
 @section('content')
 <p><a href="{{ route('admin.categories') }}#industry-{{ $category['industry'] }}">← Все категории · {{ $category['industry_name'] }}</a></p>
 <h1>{{ $category['activity_name'] }}</h1>
-<p class="muted">Этап 2 из 3. Выберите один из 8 шаблонов для загрузки фотографии и настройки оформления. Сохранённые варианты пока не доступны мастерам — подключение на этапе 3.</p>
+<p class="muted">Выберите один из 8 шаблонов для настройки. Подобранные фотографии BOSH используются автоматически, а загруженные вами изображения имеют приоритет. Шаблоны уже доступны мастерам соответствующей категории.</p>
 <style>
 .blueprints{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:24px}
 .blueprint{border:1px solid #e9e9e9;background:white;border-radius:15px;overflow:hidden}.blueprint:hover{border-color:#999;text-decoration:none}.blueprint-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.blueprint-art::before{content:'';position:absolute;inset:0;background:linear-gradient(#0005,#0002 45%,#0009);z-index:1;opacity:0}.blueprint-art:has(.blueprint-img)::before{opacity:1}.blueprint-art:has(.blueprint-img){color:white}
@@ -36,7 +36,7 @@
 <div class="blueprint-info">
 <strong>{{ $item['name'] }}</strong>
 <p>{{ $item['description'] }}</p>
-<small>{{ $saved['has_photo'] ? 'Фотография загружена · изменить' : 'Без фотографии · настроить' }}</small>
+<small>{{ $saved['has_photo'] ? 'Своё фото · изменить' : ($saved['photo_origin'] === 'curated' ? 'Фото BOSH · можно заменить' : 'Без фотографии · настроить') }}</small>
 </div>
 </a>
 @endforeach
