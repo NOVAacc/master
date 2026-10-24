@@ -82,7 +82,7 @@ class CuratedCategoryStoryPhotoTest extends TestCase
         }
         $this->assertCount(184, $allIds);
         $this->assertCount(184, array_unique($allIds));
-        $this->assertNull(CategoryStoryPhotoLibrary::get('beauty', 'tanning', 'editorial'));
+        $this->assertNull(CategoryStoryPhotoLibrary::get('beauty', 'salon', 'editorial'));
     }
 
     public function test_curated_image_is_proxied_with_validation_and_cached_without_outbound_repeats(): void
