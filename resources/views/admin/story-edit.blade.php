@@ -48,6 +48,7 @@
     'theme' => $theme,
     'template' => $template,
     'photo_url' => $config['photo_url'],
+    'default_photo_url' => 'https://images.unsplash.com/'.$photo.'?auto=format&fit=crop&w=1080&h=1920&q=85',
     'image_url' => $config['image_url'],
     'image_position' => $config['image_position'],
     'font' => $config['font'],
