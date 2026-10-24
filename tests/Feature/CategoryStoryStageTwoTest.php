@@ -94,6 +94,63 @@ class CategoryStoryStageTwoTest extends TestCase
         $this->assertNull(json_decode(SiteSetting::whereKey('category-story.auto.tires.proof')->value('value'), true)['path']);
     }
 
+    public function test_master_receives_only_own_category_templates_and_private_photo(): void
+    {
+        Storage::fake('local');
+        $this->admin();
+        $editor = '/admin/categories/beauty/nails/stories/editorial';
+        $this->post($editor, [...$this->data(),
+            'image' => UploadedFile::fake()->image('nails.jpg', 1080, 1920),
+        ])->assertRedirect($editor);
+        $settings = json_decode(SiteSetting::whereKey('category-story.beauty.nails.editorial')->value('value'), true);
+        $version = pathinfo($settings['path'], PATHINFO_FILENAME);
+
+        auth('admin')->logout();
+        $user = User::factory()->create();
+        \App\Models\MasterProfile::create([
+            'user_id' => $user->id, 'slug' => 'story-category-master',
+            'display_name' => 'Nails', 'industry' => 'beauty', 'activity' => 'nails',
+            'booking_enabled' => true,
+        ]);
+        $this->actingAs($user);
+        $catalog = $this->getJson('/stories/category/catalog')->assertOk()
+            ->assertJsonPath('category.name', 'Ногтевой сервис')
+            ->assertJsonCount(8, 'templates')
+            ->assertJsonPath('templates.0.id', 'editorial');
+        $url = $catalog->json('templates.0.image_url');
+        $this->assertStringContainsString('/stories/category/beauty/nails/editorial/image/', $url);
+        $this->get($url)->assertOk()->assertHeader('X-Content-Type-Options', 'nosniff');
+        $this->get('/stories/category/beauty/barber/editorial/image/'.$version)->assertNotFound();
+
+        $this->postJson('/stories/style', ['template' => 'category:beauty:nails:editorial'])
+            ->assertOk()->assertJsonPath('template', 'category:beauty:nails:editorial');
+        $this->postJson('/stories/style', ['template' => 'category:beauty:barber:editorial'])
+            ->assertUnprocessable();
+
+        $other = User::factory()->create();
+        \App\Models\MasterProfile::create([
+            'user_id' => $other->id, 'slug' => 'story-other-master',
+            'display_name' => 'Tutor', 'industry' => 'education', 'activity' => 'tutoring',
+        ]);
+        $this->actingAs($other)->get('/stories/category/beauty/nails/editorial/image/'.$version)->assertNotFound();
+        $this->getJson('/stories/category/catalog')->assertJsonPath('category.name','Репетиторство')
+            ->assertJsonCount(8,'templates')->assertJsonPath('templates.0.image_url',null);
+    }
+
+    public function test_master_without_category_keeps_legacy_story_choices(): void
+    {
+        $user = User::factory()->create();
+        \App\Models\MasterProfile::create([
+            'user_id'=>$user->id,'slug'=>'story-no-category',
+            'display_name'=>'General',
+        ]);
+        $this->actingAs($user)->getJson('/stories/category/catalog')
+            ->assertOk()->assertJsonPath('category',null)->assertJsonCount(0,'templates');
+        $this->postJson('/stories/style', ['template'=>'category:beauty:nails:editorial'])
+            ->assertUnprocessable();
+        $this->getJson('/stories/templates/catalog')->assertOk()->assertJsonCount(8,'nails');
+    }
+
     public function test_invalid_parameters_are_rejected_before_writing(): void
     {
         $this->admin();
