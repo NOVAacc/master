@@ -75,6 +75,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/users/{user}', [\App\Http\Controllers\AdminController::class, 'destroyUser'])->whereNumber('user')->middleware('throttle:10,1')->name('users.destroy');
         Route::get('/stories', [\App\Http\Controllers\StoryTemplateAdminController::class, 'index'])->name('stories');
         Route::get('/categories', [\App\Http\Controllers\StoryTemplateAdminController::class, 'categories'])->name('categories');
+        Route::get('/categories/{industry}/{activity}/stories', [\App\Http\Controllers\StoryTemplateAdminController::class, 'categoryTemplates'])->name('categories.stories');
         Route::get('/stories/{theme}/{template}', [\App\Http\Controllers\StoryTemplateAdminController::class, 'edit'])->name('stories.edit');
         Route::post('/stories/{theme}/{template}', [\App\Http\Controllers\StoryTemplateAdminController::class, 'update'])
             ->middleware('throttle:20,1')->name('stories.update');

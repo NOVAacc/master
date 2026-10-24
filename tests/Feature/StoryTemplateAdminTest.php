@@ -42,6 +42,40 @@ class StoryTemplateAdminTest extends TestCase
         }
     }
 
+    public function test_stage_one_catalog_covers_all_categories_and_is_admin_only(): void
+    {
+        $this->get('/admin/categories/beauty/nails/stories')->assertRedirect('/admin/login');
+
+        $catalog = \App\Support\CategoryStoryCatalog::all();
+        $this->assertCount(6, $catalog);
+        $total = 0;
+        $keys = [];
+        foreach ($catalog as $industry => $activities) {
+            foreach ($activities as $activity => $entry) {
+                $total++;
+                $this->assertCount(8, $entry['templates']);
+                $this->assertSame(array_keys(\App\Support\CategoryStoryCatalog::ROLES), array_column($entry['templates'], 'id'));
+                foreach ($entry['templates'] as $template) {
+                    $this->assertSame('planned', $template['status']);
+                    $this->assertNull($template['image_url']);
+                    $keys[] = $template['key'];
+                }
+            }
+        }
+        $this->assertSame(56, $total);
+        $this->assertCount(448, $keys);
+        $this->assertCount(448, array_unique($keys));
+
+        $this->admin();
+        $this->get('/admin/categories')->assertOk()->assertSee('8 будущих шаблонов');
+        $this->get('/admin/categories/beauty/nails/stories')->assertOk()
+            ->assertSee('Чистый editorial')
+            ->assertSee('Свежий тренд')
+            ->assertSee('Этап 1 из 3');
+        $this->get('/admin/categories/education/languages/stories')->assertOk()->assertSee('Языковая школа');
+        $this->get('/admin/categories/beauty/not-a-category/stories')->assertNotFound();
+    }
+
     public function test_template_management_is_admin_only(): void
     {
         $this->get('/admin/stories')->assertRedirect('/admin/login');

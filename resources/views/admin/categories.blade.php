@@ -32,6 +32,7 @@
 <strong>{{ $activityName }}</strong>
 <div class="master-category-meta">
 <span class="master-category-total">{{ $counts[$industryId][$activityId] ?? 0 }} мастеров</span>
+<a href="{{ route('admin.categories.stories', ['industry' => $industryId, 'activity' => $activityId]) }}">8 будущих шаблонов</a>
 @if($theme)
 <a href="{{ route('admin.stories') }}#{{ $theme }}">Шаблоны сторис</a>
 @else
