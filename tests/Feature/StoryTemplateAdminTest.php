@@ -34,14 +34,18 @@ class StoryTemplateAdminTest extends TestCase
         $this->admin();
         $this->get('/admin/stories')->assertOk()->assertSee('Шаблоны сторис');
         $this->post('/admin/stories/hair/nude', [
-            'font'=>'serif','scale'=>110,'text_color'=>'#112233',
+            'font'=>'serif','scale'=>110,'text_color'=>'#112233','image_position'=>'bottom','image_horizontal'=>'right','image_zoom'=>130,'shade'=>20,
         ])->assertRedirect('/admin/stories/hair/nude');
         $this->assertDatabaseHas('site_settings', ['key'=>'story.hair.nude']);
         $this->actingAs(User::factory()->create(), 'web')
             ->getJson('/stories/templates/catalog')->assertOk()
             ->assertJsonPath('hair.nude.font','serif')
             ->assertJsonPath('hair.nude.scale',110)
-            ->assertJsonPath('hair.nude.text_color','#112233');
+            ->assertJsonPath('hair.nude.text_color','#112233')
+            ->assertJsonPath('hair.nude.image_position','bottom')
+            ->assertJsonPath('hair.nude.shade',20)
+            ->assertJsonPath('hair.nude.image_horizontal','right')
+            ->assertJsonPath('hair.nude.image_zoom',130);
     }
 
     public function test_invalid_template_and_font_are_rejected(): void
@@ -50,6 +54,10 @@ class StoryTemplateAdminTest extends TestCase
         $this->post('/admin/stories/hair/unknown', ['font'=>'system','scale'=>100])->assertNotFound();
         $this->post('/admin/stories/hair/nude', ['font'=>'javascript','scale'=>100])->assertSessionHasErrors('font');
         $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>999])->assertSessionHasErrors('scale');
+        $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>100,'image_position'=>'diagonal'])->assertSessionHasErrors('image_position');
+        $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>100,'shade'=>90])->assertSessionHasErrors('shade');
+        $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>100,'image_horizontal'=>'diagonal'])->assertSessionHasErrors('image_horizontal');
+        $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>100,'image_zoom'=>500])->assertSessionHasErrors('image_zoom');
         $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>100,'text_color'=>'bad'])->assertSessionHasErrors('text_color');
     }
 
@@ -77,11 +85,33 @@ class StoryTemplateAdminTest extends TestCase
         Storage::disk('local')->assertMissing($entry['path']);
         $this->get($url)->assertNotFound();
     }
+    public function test_complete_catalog_has_all_72_templates_with_usable_photo_references(): void
+    {
+        $this->admin();
+        $controller = \App\Http\Controllers\StoryTemplateAdminController::class;
+        $this->assertCount(9, $controller::COLLECTIONS);
+        $catalog = $controller::catalog();
+        $this->assertCount(9, $catalog);
+        foreach ($controller::COLLECTIONS as $theme => $collection) {
+            $this->assertCount(8, $collection['ids'], "Missing templates in {$theme}");
+            foreach ($collection['ids'] as $id) {
+                $this->assertArrayHasKey($id, $catalog[$theme]);
+                $this->assertArrayHasKey($id, $controller::LABELS[$theme]);
+                $this->assertArrayHasKey($id, $controller::DEFAULT_PHOTOS[$theme]);
+                $this->assertNotEmpty($catalog[$theme][$id]['photo_url']);
+                $this->assertSame('center', $catalog[$theme][$id]['image_position']);
+                $this->assertSame(100, $catalog[$theme][$id]['image_zoom']);
+            }
+        }
+    }
+
     public function test_nine_categories_have_one_template_edit_page_each(): void
     {
         $this->admin();
         $this->get('/admin/stories')->assertOk()->assertSee('Ресницы')->assertSee('Эпиляция')
             ->assertSee('/admin/stories/barber/classic')
+            ->assertSee('role="tablist"', false)
+            ->assertSee('Фото используется в')
             ->assertDontSee('name="image"', false);
         $this->get('/admin/stories/lashes/nude')->assertOk()
             ->assertSee('Лёгкий нюд')
