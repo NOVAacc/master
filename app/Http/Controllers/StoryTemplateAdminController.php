@@ -113,7 +113,7 @@ class StoryTemplateAdminController extends Controller
                     'image_position' => in_array($cfg['image_position'] ?? '', ['top', 'center', 'bottom'], true) ? $cfg['image_position'] : 'center',
                     'shade' => max(0, min(40, (int) ($cfg['shade'] ?? 0))),
                     'image_horizontal' => in_array($cfg['image_horizontal'] ?? '', ['left', 'center', 'right'], true) ? $cfg['image_horizontal'] : 'center',
-                    'image_zoom' => max(100, min(150, (int) ($cfg['image_zoom'] ?? 100))),
+                    'image_zoom' => 100,
                     'photo_url' => $path && Storage::disk('local')->exists($path)
                         ? route('stories.template.image', ['theme' => $theme, 'template' => $id, 'version' => pathinfo($path, PATHINFO_FILENAME)])
                         : 'https://images.unsplash.com/'.self::DEFAULT_PHOTOS[$theme][$id].'?auto=format&fit=crop&w=1080&h=1920&q=85',

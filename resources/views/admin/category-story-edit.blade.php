@@ -56,8 +56,6 @@
 @endforeach
 </div>
 
-<label for="image_zoom">Увеличение фото</label>
-<select name="image_zoom" id="image_zoom">@foreach([100,110,120,130,140,150] as $v)<option value="{{ $v }}" @selected($config['image_zoom']===$v)>{{ $v }}%</option>@endforeach</select>
 <label for="shade">Дополнительное затемнение</label>
 <select name="shade" id="shade">@foreach([0,10,20,30,40] as $v)<option value="{{ $v }}" @selected($config['shade']===$v)>{{ $v }}%</option>@endforeach</select>
 <button type="submit" class="primary" style="margin-top:23px">Сохранить шаблон</button>
@@ -93,7 +91,6 @@
   const x={left:'left',center:'center',right:'right'}[storedHorizontal]||'center';
   const y={top:'top',center:'center',bottom:'bottom'}[storedPosition]||'center';
   img.style.objectPosition=x+' '+y;
-  img.style.transform='scale('+Number(form.image_zoom.value)/100+')';
   const actual=color||getComputedStyle(preview).color;
   let rgb;
   if(/^#[0-9a-fA-F]{6}$/.test(actual)) rgb=[1,3,5].map(i=>parseInt(actual.slice(i,i+2),16));
