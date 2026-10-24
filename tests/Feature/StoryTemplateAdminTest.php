@@ -34,7 +34,7 @@ class StoryTemplateAdminTest extends TestCase
         $this->admin();
         $this->get('/admin/stories')->assertOk()->assertSee('Шаблоны сторис');
         $this->post('/admin/stories/hair/nude', [
-            'font'=>'serif','scale'=>110,'text_color'=>'#112233','image_position'=>'bottom',
+            'font'=>'serif','scale'=>110,'text_color'=>'#112233','image_position'=>'bottom','shade'=>20,
         ])->assertRedirect('/admin/stories/hair/nude');
         $this->assertDatabaseHas('site_settings', ['key'=>'story.hair.nude']);
         $this->actingAs(User::factory()->create(), 'web')
@@ -42,7 +42,8 @@ class StoryTemplateAdminTest extends TestCase
             ->assertJsonPath('hair.nude.font','serif')
             ->assertJsonPath('hair.nude.scale',110)
             ->assertJsonPath('hair.nude.text_color','#112233')
-            ->assertJsonPath('hair.nude.image_position','bottom');
+            ->assertJsonPath('hair.nude.image_position','bottom')
+            ->assertJsonPath('hair.nude.shade',20);
     }
 
     public function test_invalid_template_and_font_are_rejected(): void
@@ -52,6 +53,7 @@ class StoryTemplateAdminTest extends TestCase
         $this->post('/admin/stories/hair/nude', ['font'=>'javascript','scale'=>100])->assertSessionHasErrors('font');
         $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>999])->assertSessionHasErrors('scale');
         $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>100,'image_position'=>'diagonal'])->assertSessionHasErrors('image_position');
+        $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>100,'shade'=>90])->assertSessionHasErrors('shade');
         $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>100,'text_color'=>'bad'])->assertSessionHasErrors('text_color');
     }
 
