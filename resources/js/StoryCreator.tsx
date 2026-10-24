@@ -17,6 +17,19 @@ const fontFace=(font:TemplateSetting["font"]|undefined)=>({
   mono: '"Courier New", monospace',
 }[font??"system"] ?? 'system-ui, sans-serif');
 const photoSource=(catalog:StoryCatalog,theme:"nails"|"hair"|"brows"|ExtraTheme,id:string,fallback:string)=>catalog[theme]?.[id]?.image_url||fallback;
+type CategoryTemplate = TemplateSetting & { id: string; name: string; description: string; image_url: string | null; };
+type CategoryResponse = { category: { industry: string; activity: string; name: string } | null; templates: CategoryTemplate[] };
+const categoryLook: Record<string,{bg:string; end:string; fg:string; action:string; actionText:string}>={
+ editorial:{bg:"#F4F0E9",end:"#DCD1C5",fg:"#171717",action:"#171717",actionText:"#FFFFFF"},
+ proof:{bg:"#27333A",end:"#6B7779",fg:"#FFFFFF",action:"#FFFFFF",actionText:"#27333A"},
+ premium:{bg:"#171514",end:"#524236",fg:"#FFF5E7",action:"#E3C58F",actionText:"#171514"},
+ warm:{bg:"#EDD4BD",end:"#C98979",fg:"#171717",action:"#171717",actionText:"#FFFFFF"},
+ urban:{bg:"#1D1D27",end:"#805B6F",fg:"#FFFFFF",action:"#FFFFFF",actionText:"#202027"},
+ soft:{bg:"#FAEDF0",end:"#DCD3D2",fg:"#303038",action:"#303038",actionText:"#FFFFFF"},
+ promo:{bg:"#9D1A36",end:"#DF575C",fg:"#FFFFFF",action:"#FFFFFF",actionText:"#9D1A36"},
+ seasonal:{bg:"#526D5B",end:"#B8A07A",fg:"#FFFFFF",action:"#FFFFFF",actionText:"#314539"},
+};
+
 const palettes: Record<Style, { name: string; bg: string; fg: string; sub: string; action: string; actionText: string }> = {
     minimal: { name: "Минимализм", bg: "#F5F4F1", fg: "#202020", sub: "#76716D", action: "#202020", actionText: "#FFFFFF" },
     dark: { name: "Графит", bg: "#1B1D22", fg: "#FFFFFF", sub: "#B8BAC0", action: "#FFFFFF", actionText: "#1B1D22" },
@@ -25,8 +38,8 @@ const palettes: Record<Style, { name: string; bg: string; fg: string; sub: strin
     premium: { name: "Премиум", bg: "#26342D", fg: "#F3EAD7", sub: "#C9BBA3", action: "#DDC390", actionText: "#26342D" },
 };
 
-type Theme = "nails"|"hair"|"barber"|"brows"|"lashes"|"makeup"|"massage"|"skin"|"smooth"|"general";
-const themes: Record<Theme,string> = {nails:"Маникюр",hair:"Волосы",barber:"Барбер",brows:"Брови",lashes:"Ресницы",makeup:"Макияж",massage:"Массаж",skin:"Косметология",smooth:"Эпиляция",general:"Универсальный"};
+type Theme = "nails"|"hair"|"barber"|"brows"|"lashes"|"makeup"|"massage"|"skin"|"smooth"|"general"|"category";
+const themes: Record<Theme,string> = {category:"Моя категория",nails:"Маникюр",hair:"Волосы",barber:"Барбер",brows:"Брови",lashes:"Ресницы",makeup:"Макияж",massage:"Массаж",skin:"Косметология",smooth:"Эпиляция",general:"Универсальный"};
 const rules: [Theme,string[]][]=[
  ["nails",["маникюр","педикюр","ногт","nail","шеллак","гель лак"]],
  ["brows",["бров","brow","окрашивание бровей","коррекция бровей"]],
@@ -47,7 +60,7 @@ export function storyTheme(service:Service,master:Master):Theme {
 }
 function drawArt(ctx:CanvasRenderingContext2D,theme:Theme){
  ctx.save();ctx.translate(725,710);ctx.globalAlpha=.36;
- const c:Record<Theme,string>={nails:"#C73855",hair:"#65413D",barber:"#353C44",brows:"#6D453D",makeup:"#B84963",massage:"#A27868",skin:"#BB8B7A",lashes:"#905B71",smooth:"#A4817E",general:"#A5636A"};
+ const c:Record<Theme,string>={category:"#754E5D",nails:"#C73855",hair:"#65413D",barber:"#353C44",brows:"#6D453D",makeup:"#B84963",massage:"#A27868",skin:"#BB8B7A",lashes:"#905B71",smooth:"#A4817E",general:"#A5636A"};
  ctx.fillStyle=c[theme];ctx.strokeStyle=c[theme];ctx.lineCap="round";ctx.lineJoin="round";
  if(theme==="nails"){
   ctx.rotate(-.22);ctx.beginPath();ctx.moveTo(-150,180);ctx.lineTo(-125,-95);ctx.quadraticCurveTo(-118,-156,-87,-143);ctx.quadraticCurveTo(-63,-138,-70,-102);ctx.lineTo(-72,27);ctx.lineTo(-38,-205);ctx.quadraticCurveTo(-28,-253,5,-235);ctx.quadraticCurveTo(24,-226,17,-190);ctx.lineTo(-7,29);ctx.lineTo(46,-219);ctx.quadraticCurveTo(60,-267,91,-244);ctx.quadraticCurveTo(110,-230,99,-195);ctx.lineTo(55,34);ctx.lineTo(113,-149);ctx.quadraticCurveTo(128,-186,156,-163);ctx.quadraticCurveTo(171,-147,157,-117);ctx.lineTo(87,100);ctx.quadraticCurveTo(186,29,214,77);ctx.quadraticCurveTo(232,109,196,140);ctx.lineTo(106,236);ctx.quadraticCurveTo(-45,292,-150,180);ctx.fill();
@@ -233,9 +246,58 @@ function wrappedText(ctx: CanvasRenderingContext2D, value: string, maxWidth: num
     }
     return clipped;
 }
-export async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId, hairTemplate: HairTemplateId, browTemplate: BrowTemplateId, extraId:string, catalog:StoryCatalog) {
+async function drawCategoryStory(canvas:HTMLCanvasElement,master:Master,service:Service,date:string,time:string,link:string,categoryName:string,template:CategoryTemplate){
+ const ctx=canvas.getContext("2d");if(!ctx)throw new Error("Canvas недоступен");
+ const design=categoryLook[template.id]||categoryLook.editorial;
+ const g=ctx.createLinearGradient(0,0,1080,1920);
+ g.addColorStop(0,design.bg);g.addColorStop(1,design.end);
+ ctx.fillStyle=g;ctx.fillRect(0,0,1080,1920);
+ if(template.image_url){
+  const img=new Image();img.crossOrigin="anonymous";img.src=template.image_url;
+  try{
+   await img.decode();
+   coverImage(ctx,img,0,0,1080,1920,template.image_position,template.image_horizontal,template.image_zoom);
+  }catch{ /* Retain the category's readable gradient if the uploaded image is unavailable. */ }
+ }
+ const fg=template.text_color&&/^#[A-Fa-f0-9]{6}$/.test(template.text_color)?template.text_color:design.fg;
+ const rgb=[1,3,5].map(i=>parseInt(fg.slice(i,i+2),16));
+ const light=(rgb[0]*299+rgb[1]*587+rgb[2]*114)/1000>145;
+ const wash=ctx.createLinearGradient(0,0,0,1920);
+ const dark=light?"0,0,0":"255,255,255";
+ wash.addColorStop(0,`rgba(${dark},.57)`);
+ wash.addColorStop(.5,`rgba(${dark},.32)`);
+ wash.addColorStop(1,`rgba(${dark},.67)`);
+ if(template.image_url){ctx.fillStyle=wash;ctx.fillRect(0,0,1080,1920);}
+ const shade=Math.min(40,Math.max(0,Number(template.shade)||0));
+ if(shade){ctx.fillStyle=`rgba(${dark},${shade/100})`;ctx.fillRect(0,0,1080,1920);}
+ const font=fontFace(template.font),size=Math.max(80,Math.min(120,Number(template.scale)||100))/100;
+ ctx.textBaseline="top";ctx.fillStyle=fg;
+ ctx.font=`bold 46px ${font}`;
+ ctx.fillText("BOSH",108,122);
+ ctx.font=`500 36px ${font}`;
+ wrappedText(ctx,master.display_name,840,2).forEach((line,i)=>ctx.fillText(line,108,225+i*46,864));
+ ctx.font=`600 38px ${font}`;
+ ctx.fillText("ЕСТЬ СВОБОДНОЕ ВРЕМЯ",108,560,864);
+ ctx.font=`bold ${Math.round(92*size)}px ${font}`;
+ wrappedText(ctx,categoryName,850,3).forEach((line,i)=>ctx.fillText(line,108,670+i*112,864));
+ ctx.font=`600 50px ${font}`;
+ wrappedText(ctx,service.name,850,2).forEach((line,i)=>ctx.fillText(line,108,1018+i*64,864));
+ ctx.font=`bold 136px ${font}`;
+ ctx.fillText(time,108,1220,864);
+ const niceDate=new Date(date+"T12:00:00Z").toLocaleDateString("ru-RU",{timeZone:"UTC",day:"numeric",month:"long"});
+ ctx.font=`500 46px ${font}`;
+ ctx.fillText(niceDate+" · "+service.price_som.toLocaleString("ru-RU")+" сом",108,1395,864);
+ ctx.fillStyle=design.action;
+ ctx.beginPath();ctx.roundRect(108,1560,864,112,55);ctx.fill();
+ ctx.fillStyle=design.actionText;ctx.font=`bold 46px ${font}`;
+ ctx.fillText("Записаться",160,1590,760);
+ ctx.fillStyle=fg;ctx.font=`500 30px ${font}`;
+ const url=new URL(link);ctx.fillText(url.host+url.pathname,108,1740,864);
+}
+export async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId, hairTemplate: HairTemplateId, browTemplate: BrowTemplateId, extraId:string, catalog:StoryCatalog,categoryTemplate?:CategoryTemplate,categoryName?:string) {
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
+    if(theme==="category" && categoryTemplate){await drawCategoryStory(canvas,master,service,date,time,link,categoryName||"Услуги",categoryTemplate);return;}
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Браузер не поддерживает создание изображений.");
     const design = nailTemplates.find(t=>t.id===nailTemplate)??nailTemplates[0];
@@ -323,9 +385,15 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const [busy, setBusy] = useState(false);
     const [mobileStoryView, setMobileStoryView] = useState<"edit" | "preview">("edit");
     const [catalog, setCatalog] = useState<StoryCatalog>({});
+    const [categoryCatalog,setCategoryCatalog]=useState<CategoryResponse>({category:null,templates:[]});
+    useEffect(()=>{let live=true;axios.get<CategoryResponse>("/stories/category/catalog").then(({data})=>{if(live)setCategoryCatalog(data);}).catch(()=>{/* Legacy story collections remain usable. */});return()=>{live=false;};},[master.industry,master.activity]);
     const [prepared, setPrepared] = useState<File | null>(null);
     const canvas = useRef<HTMLCanvasElement>(null);
     const [themeChoice,setThemeChoice]=useState<Theme|null>(null);
+    const [categorySelection,setCategorySelection]=useState<string>(()=>{
+      const parts=master.story_template?.split(":");
+      return parts?.[0]==="category"&&parts[1]===master.industry&&parts[2]===master.activity?parts[3]:"editorial";
+    });
     const [nailTemplate,setNailTemplate]=useState<NailTemplateId>(()=> master.story_template?.startsWith("bosh-nail-trends:") ? (master.story_template.split(":")[1] as NailTemplateId) : "nude");
     const [hairTemplate,setHairTemplate]=useState<HairTemplateId>(()=> master.story_template?.startsWith(HAIR_COLLECTION.slug+":") && hairTemplates.some(t=>t.id===master.story_template?.split(":")[1]) ? master.story_template.split(":")[1] as HairTemplateId : "nude");
     const [browTemplate,setBrowTemplate]=useState<BrowTemplateId>(()=>master.story_template?.startsWith(BROW_COLLECTION.slug+":") && browTemplates.some(t=>t.id===master.story_template?.split(":")[1]) ? master.story_template.split(":")[1] as BrowTemplateId : "soft-pink");
@@ -342,7 +410,9 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const [savedTemplate,setSavedTemplate]=useState<string|null>(master.story_template??null);
     const renderSequence=useRef(0);
     const service = activeServices.find(s => s.id === serviceId);
-    const theme=themeChoice ?? (service ? storyTheme(service,master) : "general");
+    const hasCategory=!!(categoryCatalog.category && categoryCatalog.category.industry===master.industry && categoryCatalog.category.activity===master.activity && categoryCatalog.templates.length);
+    const theme=themeChoice ?? (hasCategory?"category":service?storyTheme(service,master):"general");
+    const categoryTemplate=hasCategory?categoryCatalog.templates.find(t=>t.id===categorySelection)??categoryCatalog.templates[0]:undefined;
     const extraId=isExtraTheme(theme)?extraSelections[theme]??extraCollections[theme].templates[0].id:"";
     useEffect(()=>setThemeChoice(null),[serviceId]);
     const link = new URL(`/m/${encodeURIComponent(master.slug)}?date=${encodeURIComponent(date)}&service=${serviceId}&time=${encodeURIComponent(time)}`, window.location.origin).toString();
@@ -355,11 +425,11 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
             const preview=canvas.current;
             // A temporary canvas prevents late image loads from overwriting a newer template.
             const offscreen=document.createElement("canvas");
-            void drawStory(offscreen,master,service,date,time,style,link,theme,nailTemplate,hairTemplate,browTemplate,extraId,catalog)
+            void drawStory(offscreen,master,service,date,time,style,link,theme,nailTemplate,hairTemplate,browTemplate,extraId,catalog,categoryTemplate,categoryCatalog.category?.name)
                 .then(()=>{if(sequence!==renderSequence.current)return;const c=preview.getContext("2d");if(c){preview.width=offscreen.width;preview.height=offscreen.height;c.drawImage(offscreen,0,0);}})
                 .catch(()=>{if(sequence===renderSequence.current)setError("Не удалось отобразить сторис.");});
         }
-    }, [master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog]);
+    }, [master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, categoryCatalog.category?.name]);
     useEffect(() => {
         const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
         window.addEventListener("keydown", handleKey);
@@ -389,7 +459,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         try {
             const response = await axios.get<{available: boolean; reason?: string}>("/stories/availability", {params: {service: service.id, date, time}});
             if (!response.data.available) throw new Error(response.data.reason || "Это время сейчас недоступно.");
-            await drawStory(canvas.current, master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog);
+            await drawStory(canvas.current, master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, categoryCatalog.category?.name);
             const blob = await toBlob(canvas.current);
             if(blob.size===0) throw new Error("PNG пустой.");
             setPrepared(new File([blob], `bosh-${date}-${time.replace(":", "-")}.png`, { type: "image/png" }));
@@ -432,8 +502,21 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                         <label>Дата<input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
                         <label>Время<input type="time" step="1800" value={time} onChange={e => setTime(e.target.value)} /></label>
                     </div>
-                    <label>Тематика изображения<select value={theme} onChange={e=>setThemeChoice(e.target.value as Theme)}>{(Object.keys(themes) as Theme[]).map(key=><option key={key} value={key}>{themes[key]}</option>)}</select></label>
-                    <p className="muted small">Тематика подобрана по услуге автоматически. Можно изменить.</p>
+                    <label>Тематика изображения<select value={theme} onChange={e=>setThemeChoice(e.target.value as Theme)}>{(Object.keys(themes) as Theme[]).filter(key=>key!=="category"||hasCategory).map(key=><option key={key} value={key}>{key==="category"?categoryCatalog.category?.name:themes[key]}</option>)}</select></label>
+                    <p className="muted small">{hasCategory?"По умолчанию выбрана категория вашего профиля. Старые подборки доступны вручную.":"Тематика подобрана по услуге автоматически. Можно изменить."}</p>
+                    {theme==="category" && hasCategory && <div>
+                        <p className="muted small">{categoryCatalog.category?.name} · 8 вариантов оформления</p>
+                        <div className="story-nail-templates" role="group" aria-label="Шаблоны моей категории">
+                        {categoryCatalog.templates.map(t=><button type="button" key={t.id} aria-pressed={categoryTemplate?.id===t.id}
+                          className={categoryTemplate?.id===t.id?"story-nail-template selected":"story-nail-template"}
+                          disabled={savingTemplate}
+                          onClick={()=>{setCategorySelection(t.id);void saveTemplate("category:"+categoryCatalog.category!.industry+":"+categoryCatalog.category!.activity,t.id);}}>
+                          <span className="story-nail-thumb" style={{backgroundImage:t.image_url?`linear-gradient(180deg,transparent,rgba(0,0,0,.45)),url("${t.image_url}")`:undefined,backgroundColor:categoryLook[t.id]?.bg||"#e9e5df"}}/>
+                          <span>{t.name}</span>
+                        </button>)}
+                        </div>
+                        <p className="muted small" role="status">{savingTemplate?"Сохраняем шаблон…":savedTemplate==="category:"+categoryCatalog.category?.industry+":"+categoryCatalog.category?.activity+":"+categoryTemplate?.id?"Шаблон сохранён":""}</p>
+                    </div>}
                     {theme==="nails" && <div className="story-nail-templates" role="group" aria-label="Маникюрные шаблоны">
                         {nailTemplates.map(t=><button type="button" key={t.id} aria-pressed={nailTemplate===t.id} className={nailTemplate===t.id?"story-nail-template selected":"story-nail-template"} onClick={()=>{setNailTemplate(t.id);void saveTemplate("bosh-nail-trends",t.id);}}>
                             <span className="story-nail-thumb" style={{backgroundImage:`linear-gradient(180deg,transparent,rgba(0,0,0,.45)),url("${photoSource(catalog,"nails",t.id,"https://images.unsplash.com/"+t.photo+"?auto=format&fit=crop&w=160&h=260&q=55")}")`}}/>
