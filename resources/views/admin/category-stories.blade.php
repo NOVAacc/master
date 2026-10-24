@@ -3,10 +3,10 @@
 @section('content')
 <p><a href="{{ route('admin.categories') }}#industry-{{ $category['industry'] }}">← Все категории · {{ $category['industry_name'] }}</a></p>
 <h1>{{ $category['activity_name'] }}</h1>
-<p class="muted">Этап 1 из 3. Для этой категории подготовлено 8 направлений оформления. Это заготовки, пока без фотографий и без публикации в кабинете мастера. Редактирование изображений будет добавлено на этапе 2.</p>
+<p class="muted">Этап 2 из 3. Выберите один из 8 шаблонов для загрузки фотографии и настройки оформления. Сохранённые варианты пока не доступны мастерам — подключение на этапе 3.</p>
 <style>
 .blueprints{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:24px}
-.blueprint{border:1px solid #e9e9e9;background:white;border-radius:15px;overflow:hidden}
+.blueprint{border:1px solid #e9e9e9;background:white;border-radius:15px;overflow:hidden}.blueprint:hover{border-color:#999;text-decoration:none}.blueprint-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.blueprint-art::before{content:'';position:absolute;inset:0;background:linear-gradient(#0005,#0002 45%,#0009);z-index:1;opacity:0}.blueprint-art:has(.blueprint-img)::before{opacity:1}.blueprint-art:has(.blueprint-img){color:white}
 .blueprint-art{aspect-ratio:9/12;padding:18px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
 .blueprint-art span{position:relative;z-index:1;font-size:11px;font-weight:750;letter-spacing:.04em}
 .blueprint-art strong{position:relative;z-index:1;font-size:25px;line-height:1.05;max-width:94%;overflow-wrap:anywhere}
@@ -25,8 +25,10 @@
 </style>
 <div class="blueprints">
 @foreach($category['templates'] as $item)
-<article class="blueprint">
+@php($saved = $designs[$item['id']])
+<a class="blueprint" href="{{ route('admin.categories.stories.edit', ['industry'=>$category['industry'],'activity'=>$category['activity'],'role'=>$item['id']]) }}">
 <div class="blueprint-art blueprint-{{ $item['id'] }}" aria-hidden="true">
+@if($saved['image_url'])<img class="blueprint-img" src="{{ $saved['image_url'] }}" alt="" loading="lazy">@endif
 <span>BOSH</span>
 <strong>{{ $category['activity_name'] }}</strong>
 <span>16:30 · Запись открыта</span>
@@ -34,9 +36,9 @@
 <div class="blueprint-info">
 <strong>{{ $item['name'] }}</strong>
 <p>{{ $item['description'] }}</p>
-<small>Заготовка · фото будет на этапе 2</small>
+<small>{{ $saved['has_photo'] ? 'Фотография загружена · изменить' : 'Без фотографии · настроить' }}</small>
 </div>
-</article>
+</a>
 @endforeach
 </div>
 @endsection

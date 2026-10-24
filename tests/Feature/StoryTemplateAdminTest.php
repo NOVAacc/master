@@ -71,7 +71,7 @@ class StoryTemplateAdminTest extends TestCase
         $this->get('/admin/categories/beauty/nails/stories')->assertOk()
             ->assertSee('Чистый editorial')
             ->assertSee('Свежий тренд')
-            ->assertSee('Этап 1 из 3');
+            ->assertSee('Этап 2 из 3');
         $this->get('/admin/categories/education/languages/stories')->assertOk()->assertSee('Языковая школа');
         $this->get('/admin/categories/beauty/not-a-category/stories')->assertNotFound();
     }
