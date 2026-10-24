@@ -3,14 +3,14 @@
 @section('content')
 <p><a href="{{ route('admin.categories.stories', ['industry'=>$category['industry'], 'activity'=>$category['activity']]) }}">← {{ $category['activity_name'] }} · все 8 шаблонов</a></p>
 <h1>{{ $concept['name'] }}</h1>
-<p class="muted">Шаблон «{{ $category['activity_name'] }}». Редактируется отдельно. Сохраняется только в админке; мастера получат доступ после этапа 3.</p>
+<p class="muted">Шаблон «{{ $category['activity_name'] }}». Редактируется отдельно. После сохранения изменения сразу доступны мастерам этой категории.</p>
 <style>
 .category-edit-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(210px,290px);gap:26px;max-width:850px;align-items:start}
 .category-edit-form select{width:100%;padding:11px;border:1px solid #dedede;border-radius:11px;background:#fff}
 .category-edit-form input[type=checkbox]{width:auto}.category-edit-form label{margin:15px 0 6px}
 .category-story-preview{width:100%;aspect-ratio:9/16;border-radius:16px;position:relative;overflow:hidden;background:#f2ebe6;color:#171717;box-shadow:0 5px 22px #00000018}
 .category-story-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:center}
-.category-story-tint{position:absolute;inset:0;background:#000;opacity:0}
+.category-story-tint{position:absolute;inset:0;pointer-events:none}
 .category-story-copy{position:absolute;z-index:2;inset:9% 9% 8%;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
 .category-story-copy .brand{font-weight:800;font-size:clamp(12px,1.8vw,17px);letter-spacing:.02em}
 .category-story-copy .center strong{display:block;font-size:clamp(21px,3.5vw,33px);line-height:1.08;overflow-wrap:anywhere}
@@ -48,7 +48,7 @@
 <select name="font" id="font">@foreach($fonts as $id=>$name)<option value="{{ $id }}" @selected($config['font']===$id)>{{ $name }}</option>@endforeach</select>
 <label for="scale">Размер заголовка</label>
 <select name="scale" id="scale">@foreach([80,90,100,110,120] as $v)<option value="{{ $v }}" @selected($config['scale']===$v)>{{ $v }}%</option>@endforeach</select>
-<label for="text_color">Цвет текста</label>
+<label for="text_color">Цвет текста · готовые палитры</label>
 <select name="text_color" id="text_color">@foreach($colors as $hex=>$name)<option value="{{ $hex }}" @selected($config['text_color']===$hex)>{{ $name }}</option>@endforeach</select>
 <div class="category-swatches" aria-label="Цвет текста">
 @foreach($colors as $hex=>$name)
@@ -95,7 +95,16 @@
   const y={top:'top',center:'center',bottom:'bottom'}[form.image_position.value]||'center';
   img.style.objectPosition=x+' '+y;
   img.style.transform='scale('+Number(form.image_zoom.value)/100+')';
-  tint.style.opacity=String(Number(form.shade.value)/100);
+  const actual=color||getComputedStyle(preview).color;
+  let rgb;
+  if(/^#[0-9a-fA-F]{6}$/.test(actual)) rgb=[1,3,5].map(i=>parseInt(actual.slice(i,i+2),16));
+  else rgb=(actual.match(/\d+/g)||['255','255','255']).slice(0,3).map(Number);
+  const isLight=(rgb[0]*299+rgb[1]*587+rgb[2]*114)/1000>145;
+  const tintBase=isLight?'0,0,0':'255,255,255';
+  const strength=Number(form.shade.value)/100;
+  const photoVisible=Boolean(form.image.files.length)||(!form.remove_image.checked&&Boolean(original));
+  const top=photoVisible?.66:0,mid=photoVisible?.48:0,bottom=photoVisible?.75:0;
+  tint.style.background='linear-gradient(to bottom,rgba('+tintBase+','+(top+strength*(1-top))+'),rgba('+tintBase+','+(mid+strength*(1-mid))+') 50%,rgba('+tintBase+','+(bottom+strength*(1-bottom))+'))';
   const hasCustom=Boolean(form.image.files.length);
   const shown=hasCustom||(!form.remove_image.checked&&Boolean(original));
   img.hidden=!shown;
