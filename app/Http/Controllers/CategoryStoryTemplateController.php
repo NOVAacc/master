@@ -42,7 +42,7 @@ class CategoryStoryTemplateController extends Controller
         $exists = $path !== null && Storage::disk('local')->exists($path);
         return [
             'font' => array_key_exists($saved['font'] ?? '', StoryTemplateAdminController::FONTS) ? $saved['font'] : $default['font'],
-            'text_color' => in_array($saved['text_color'] ?? '', array_keys(StoryTemplateAdminController::TEXT_COLORS), true) ? $saved['text_color'] : $default['text_color'],
+            'text_color' => in_array($saved['text_color'] ?? $default['text_color'], array_keys(StoryTemplateAdminController::TEXT_COLORS), true) ? ($saved['text_color'] ?? $default['text_color']) : $default['text_color'],
             'scale' => max(80, min(120, (int) ($saved['scale'] ?? 100))),
             'shade' => max(0, min(40, (int) ($saved['shade'] ?? $default['shade']))),
             'image_position' => in_array($saved['image_position'] ?? '', ['top', 'center', 'bottom'], true) ? $saved['image_position'] : 'center',
