@@ -48,6 +48,20 @@ class CuratedCategoryStoryPhotoTest extends TestCase
             $ids[] = $photo['id'];
         }
         $this->assertCount(8, array_unique($ids));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'barber'));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('sport', 'yoga'));
+        $allIds = [];
+        foreach (CategoryStoryPhotoLibrary::COLLECTIONS as $industry => $categories) {
+            foreach ($categories as $activity => $photos) {
+                $this->assertCount(8, $photos, "Missing roles for {$industry}/{$activity}");
+                foreach (array_keys(\App\Support\CategoryStoryCatalog::ROLES) as $role) {
+                    $this->assertNotNull(CategoryStoryPhotoLibrary::get($industry, $activity, $role));
+                    $allIds[] = CategoryStoryPhotoLibrary::get($industry, $activity, $role)['id'];
+                }
+            }
+        }
+        $this->assertCount(24, $allIds);
+        $this->assertCount(24, array_unique($allIds));
         $this->assertNull(CategoryStoryPhotoLibrary::get('medicine', 'dentistry', 'editorial'));
     }
 
