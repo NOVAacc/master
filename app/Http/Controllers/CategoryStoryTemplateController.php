@@ -86,8 +86,8 @@ class CategoryStoryTemplateController extends Controller
             'text_color' => ['nullable', Rule::in(array_keys(StoryTemplateAdminController::TEXT_COLORS))],
             'scale' => ['required', 'integer', 'between:80,120'],
             'shade' => ['required', 'integer', 'between:0,40'],
-            'image_position' => ['required', Rule::in(['top','center','bottom'])],
-            'image_horizontal' => ['required', Rule::in(['left','center','right'])],
+            'image_position' => ['sometimes', Rule::in(['top','center','bottom'])],
+            'image_horizontal' => ['sometimes', Rule::in(['left','center','right'])],
             'image_zoom' => ['required', 'integer', 'between:100,150'],
         ]);
         $key = self::key($industry, $activity, $role);
@@ -108,7 +108,8 @@ class CategoryStoryTemplateController extends Controller
         $value = [
             'font' => $data['font'], 'text_color' => $data['text_color'] ?? '',
             'scale' => (int) $data['scale'], 'shade' => (int) $data['shade'],
-            'image_position' => $data['image_position'], 'image_horizontal' => $data['image_horizontal'],
+            'image_position' => $data['image_position'] ?? (is_array($saved) ? ($saved['image_position'] ?? 'center') : 'center'),
+            'image_horizontal' => $data['image_horizontal'] ?? (is_array($saved) ? ($saved['image_horizontal'] ?? 'center') : 'center'),
             'image_zoom' => (int) $data['image_zoom'], 'path' => $path,
         ];
         try {

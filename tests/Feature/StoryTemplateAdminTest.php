@@ -103,6 +103,21 @@ class StoryTemplateAdminTest extends TestCase
             ->assertJsonPath('hair.nude.image_zoom',130);
     }
 
+    public function test_legacy_position_controls_are_hidden_but_existing_crop_is_kept(): void
+    {
+        $this->admin();
+        $url = '/admin/stories/hair/nude';
+        $this->post($url, ['font'=>'serif', 'scale'=>110, 'image_position'=>'bottom', 'image_horizontal'=>'right', 'image_zoom'=>130])->assertRedirect($url);
+        $page = $this->get($url)->assertOk();
+        $page->assertDontSee('name="image_position"', false)->assertDontSee('name="image_horizontal"', false)
+            ->assertDontSee('Кадрирование фотографии')->assertDontSee('Смещение фотографии');
+        $this->post($url, ['font'=>'serif', 'scale'=>100, 'image_zoom'=>110])->assertRedirect($url);
+        $this->assertDatabaseHas('site_settings', ['key'=>'story.hair.nude']);
+        $settings = json_decode(\App\Models\SiteSetting::whereKey('story.hair.nude')->value('value'),true);
+        $this->assertSame('bottom', $settings['image_position']);
+        $this->assertSame('right', $settings['image_horizontal']);
+    }
+
     public function test_invalid_template_and_font_are_rejected(): void
     {
         $this->admin();

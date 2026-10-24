@@ -55,10 +55,7 @@
 <button type="button" data-color="{{ $hex }}" title="{{ $name }}" aria-label="{{ $name }}" aria-pressed="{{ $config['text_color']===$hex ? 'true':'false' }}"><span style="{{ $hex ? 'background:'.$hex : 'background:conic-gradient(#fff 0 25%,#222 0 50%,#fff 0 75%,#222 0)' }}"></span></button>
 @endforeach
 </div>
-<label for="image_position">Вертикальное положение фотографии</label>
-<select name="image_position" id="image_position">@foreach(['top'=>'Верх','center'=>'Центр','bottom'=>'Низ'] as $v=>$name)<option value="{{ $v }}" @selected($config['image_position']===$v)>{{ $name }}</option>@endforeach</select>
-<label for="image_horizontal">Горизонтальное положение</label>
-<select name="image_horizontal" id="image_horizontal">@foreach(['left'=>'Слева','center'=>'Центр','right'=>'Справа'] as $v=>$name)<option value="{{ $v }}" @selected($config['image_horizontal']===$v)>{{ $name }}</option>@endforeach</select>
+
 <label for="image_zoom">Увеличение фото</label>
 <select name="image_zoom" id="image_zoom">@foreach([100,110,120,130,140,150] as $v)<option value="{{ $v }}" @selected($config['image_zoom']===$v)>{{ $v }}%</option>@endforeach</select>
 <label for="shade">Дополнительное затемнение</label>
@@ -84,6 +81,8 @@
  const form=document.getElementById('categoryStoryForm'),img=document.getElementById('storyPhoto'),preview=document.getElementById('storyPreview');
  const copy=document.getElementById('storyCopy'),heading=document.getElementById('storyHeading'),tint=document.getElementById('storyTint');
  const original=img.getAttribute('src')||'';
+ const storedPosition=@json($config['image_position']);
+ const storedHorizontal=@json($config['image_horizontal']);
  let blob=null;
  const fonts={system:'system-ui,sans-serif',serif:'Georgia,serif',rounded:'Trebuchet MS,Arial,sans-serif',elegant:'Palatino,Georgia,serif',classic:'Baskerville,Georgia,serif',bold:'Arial Black,Arial,sans-serif',mono:'Courier New,monospace'};
  function update(){
@@ -91,8 +90,8 @@
   copy.style.color=color||'';
   copy.style.fontFamily=fonts[form.font.value]||fonts.system;
   heading.style.fontSize='clamp(21px,'+(3.5*Number(form.scale.value)/100)+'vw,'+(33*Number(form.scale.value)/100)+'px)';
-  const x={left:'left',center:'center',right:'right'}[form.image_horizontal.value]||'center';
-  const y={top:'top',center:'center',bottom:'bottom'}[form.image_position.value]||'center';
+  const x={left:'left',center:'center',right:'right'}[storedHorizontal]||'center';
+  const y={top:'top',center:'center',bottom:'bottom'}[storedPosition]||'center';
   img.style.objectPosition=x+' '+y;
   img.style.transform='scale('+Number(form.image_zoom.value)/100+')';
   const actual=color||getComputedStyle(preview).color;

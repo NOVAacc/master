@@ -49,6 +49,23 @@ class CategoryStoryStageTwoTest extends TestCase
         $this->get('/admin/categories/invalid/nails/stories/editorial')->assertNotFound();
     }
 
+    public function test_position_controls_are_hidden_and_existing_crop_is_preserved(): void
+    {
+        $this->admin();
+        $url = '/admin/categories/household/photo/stories/editorial';
+        $this->post($url, $this->data())->assertRedirect($url);
+        $page = $this->get($url)->assertOk();
+        $page->assertDontSee('name="image_position"', false)->assertDontSee('name="image_horizontal"', false)
+            ->assertDontSee('Вертикальное положение')->assertDontSee('Горизонтальное положение');
+        $payload = $this->data();
+        unset($payload['image_position'], $payload['image_horizontal']);
+        $this->post($url, $payload)->assertRedirect($url);
+        $saved = json_decode(SiteSetting::whereKey('category-story.household.photo.editorial')->value('value'), true);
+        $this->assertSame('bottom', $saved['image_position']);
+        $this->assertSame('left', $saved['image_horizontal']);
+        $this->assertSame(120, $saved['image_zoom']);
+    }
+
     public function test_settings_persist_privately_and_autocolor_is_supported(): void
     {
         $url = '/admin/categories/education/languages/stories/editorial';
