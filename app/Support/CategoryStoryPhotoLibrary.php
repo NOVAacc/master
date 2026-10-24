@@ -87,6 +87,27 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'household' => [
+            'cleaning' => [
+                'editorial' => ['id' => 36273684, 'title' => 'Минималистичный домашний кабинет и инвентарь для уборки', 'author' => 'Alec Adriano'],
+                'proof' => ['id' => 28576626, 'title' => 'Средства для уборки на спокойном сером фоне', 'author' => 'Jonathan Borba'],
+                'premium' => ['id' => 36730122, 'title' => 'Уборка стильной гостиной — интерьер 2026', 'author' => 'Vitaly Gariev'],
+                'warm' => ['id' => 6195198, 'title' => 'Заботливая уборка светлой гостиной', 'author' => 'Tima Miroshnichenko'],
+                'urban' => ['id' => 6195274, 'title' => 'Профессиональная команда уборки — современный интерьер', 'author' => 'Tima Miroshnichenko'],
+                'soft' => ['id' => 10554825, 'title' => 'Бежевое бельё и чистая комната в мягком свете', 'author' => 'Ron Lach'],
+                'promo' => ['id' => 9462621, 'title' => 'Подготовка аккуратной спальни к приёму гостей', 'author' => 'Liliana Drew'],
+                'seasonal' => ['id' => 36715256, 'title' => 'Свежая уборка дома — естественный свет 2026', 'author' => 'Vitaly Gariev'],
+            ],
+            'pets' => [
+                'editorial' => ['id' => 20329050, 'title' => 'Серый кот — спокойный домашний уход за шерстью', 'author' => 'Nadin Sh'],
+                'proof' => ['id' => 6816850, 'title' => 'Груминг собаки — деликатное расчёсывание', 'author' => 'Gustavo Fring'],
+                'premium' => ['id' => 6131568, 'title' => 'Стрижка собаки в профессиональном салоне', 'author' => 'Tima Miroshnichenko'],
+                'warm' => ['id' => 6865159, 'title' => 'Рыжий кот и мягкая щётка — домашняя забота', 'author' => 'cottonbro studio'],
+                'urban' => ['id' => 6130986, 'title' => 'Профессиональный уход за котом в салоне', 'author' => 'Tima Miroshnichenko'],
+                'soft' => ['id' => 20329051, 'title' => 'Нежный груминг серого кота крупным планом', 'author' => 'Nadin Sh'],
+                'promo' => ['id' => 6131165, 'title' => 'Купание питомца в салоне груминга', 'author' => 'Tima Miroshnichenko'],
+                'seasonal' => ['id' => 19145882, 'title' => 'Забота о собаке — спа-груминг', 'author' => 'Goochie Poochie Grooming'],
+            ],
+
             'photo' => [
                 'editorial' => ['id' => 35888640, 'title' => 'Фотограф в студии — светлый вертикальный портрет', 'author' => 'Davide Comunian'],
                 'proof' => ['id' => 32092180, 'title' => 'Работа с камерой в студии', 'author' => 'kaleef lawal'],
