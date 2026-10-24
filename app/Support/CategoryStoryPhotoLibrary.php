@@ -113,6 +113,26 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'medicine' => [
+            'medical-center' => [
+                'editorial' => ['id' => 33812025, 'title' => 'Минималистичная приёмная медицинского центра', 'author' => 'Jinshu Pulpatta'],
+                'proof' => ['id' => 5214997, 'title' => 'Измерение давления на приёме у врача', 'author' => 'Antoni Shkraba'],
+                'premium' => ['id' => 16571731, 'title' => 'Современный кабинет обследования — нейтральный интерьер', 'author' => 'Yusuf Çelik'],
+                'warm' => ['id' => 7108325, 'title' => 'Помощь пациентам на стойке регистрации', 'author' => 'Pavel Danilyuk'],
+                'urban' => ['id' => 7108317, 'title' => 'Современная клиника — работа персонала', 'author' => 'Pavel Danilyuk'],
+                'soft' => ['id' => 5215008, 'title' => 'Спокойная консультация в светлом кабинете', 'author' => 'Antoni Shkraba'],
+                'promo' => ['id' => 7108157, 'title' => 'Приём врача — запись на консультацию', 'author' => 'Pavel Danilyuk'],
+                'seasonal' => ['id' => 6627849, 'title' => 'Пациент в современной клинике у стойки регистрации', 'author' => 'Kaboompics.com'],
+            ],
+            'aesthetic' => [
+                'editorial' => ['id' => 10521230, 'title' => 'Светлый минималистичный кабинет эстетической медицины', 'author' => 'Deane Bayas'],
+                'proof' => ['id' => 36930338, 'title' => 'Аппаратный уход за кожей в эстетической клинике', 'author' => 'Kerim Eveyik'],
+                'premium' => ['id' => 34220539, 'title' => 'Современная эстетическая процедура в тёплых тонах', 'author' => 'Daniel & Hannah Snipes'],
+                'warm' => ['id' => 4586751, 'title' => 'Бережная аппаратная процедура для лица', 'author' => 'Anna Shvets'],
+                'urban' => ['id' => 11024139, 'title' => 'Технологичное оснащение эстетического кабинета', 'author' => 'MIKE GIOVINAZZO'],
+                'soft' => ['id' => 36930786, 'title' => 'Деликатный уход за кожей в современной клинике', 'author' => 'Kerim Eveyik'],
+                'promo' => ['id' => 7446690, 'title' => 'Дерматолог проводит процедуру в светлом кабинете', 'author' => 'Gustavo Fring'],
+                'seasonal' => ['id' => 34220525, 'title' => 'Современная косметическая процедура — естественные оттенки', 'author' => 'Daniel & Hannah Snipes'],
+            ],
             'veterinary' => [
                 'editorial' => ['id' => 39550277, 'title' => 'Ветеринар слушает рыжего кота — спокойный портрет 2026', 'author' => 'Ali Merchant'],
                 'proof' => ['id' => 6235650, 'title' => 'Осмотр собаки стетоскопом в клинике', 'author' => 'Tima Miroshnichenko'],
