@@ -172,21 +172,7 @@ class StoryTemplateAdminController extends Controller
             'photoTotal' => $photoTotal,
             'industries' => $industries,
             'counts' => $counts,
-            'storyThemes' => [
-                'beauty' => [
-                    'barber' => 'barber',
-                    'spa' => 'massage',
-                    'cosmetology' => 'skin',
-                    'nails' => 'nails',
-                    'brows-lashes' => 'brows',
-                    'waxing' => 'smooth',
-                    'kids-hair' => 'hair',
-                ],
-                'medicine' => [
-                    'massage' => 'massage',
-                    'aesthetic' => 'skin',
-                ],
-            ],
+
         ]);
     }
 
