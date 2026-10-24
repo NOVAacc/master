@@ -44,7 +44,25 @@ class StoryTemplateAdminController extends Controller
         'barber' => ['classic' => 'photo-1503951914875-452162b0f3f1', 'gentleman' => 'photo-1621605815971-fbc98d665033', 'luxury' => 'photo-1599351431202-1e0f0137899a', 'street' => 'photo-1521590832167-7bcbfaa6381f', 'beard' => 'photo-1596728325488-58c87691e9af', 'vintage' => 'photo-1512690459411-b9245aed614b', 'urban' => 'photo-1622286346003-cad4a2e4b6b7', 'creative' => 'photo-1503951914875-452162b0f3f1'],
         'smooth' => ['nude' => 'photo-1512290923902-8a9f81dc236c', 'soft' => 'photo-1608248543803-ba4f8c70ae0b', 'premium' => 'photo-1556228720-195a672e8a03', 'bold' => 'photo-1570172619644-dfd03ed5d881', 'natural' => 'photo-1540555700478-4be289fbecef', 'care' => 'photo-1600334129128-685c5582fd35', 'urban' => 'photo-1596462502278-27bfdc403348', 'luxury' => 'photo-1620916566398-39f1143ab7be'],
     ];
-    public const FONTS = ['system' => 'Современный', 'serif' => 'Редакционный', 'rounded' => 'Мягкий'];
+    public const FONTS = [
+        'system' => 'Современный',
+        'serif' => 'Редакционный',
+        'rounded' => 'Мягкий',
+        'elegant' => 'Элегантный',
+        'classic' => 'Классический',
+        'bold' => 'Акцентный',
+        'mono' => 'Моноширинный',
+    ];
+    public const TEXT_COLORS = [
+        '' => 'Авто (цвет шаблона)',
+        '#FFFFFF' => 'Белый',
+        '#171717' => 'Чёрный',
+        '#303038' => 'Графит',
+        '#FFF5E7' => 'Молочный',
+        '#F6D7E3' => 'Пудровый',
+        '#C52F43' => 'Красный BOSH',
+        '#E3C58F' => 'Золотистый',
+    ];
     public const DEFAULTS = ['font' => 'system', 'scale' => 100, 'text_color' => '', 'image_position' => 'center', 'image_horizontal' => 'center', 'image_zoom' => 100, 'shade' => 0];
 
     private static function settingKey(string $theme, string $template): string
@@ -125,6 +143,7 @@ class StoryTemplateAdminController extends Controller
             'config' => self::catalog()[$theme][$template],
             'photo' => self::DEFAULT_PHOTOS[$theme][$template],
             'fonts' => self::FONTS,
+            'textColors' => self::TEXT_COLORS,
         ]);
     }
 
