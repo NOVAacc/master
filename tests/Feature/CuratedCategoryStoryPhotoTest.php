@@ -51,6 +51,7 @@ class CuratedCategoryStoryPhotoTest extends TestCase
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'barber'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('sport', 'yoga'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('medicine', 'dentistry'));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('medicine', 'massage'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'cosmetology'));
         $allIds = [];
         foreach (CategoryStoryPhotoLibrary::COLLECTIONS as $industry => $categories) {
@@ -62,8 +63,8 @@ class CuratedCategoryStoryPhotoTest extends TestCase
                 }
             }
         }
-        $this->assertCount(40, $allIds);
-        $this->assertCount(40, array_unique($allIds));
+        $this->assertCount(48, $allIds);
+        $this->assertCount(48, array_unique($allIds));
         $this->assertNull(CategoryStoryPhotoLibrary::get('education', 'languages', 'editorial'));
     }
 
