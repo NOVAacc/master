@@ -195,6 +195,26 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'education' => [
+            'children' => [
+                'editorial' => ['id' => 8423125, 'title' => 'Дети учатся в спокойном светлом классе', 'author' => 'Pavel Danilyuk'],
+                'proof' => ['id' => 5905921, 'title' => 'Учитель помогает детям выполнить задание', 'author' => 'Katerina Holmes'],
+                'premium' => ['id' => 8382228, 'title' => 'Творческое занятие для детей с мольбертами', 'author' => 'Pavel Danilyuk'],
+                'warm' => ['id' => 8088092, 'title' => 'Дети занимаются с педагогом за общим столом', 'author' => 'Artem Podrez'],
+                'urban' => ['id' => 20220313, 'title' => 'Современное детское творческое занятие', 'author' => 'Yakup Polat'],
+                'soft' => ['id' => 8923877, 'title' => 'Два ребёнка читают в классе', 'author' => 'Mikhail Nilov'],
+                'promo' => ['id' => 8088087, 'title' => 'Дети и педагог на занятии — анонс записи', 'author' => 'Artem Podrez'],
+                'seasonal' => ['id' => 28097500, 'title' => 'Дети играют и учатся вместе в школе', 'author' => 'Andy Coffie'],
+            ],
+            'professional' => [
+                'editorial' => ['id' => 18999475, 'title' => 'Современный курс профессионального обучения', 'author' => 'Matheus Bertelli'],
+                'proof' => ['id' => 9301152, 'title' => 'Практический семинар с презентацией в офисе', 'author' => 'Mikhail Nilov'],
+                'premium' => ['id' => 34774351, 'title' => 'Деловое выступление в современной аудитории', 'author' => 'Matheus Bertelli'],
+                'warm' => ['id' => 15189552, 'title' => 'Спикер общается с участниками профессионального семинара', 'author' => 'Airam Dato-on'],
+                'urban' => ['id' => 18800449, 'title' => 'Преподаватель проводит современный обучающий курс', 'author' => 'Matheus Bertelli'],
+                'soft' => ['id' => 33714896, 'title' => 'Внимательные слушатели на профессиональном тренинге', 'author' => 'Matheus Bertelli'],
+                'promo' => ['id' => 9301260, 'title' => 'Спикер представляет программу обучения группе', 'author' => 'Mikhail Nilov'],
+                'seasonal' => ['id' => 39951330, 'title' => 'Современный профессиональный воркшоп 2026', 'author' => 'Swastik Arora'],
+            ],
             'exams' => [
                 'editorial' => ['id' => 6281016, 'title' => 'Студенты готовятся в библиотеке — нейтральная композиция', 'author' => 'Yaroslav Shuraev'],
                 'proof' => ['id' => 6549859, 'title' => 'Ученица выполняет письменное задание в библиотеке', 'author' => 'Tima Miroshnichenko'],
