@@ -11,6 +11,16 @@ final class CategoryStoryPhotoLibrary
 {
     public const COLLECTIONS = [
         'beauty' => [
+            'tanning' => [
+                'editorial' => ['id' => 16645419, 'title' => 'Солярий и зона ухода — спокойные синие тона', 'author' => 'Boris Hamer'],
+                'proof' => ['id' => 14256895, 'title' => 'Процедура в вертикальном солярии, крупный план', 'author' => 'John (Giannis) Tekeridis'],
+                'premium' => ['id' => 16645412, 'title' => 'Зона солярия и халат в прохладном свете', 'author' => 'Boris Hamer'],
+                'warm' => ['id' => 14256892, 'title' => 'Клиент солярия в мягком студийном свете', 'author' => 'John (Giannis) Tekeridis'],
+                'urban' => ['id' => 14256894, 'title' => 'Вертикальный солярий, свет и графичная атмосфера', 'author' => 'John (Giannis) Tekeridis'],
+                'soft' => ['id' => 14256893, 'title' => 'Клиентка возле солярия и нейтральный фон', 'author' => 'John (Giannis) Tekeridis'],
+                'promo' => ['id' => 3736281, 'title' => 'Подбор косметического ухода в салоне', 'author' => 'Polina Tankilevitch'],
+                'seasonal' => ['id' => 3736398, 'title' => 'Средства ухода за кожей на светлом фоне', 'author' => 'Polina Tankilevitch'],
+            ],
             'spa' => [
                 'editorial' => ['id' => 36837602, 'title' => 'Спокойный SPA-интерьер с полотенцем и зеленью', 'author' => 'aiseleer'],
                 'proof' => ['id' => 19572635, 'title' => 'SPA-масла и роллер на мягком полотенце', 'author' => 'Tuğba ÖZTÜRK'],
@@ -105,6 +115,16 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'education' => [
+            'driving' => [
+                'editorial' => ['id' => 37112146, 'title' => 'Учебный автомобиль с опознавательным знаком 2026', 'author' => 'SHOX ART'],
+                'proof' => ['id' => 9518015, 'title' => 'Инструктор объясняет управление автомобилем', 'author' => 'Ron Lach'],
+                'premium' => ['id' => 9518246, 'title' => 'Ученик контролирует дорогу через зеркало', 'author' => 'Ron Lach'],
+                'warm' => ['id' => 9518018, 'title' => 'Практика вождения с наставником', 'author' => 'Ron Lach'],
+                'urban' => ['id' => 9518016, 'title' => 'Ученик за рулём во время урока', 'author' => 'Ron Lach'],
+                'soft' => ['id' => 9518240, 'title' => 'Вручение ключей и знакомство с автомобилем', 'author' => 'Ron Lach'],
+                'promo' => ['id' => 9518017, 'title' => 'Инструктор с учеником в машине', 'author' => 'Ron Lach'],
+                'seasonal' => ['id' => 9518025, 'title' => 'Объяснение правил вождения в салоне машины', 'author' => 'Ron Lach'],
+            ],
             'music' => [
                 'editorial' => ['id' => 32218646, 'title' => 'Тёплая музыкальная комната с пианино и гитарой', 'author' => 'Flávia Vicentini'],
                 'proof' => ['id' => 8520439, 'title' => 'Деталь урока фортепиано — руки учителя и ученика', 'author' => 'Yan Krukau'],
@@ -194,6 +214,16 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'sport' => [
+            'stretching' => [
+                'editorial' => ['id' => 35553892, 'title' => 'Стретчинг на реформере в студии 2026', 'author' => 'khezez | خزاز'],
+                'proof' => ['id' => 25596675, 'title' => 'Занятие растяжкой на пилатес-реформере', 'author' => 'Ahmet Kurt'],
+                'premium' => ['id' => 35553891, 'title' => 'Пилатес и растяжка в современной студии', 'author' => 'khezez | خزاز'],
+                'warm' => ['id' => 18499513, 'title' => 'Растяжка на оборудовании в сером зале', 'author' => 'Lê Đức'],
+                'urban' => ['id' => 25596676, 'title' => 'Спокойная техника растяжки на реформере', 'author' => 'Ahmet Kurt'],
+                'soft' => ['id' => 18499516, 'title' => 'Мягкое освещение студии растяжки', 'author' => 'Lê Đức'],
+                'promo' => ['id' => 31509830, 'title' => 'Пилатес в минималистичной студии', 'author' => 'Flexity Yoga & Pilates'],
+                'seasonal' => ['id' => 36242676, 'title' => 'Новая студия растяжки — занятие 2026', 'author' => 'Stiven Rivera'],
+            ],
             'dance' => [
                 'editorial' => ['id' => 35538273, 'title' => 'Студийный танцевальный портрет в чёрном', 'author' => 'Miguel Rodríguez'],
                 'proof' => ['id' => 30861353, 'title' => 'Современная танцевальная поза в мягком свете', 'author' => 'Freddy Rezvanian'],
