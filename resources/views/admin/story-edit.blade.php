@@ -28,6 +28,13 @@
 @endforeach
 </select>
 <p class="muted small">Выберите, какая часть изображения останется видна после обрезки до 9:16. Настройка применяется и к скачанному PNG.</p>
+<label for="shade">Дополнительный контраст фотографии</label>
+<select id="shade" name="shade">
+@foreach([0 => 'Без изменений', 10 => 'Лёгкий — 10%', 20 => 'Средний — 20%', 30 => 'Сильный — 30%', 40 => 'Максимальный — 40%'] as $value => $description)
+<option value="{{ $value }}" @selected(($config['shade'] ?? 0) === $value)>{{ $description }}</option>
+@endforeach
+</select>
+<p class="muted small">Улучшает читаемость текста на светлых и тёмных фотографиях.</p>
 <label for="font">Шрифт сторис</label>
 <select id="font" name="font">@foreach($fonts as $key => $titleFont)<option value="{{ $key }}" @selected($config['font']===$key)>{{ $titleFont }}</option>@endforeach</select>
 <label for="scale">Размер заголовка</label>
@@ -54,6 +61,7 @@ $storyPreviewData = [
     'image_position' => $config['image_position'],
     'font' => $config['font'],
     'scale' => $config['scale'],
+    'shade' => $config['shade'],
     'text_color' => $config['text_color'],
 ];
 @endphp
