@@ -132,6 +132,41 @@ class StoryTemplateAdminController extends Controller
         ]);
     }
 
+    public function categories()
+    {
+        $industries = config('industries', []);
+        $counts = [];
+        foreach (\App\Models\MasterProfile::query()
+            ->select('industry', 'activity')
+            ->selectRaw('COUNT(*) as total')
+            ->whereNotNull('industry')
+            ->whereNotNull('activity')
+            ->groupBy('industry', 'activity')
+            ->get() as $group) {
+            $counts[$group->industry][$group->activity] = (int) $group->total;
+        }
+
+        return view('admin.categories', [
+            'industries' => $industries,
+            'counts' => $counts,
+            'storyThemes' => [
+                'beauty' => [
+                    'barber' => 'barber',
+                    'spa' => 'massage',
+                    'cosmetology' => 'skin',
+                    'nails' => 'nails',
+                    'brows-lashes' => 'brows',
+                    'waxing' => 'smooth',
+                    'kids-hair' => 'hair',
+                ],
+                'medicine' => [
+                    'massage' => 'massage',
+                    'aesthetic' => 'skin',
+                ],
+            ],
+        ]);
+    }
+
     public function edit(string $theme, string $template)
     {
         abort_unless(self::allowed($theme, $template), 404);
