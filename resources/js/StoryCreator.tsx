@@ -160,7 +160,7 @@ const nailTemplates:{id:NailTemplateId;name:string;photo:string;top:string;botto
 {id:"urban",name:"Urban trendy",photo:"photo-1727199433231-346fd8101839",top:"#23232A",bottom:"#4B4B54",ink:"#FFFFFF",muted:"#E4E1E8",button:"#FFFFFF",buttonInk:"#24232A",photoCredit:"Maria Lupan / Unsplash"},
 {id:"chrome",name:"Creative chrome / party",photo:"photo-1684609365994-a144ee021c88",top:"#211239",bottom:"#50317C",ink:"#FDEBFF",muted:"#DEB9FE",button:"#CDA0FA",buttonInk:"#26113C",photoCredit:"Noel Oviedo / Unsplash"}
 ];
-function coverImage(ctx:CanvasRenderingContext2D,img:HTMLImageElement,x:number,y:number,w:number,h:number,position:"top"|"center"|"bottom"="center"){
+function coverImage(ctx:CanvasRenderingContext2D,img:HTMLImageElement,x:number,y:number,w:number,h:number,position:"top"|"center"|"bottom"="center",horizontal:"left"|"center"|"right"="center",zoom=100){
 const magnification=Math.max(1,Math.min(1.5,zoom/100));
 const scale=Math.max(w/img.naturalWidth,h/img.naturalHeight)*magnification;
 const sw=w/scale,sh=h/scale;
