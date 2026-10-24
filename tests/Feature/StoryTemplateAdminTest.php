@@ -85,6 +85,26 @@ class StoryTemplateAdminTest extends TestCase
         Storage::disk('local')->assertMissing($entry['path']);
         $this->get($url)->assertNotFound();
     }
+    public function test_complete_catalog_has_all_72_templates_with_usable_photo_references(): void
+    {
+        $this->admin();
+        $controller = \\App\\Http\\Controllers\\StoryTemplateAdminController::class;
+        $this->assertCount(9, $controller::COLLECTIONS);
+        $catalog = $controller::catalog();
+        $this->assertCount(9, $catalog);
+        foreach ($controller::COLLECTIONS as $theme => $collection) {
+            $this->assertCount(8, $collection['ids'], "Missing templates in {$theme}");
+            foreach ($collection['ids'] as $id) {
+                $this->assertArrayHasKey($id, $catalog[$theme]);
+                $this->assertArrayHasKey($id, $controller::LABELS[$theme]);
+                $this->assertArrayHasKey($id, $controller::DEFAULT_PHOTOS[$theme]);
+                $this->assertNotEmpty($catalog[$theme][$id]['photo_url']);
+                $this->assertSame('center', $catalog[$theme][$id]['image_position']);
+                $this->assertSame(100, $catalog[$theme][$id]['image_zoom']);
+            }
+        }
+    }
+
     public function test_nine_categories_have_one_template_edit_page_each(): void
     {
         $this->admin();
