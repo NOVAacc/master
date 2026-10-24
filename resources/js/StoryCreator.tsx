@@ -17,6 +17,19 @@ const fontFace=(font:TemplateSetting["font"]|undefined)=>({
   mono: '"Courier New", monospace',
 }[font??"system"] ?? 'system-ui, sans-serif');
 const photoSource=(catalog:StoryCatalog,theme:"nails"|"hair"|"brows"|ExtraTheme,id:string,fallback:string)=>catalog[theme]?.[id]?.image_url||fallback;
+type CategoryTemplate = TemplateSetting & { id: string; name: string; description: string; image_url: string | null; };
+type CategoryResponse = { category: { industry: string; activity: string; name: string } | null; templates: CategoryTemplate[] };
+const categoryLook: Record<string,{bg:string; end:string; fg:string; action:string; actionText:string}>={
+ editorial:{bg:"#F4F0E9",end:"#DCD1C5",fg:"#171717",action:"#171717",actionText:"#FFFFFF"},
+ proof:{bg:"#27333A",end:"#6B7779",fg:"#FFFFFF",action:"#FFFFFF",actionText:"#27333A"},
+ premium:{bg:"#171514",end:"#524236",fg:"#FFF5E7",action:"#E3C58F",actionText:"#171514"},
+ warm:{bg:"#EDD4BD",end:"#C98979",fg:"#171717",action:"#171717",actionText:"#FFFFFF"},
+ urban:{bg:"#1D1D27",end:"#805B6F",fg:"#FFFFFF",action:"#FFFFFF",actionText:"#202027"},
+ soft:{bg:"#FAEDF0",end:"#DCD3D2",fg:"#303038",action:"#303038",actionText:"#FFFFFF"},
+ promo:{bg:"#9D1A36",end:"#DF575C",fg:"#FFFFFF",action:"#FFFFFF",actionText:"#9D1A36"},
+ seasonal:{bg:"#526D5B",end:"#B8A07A",fg:"#FFFFFF",action:"#FFFFFF",actionText:"#314539"},
+};
+
 const palettes: Record<Style, { name: string; bg: string; fg: string; sub: string; action: string; actionText: string }> = {
     minimal: { name: "Минимализм", bg: "#F5F4F1", fg: "#202020", sub: "#76716D", action: "#202020", actionText: "#FFFFFF" },
     dark: { name: "Графит", bg: "#1B1D22", fg: "#FFFFFF", sub: "#B8BAC0", action: "#FFFFFF", actionText: "#1B1D22" },
@@ -25,8 +38,8 @@ const palettes: Record<Style, { name: string; bg: string; fg: string; sub: strin
     premium: { name: "Премиум", bg: "#26342D", fg: "#F3EAD7", sub: "#C9BBA3", action: "#DDC390", actionText: "#26342D" },
 };
 
-type Theme = "nails"|"hair"|"barber"|"brows"|"lashes"|"makeup"|"massage"|"skin"|"smooth"|"general";
-const themes: Record<Theme,string> = {nails:"Маникюр",hair:"Волосы",barber:"Барбер",brows:"Брови",lashes:"Ресницы",makeup:"Макияж",massage:"Массаж",skin:"Косметология",smooth:"Эпиляция",general:"Универсальный"};
+type Theme = "nails"|"hair"|"barber"|"brows"|"lashes"|"makeup"|"massage"|"skin"|"smooth"|"general"|"category";
+const themes: Record<Theme,string> = {category:"Моя категория",nails:"Маникюр",hair:"Волосы",barber:"Барбер",brows:"Брови",lashes:"Ресницы",makeup:"Макияж",massage:"Массаж",skin:"Косметология",smooth:"Эпиляция",general:"Универсальный"};
 const rules: [Theme,string[]][]=[
  ["nails",["маникюр","педикюр","ногт","nail","шеллак","гель лак"]],
  ["brows",["бров","brow","окрашивание бровей","коррекция бровей"]],
@@ -233,9 +246,58 @@ function wrappedText(ctx: CanvasRenderingContext2D, value: string, maxWidth: num
     }
     return clipped;
 }
-export async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId, hairTemplate: HairTemplateId, browTemplate: BrowTemplateId, extraId:string, catalog:StoryCatalog) {
+async function drawCategoryStory(canvas:HTMLCanvasElement,master:Master,service:Service,date:string,time:string,link:string,categoryName:string,template:CategoryTemplate){
+ const ctx=canvas.getContext("2d");if(!ctx)throw new Error("Canvas недоступен");
+ const design=categoryLook[template.id]||categoryLook.editorial;
+ const g=ctx.createLinearGradient(0,0,1080,1920);
+ g.addColorStop(0,design.bg);g.addColorStop(1,design.end);
+ ctx.fillStyle=g;ctx.fillRect(0,0,1080,1920);
+ if(template.image_url){
+  const img=new Image();img.crossOrigin="anonymous";img.src=template.image_url;
+  try{
+   await img.decode();
+   coverImage(ctx,img,0,0,1080,1920,template.image_position,template.image_horizontal,template.image_zoom);
+  }catch{ /* Retain the category's readable gradient if the uploaded image is unavailable. */ }
+ }
+ const fg=template.text_color&&/^#[A-Fa-f0-9]{6}$/.test(template.text_color)?template.text_color:design.fg;
+ const rgb=[1,3,5].map(i=>parseInt(fg.slice(i,i+2),16));
+ const light=(rgb[0]*299+rgb[1]*587+rgb[2]*114)/1000>145;
+ const wash=ctx.createLinearGradient(0,0,0,1920);
+ const dark=light?"0,0,0":"255,255,255";
+ wash.addColorStop(0,`rgba(${dark},.57)`);
+ wash.addColorStop(.5,`rgba(${dark},.32)`);
+ wash.addColorStop(1,`rgba(${dark},.67)`);
+ if(template.image_url){ctx.fillStyle=wash;ctx.fillRect(0,0,1080,1920);}
+ const shade=Math.min(40,Math.max(0,Number(template.shade)||0));
+ if(shade){ctx.fillStyle=`rgba(${dark},${shade/100})`;ctx.fillRect(0,0,1080,1920);}
+ const font=fontFace(template.font),size=Math.max(80,Math.min(120,Number(template.scale)||100))/100;
+ ctx.textBaseline="top";ctx.fillStyle=fg;
+ ctx.font=`bold 46px ${font}`;
+ ctx.fillText("BOSH",108,122);
+ ctx.font=`500 36px ${font}`;
+ wrappedText(ctx,master.display_name,840,2).forEach((line,i)=>ctx.fillText(line,108,225+i*46,864));
+ ctx.font=`600 38px ${font}`;
+ ctx.fillText("ЕСТЬ СВОБОДНОЕ ВРЕМЯ",108,560,864);
+ ctx.font=`bold ${Math.round(92*size)}px ${font}`;
+ wrappedText(ctx,categoryName,850,3).forEach((line,i)=>ctx.fillText(line,108,670+i*112,864));
+ ctx.font=`600 50px ${font}`;
+ wrappedText(ctx,service.name,850,2).forEach((line,i)=>ctx.fillText(line,108,1018+i*64,864));
+ ctx.font=`bold 136px ${font}`;
+ ctx.fillText(time,108,1220,864);
+ const niceDate=new Date(date+"T12:00:00Z").toLocaleDateString("ru-RU",{timeZone:"UTC",day:"numeric",month:"long"});
+ ctx.font=`500 46px ${font}`;
+ ctx.fillText(niceDate+" · "+service.price_som.toLocaleString("ru-RU")+" сом",108,1395,864);
+ ctx.fillStyle=design.action;
+ ctx.beginPath();ctx.roundRect(108,1560,864,112,55);ctx.fill();
+ ctx.fillStyle=design.actionText;ctx.font=`bold 46px ${font}`;
+ ctx.fillText("Записаться",160,1590,760);
+ ctx.fillStyle=fg;ctx.font=`500 30px ${font}`;
+ const url=new URL(link);ctx.fillText(url.host+url.pathname,108,1740,864);
+}
+export async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId, hairTemplate: HairTemplateId, browTemplate: BrowTemplateId, extraId:string, catalog:StoryCatalog,categoryTemplate?:CategoryTemplate,categoryName?:string) {
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
+    if(theme==="category" && categoryTemplate){await drawCategoryStory(canvas,master,service,date,time,link,categoryName||"Услуги",categoryTemplate);return;}
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Браузер не поддерживает создание изображений.");
     const design = nailTemplates.find(t=>t.id===nailTemplate)??nailTemplates[0];
