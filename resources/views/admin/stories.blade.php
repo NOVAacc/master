@@ -27,7 +27,7 @@
 @php($preview = $config['photo_url'])
 <a class="story-choice" href="{{ route('admin.stories.edit', ['theme'=>$theme,'template'=>$template]) }}">
 <img src="{{ $preview }}" alt="{{ $labels[$theme][$template] ?? $template }}" loading="lazy" referrerpolicy="no-referrer">
-<div><strong>{{ $labels[$theme][$template] ?? $template }}</strong><span class="muted">{{ $config['image_url'] ? 'Своя фотография' : 'Стандартное фото' }}</span><span class="story-image-warning">Изображение недоступно — замените его</span></div>
+<div><strong>{{ $labels[$theme][$template] ?? $template }}</strong><span class="muted">{{ $config['image_url'] ? 'Своя фотография' : 'Стандартное фото' }}</span><span class="story-image-warning">Изображение недоступно — замените его</span>@if(!$config['image_url'] && ($photoCounts[$photos[$theme][$template]] ?? 0) > 1)<span class="muted" style="display:block;font-size:10px">Фото используется в {{ $photoCounts[$photos[$theme][$template]] }} шаблонах</span>@endif</div>
 </a>
 @endforeach
 </div>
