@@ -1,7 +1,7 @@
 @extends('admin.layout')
 @section('title', 'Редактор шаблона')
 @section('content')
-<p><a href="{{ route('admin.stories') }}">← Все шаблоны</a></p>
+<p><a href="{{ route('admin.stories') }}#{{ $theme }}">← Все шаблоны · {{ $title }}</a></p>
 <h1>{{ $title }} · {{ $label }}</h1>
 <p class="muted">Изменяйте оформление только этого шаблона. Данные мастера, услуга, дата, цена, ссылка и логотип BOSH подставляются автоматически.</p>
 <style>
