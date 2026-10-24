@@ -404,6 +404,26 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'sport' => [
+            'pool' => [
+                'editorial' => ['id' => 39905019, 'title' => 'Минималистичный голубой бассейн и геометрия плитки — 2026', 'author' => 'Doruk Aksel Anıl'],
+                'proof' => ['id' => 36755663, 'title' => 'Пловец на дорожке крытого бассейна — динамика', 'author' => 'Josué Rodríguez'],
+                'premium' => ['id' => 35402615, 'title' => 'Спортивное плавание в глубокой синей воде', 'author' => 'Dany Goldraij'],
+                'warm' => ['id' => 6012008, 'title' => 'Тренировка пловца в крытом бассейне', 'author' => 'Tima Miroshnichenko'],
+                'urban' => ['id' => 35156557, 'title' => 'Баттерфляй на спортивной дорожке', 'author' => 'david hou'],
+                'soft' => ['id' => 8028623, 'title' => 'Светлый бассейн с современным интерьером', 'author' => 'SHVETS production'],
+                'promo' => ['id' => 8028685, 'title' => 'Пловец готовится к тренировке — запись на занятие', 'author' => 'SHVETS production'],
+                'seasonal' => ['id' => 35402638, 'title' => 'Профессиональный заплыв на спине, свежая съёмка', 'author' => 'Dany Goldraij'],
+            ],
+            'martial-arts' => [
+                'editorial' => ['id' => 35251784, 'title' => 'Чёрно-белый портрет боксёра — editorial', 'author' => 'Imam Efendi'],
+                'proof' => ['id' => 39779063, 'title' => 'Тренировка муай-тай с наставником, сентябрь 2026', 'author' => 'Noe Garde'],
+                'premium' => ['id' => 39969612, 'title' => 'Кинематографичный муай-тай в дымном зале, октябрь 2026', 'author' => 'Noval Gani'],
+                'warm' => ['id' => 39779070, 'title' => 'Юные бойцы осваивают муай-тай в спортзале', 'author' => 'Noe Garde'],
+                'urban' => ['id' => 35462271, 'title' => 'Боксёр тренируется у мешка в современном зале', 'author' => 'Dwi Setyo'],
+                'soft' => ['id' => 9968139, 'title' => 'Пустой боксёрский ринг с приглушённым светом', 'author' => 'Stanislav Kondratiev'],
+                'promo' => ['id' => 6295766, 'title' => 'Спарринг бойцов ММА — приглашение на тренировку', 'author' => 'Pavel Danilyuk'],
+                'seasonal' => ['id' => 4398389, 'title' => 'Боксёр в тёмном зале с контрастным освещением', 'author' => 'AI25.Studio Studio'],
+            ],
             'racket' => [
                 'editorial' => ['id' => 35694287, 'title' => 'Один теннисный мяч на спокойном корте', 'author' => 'Murun. E'],
                 'proof' => ['id' => 36531590, 'title' => 'Ракетка и мяч на однотонном корте', 'author' => 'Roberto Angel Rosas'],
