@@ -77,7 +77,7 @@ class CategoryStoryTemplateController extends Controller
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', new ProfileImage, 'max:4096', 'dimensions:max_width=4096,max_height=4096'],
             'remove_image' => ['sometimes', 'boolean'],
             'font' => ['required', Rule::in(array_keys(StoryTemplateAdminController::FONTS))],
-            'text_color' => ['present', Rule::in(array_keys(StoryTemplateAdminController::TEXT_COLORS))],
+            'text_color' => ['nullable', Rule::in(array_keys(StoryTemplateAdminController::TEXT_COLORS))],
             'scale' => ['required', 'integer', 'between:80,120'],
             'shade' => ['required', 'integer', 'between:0,40'],
             'image_position' => ['required', Rule::in(['top','center','bottom'])],
@@ -100,7 +100,7 @@ class CategoryStoryTemplateController extends Controller
             $path = null;
         }
         $value = [
-            'font' => $data['font'], 'text_color' => $data['text_color'],
+            'font' => $data['font'], 'text_color' => $data['text_color'] ?? '',
             'scale' => (int) $data['scale'], 'shade' => (int) $data['shade'],
             'image_position' => $data['image_position'], 'image_horizontal' => $data['image_horizontal'],
             'image_zoom' => (int) $data['image_zoom'], 'path' => $path,
