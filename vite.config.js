@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
     plugins: [
-        laravel({ input: ["resources/js/app.tsx"], refresh: true }),
+        laravel({ input: ["resources/js/app.tsx", "resources/js/admin-story-preview.ts"], refresh: true }),
         react(),
         tailwindcss(),
     ],
