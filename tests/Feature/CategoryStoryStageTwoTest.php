@@ -111,7 +111,7 @@ class CategoryStoryStageTwoTest extends TestCase
         $this->assertNull(json_decode(SiteSetting::whereKey('category-story.auto.tires.proof')->value('value'), true)['path']);
     }
 
-    public function test_master_receives_only_own_category_templates_and_private_photo(): void
+    public function test_master_receives_admin_templates_and_can_select_other_categories(): void
     {
         Storage::fake('local');
         $this->admin();
@@ -142,16 +142,18 @@ class CategoryStoryStageTwoTest extends TestCase
         $this->postJson('/stories/style', ['template' => 'category:beauty:nails:editorial'])
             ->assertOk()->assertJsonPath('template', 'category:beauty:nails:editorial');
         $this->postJson('/stories/style', ['template' => 'category:beauty:barber:editorial'])
-            ->assertUnprocessable();
+            ->assertOk();
+        $this->getJson('/stories/category/catalog?industry=beauty&activity=barber')
+            ->assertOk()->assertJsonPath('category.activity', 'barber')->assertJsonCount(6, 'groups')->assertJsonCount(8, 'templates');
 
         $other = User::factory()->create();
         \App\Models\MasterProfile::create([
             'user_id' => $other->id, 'slug' => 'story-other-master',
             'display_name' => 'Tutor', 'industry' => 'education', 'activity' => 'tutoring',
         ]);
-        $this->actingAs($other)->get('/stories/category/beauty/nails/editorial/image/'.$version)->assertNotFound();
+        $this->actingAs($other)->get('/stories/category/beauty/nails/editorial/image/'.$version)->assertOk();
         $this->getJson('/stories/category/catalog')->assertJsonPath('category.name','Репетиторство')
-            ->assertJsonCount(8,'templates')->assertJsonPath('templates.0.image_url',null);
+            ->assertJsonCount(8,'templates')->assertJsonPath('templates.0.photo_origin', 'curated');
     }
 
     public function test_master_without_category_keeps_legacy_story_choices(): void
@@ -164,7 +166,10 @@ class CategoryStoryStageTwoTest extends TestCase
         $this->actingAs($user)->getJson('/stories/category/catalog')
             ->assertOk()->assertJsonPath('category',null)->assertJsonCount(0,'templates');
         $this->postJson('/stories/style', ['template'=>'category:beauty:nails:editorial'])
-            ->assertUnprocessable();
+            ->assertOk();
+        $this->getJson('/stories/category/catalog?industry=education&activity=languages')
+            ->assertOk()->assertJsonPath('category.name', 'Языковая школа')->assertJsonCount(8, 'templates');
+        $this->postJson('/stories/style', ['template'=>'category:invalid:nails:editorial'])->assertUnprocessable();
         $this->getJson('/stories/templates/catalog')->assertOk()->assertJsonCount(8,'nails');
     }
 
