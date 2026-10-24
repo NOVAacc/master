@@ -74,6 +74,18 @@ final class CategoryStoryPhotoLibrary
                 'seasonal' => ['id' => 3881319, 'title' => 'Светлая клиника, актуальный уход', 'author' => 'Andrea Piacquadio'],
             ],
         ],
+        'education' => [
+            'languages' => [
+                'editorial' => ['id' => 6991507, 'title' => 'Бежевый блокнот с пространством для текста', 'author' => 'DS stories'],
+                'proof' => ['id' => 37811262, 'title' => 'Ученики за занятиями, естественные цвета', 'author' => 'Eduard Perez'],
+                'premium' => ['id' => 37220567, 'title' => 'Кинематографичный тёплый класс', 'author' => 'Raditya Amoret'],
+                'warm' => ['id' => 6929203, 'title' => 'Учитель и ученик в диалоге', 'author' => 'Polina Tankilevitch'],
+                'urban' => ['id' => 32394664, 'title' => 'Обучение с ноутбуком в современном классе', 'author' => 'Haidar Azmi'],
+                'soft' => ['id' => 5088025, 'title' => 'Нейтральный образовательный flat lay', 'author' => 'olia danilevich'],
+                'promo' => ['id' => 4126697, 'title' => 'Учёба с ноутбуком на спокойном бежевом фоне', 'author' => 'Ketut Subiyanto'],
+                'seasonal' => ['id' => 37827719, 'title' => 'Современный живой процесс обучения', 'author' => 'Mica Bassa'],
+            ],
+        ],
         'auto' => [
             'car-wash' => [
                 'editorial' => ['id' => 30564616, 'title' => 'Монохромный автомобиль в пене, вертикальный кадр', 'author' => 'Borta'],
