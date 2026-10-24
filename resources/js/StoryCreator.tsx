@@ -279,15 +279,15 @@ async function drawCategoryStory(canvas:HTMLCanvasElement,master:Master,service:
  wrappedText(ctx,master.display_name,840,2).forEach((line,i)=>ctx.fillText(line,108,225+i*46,864));
  ctx.font=`600 38px ${font}`;
  ctx.fillText("ЕСТЬ СВОБОДНОЕ ВРЕМЯ",108,560,864);
- ctx.font=`bold ${Math.round(92*size)}px ${font}`;
- wrappedText(ctx,categoryName,850,3).forEach((line,i)=>ctx.fillText(line,108,670+i*112,864));
+ ctx.font=`bold ${Math.round(140*size)}px ${font}`;
+ wrappedText(ctx,categoryName,850,3).forEach((line,i)=>ctx.fillText(line,108,650+i*180,864));
  ctx.font=`600 50px ${font}`;
- wrappedText(ctx,service.name,850,2).forEach((line,i)=>ctx.fillText(line,108,1018+i*64,864));
- ctx.font=`bold 136px ${font}`;
- ctx.fillText(time,108,1220,864);
+ wrappedText(ctx,service.name,850,2).forEach((line,i)=>ctx.fillText(line,108,1210+i*60,864));
+ ctx.font=`bold 96px ${font}`;
+ ctx.fillText(time,108,1360,864);
  const niceDate=new Date(date+"T12:00:00Z").toLocaleDateString("ru-RU",{timeZone:"UTC",day:"numeric",month:"long"});
  ctx.font=`500 46px ${font}`;
- ctx.fillText(niceDate+" · "+service.price_som.toLocaleString("ru-RU")+" сом",108,1395,864);
+ ctx.fillText(niceDate+" · "+service.price_som.toLocaleString("ru-RU")+" сом",108,1495,864);
  ctx.fillStyle=design.action;
  ctx.beginPath();ctx.roundRect(108,1560,864,112,55);ctx.fill();
  ctx.fillStyle=design.actionText;ctx.font=`bold 46px ${font}`;
@@ -377,15 +377,16 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     initialDate?: string; initialTime?: string; initialService?: number;
 }) {
     const activeServices = services.filter(s => s.is_active);
-    useEffect(()=>{let live=true;axios.get<StoryCatalog>("/stories/templates/catalog").then(({data})=>{if(live)setCatalog(data);}).catch(()=>{/* Retain bundled designs when catalog is unavailable. */});return()=>{live=false;};},[]);
+
     const [serviceId, setServiceId] = useState(initialService && activeServices.some(s => s.id === initialService) ? initialService : activeServices[0]?.id || 0);
     const [date, setDate] = useState(initialDate || new Intl.DateTimeFormat("en-CA", { timeZone: master.timezone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()));
     const [time, setTime] = useState(initialTime || "12:00");
-    const [style, setStyle] = useState<Style>(master.story_style && master.story_style in palettes ? master.story_style as Style : "minimal");
+    const [style] = useState<Style>(master.story_style && master.story_style in palettes ? master.story_style as Style : "minimal");
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
     const [mobileStoryView, setMobileStoryView] = useState<"edit" | "preview">("edit");
-    const [catalog, setCatalog] = useState<StoryCatalog>({});
+    const [catalog] = useState<StoryCatalog>({});
+    const [headlineOverride,setHeadlineOverride]=useState<string|null>(null);
     const [categoryCatalog,setCategoryCatalog]=useState<CategoryResponse>({category:null,templates:[]});
     const [categoryPair,setCategoryPair]=useState(()=>{
         const saved=master.story_template?.split(":");
@@ -394,32 +395,23 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     useEffect(()=>{let live=true;axios.get<CategoryResponse>("/stories/category/catalog",{params:{industry:categoryPair[0],activity:categoryPair[1]}}).then(({data})=>{if(live)setCategoryCatalog(data);}).catch(()=>{if(live)setError("Не удалось загрузить шаблоны категории. Попробуйте ещё раз.");});return()=>{live=false;};},[categoryPair[0],categoryPair[1]]);
     const [prepared, setPrepared] = useState<File | null>(null);
     const canvas = useRef<HTMLCanvasElement>(null);
-    const [themeChoice,setThemeChoice]=useState<Theme|null>(null);
+
     const [categorySelection,setCategorySelection]=useState<string>(()=>{
       const parts=master.story_template?.split(":");
       return parts?.[0]==="category"?parts[3]:"editorial";
     });
-    const [nailTemplate,setNailTemplate]=useState<NailTemplateId>(()=> master.story_template?.startsWith("bosh-nail-trends:") ? (master.story_template.split(":")[1] as NailTemplateId) : "nude");
-    const [hairTemplate,setHairTemplate]=useState<HairTemplateId>(()=> master.story_template?.startsWith(HAIR_COLLECTION.slug+":") && hairTemplates.some(t=>t.id===master.story_template?.split(":")[1]) ? master.story_template.split(":")[1] as HairTemplateId : "nude");
-    const [browTemplate,setBrowTemplate]=useState<BrowTemplateId>(()=>master.story_template?.startsWith(BROW_COLLECTION.slug+":") && browTemplates.some(t=>t.id===master.story_template?.split(":")[1]) ? master.story_template.split(":")[1] as BrowTemplateId : "soft-pink");
-    const [extraSelections,setExtraSelections]=useState<Partial<Record<ExtraTheme,string>>>(()=>{
-        const selected=master.story_template?.split(":");
-        const result:Partial<Record<ExtraTheme,string>>={};
-        for(const key of Object.keys(extraCollections) as ExtraTheme[]){
-            const collection=extraCollections[key];
-            if(selected?.[0]===collection.slug && collection.templates.some(t=>t.id===selected[1]))result[key]=selected[1];
-        }
-        return result;
-    });
+    const nailTemplate:NailTemplateId="nude";
+    const hairTemplate:HairTemplateId="nude";
+    const browTemplate:BrowTemplateId="soft-pink";
     const [savingTemplate,setSavingTemplate]=useState(false);
     const [savedTemplate,setSavedTemplate]=useState<string|null>(master.story_template??null);
     const renderSequence=useRef(0);
     const service = activeServices.find(s => s.id === serviceId);
     const hasCategory=!!(categoryCatalog.category && categoryCatalog.category.industry===categoryPair[0] && categoryCatalog.category.activity===categoryPair[1] && categoryCatalog.templates.length);
-    const theme=themeChoice ?? (hasCategory?"category":service?storyTheme(service,master):"general");
+    const theme:Theme="category";
+    const headline=headlineOverride ?? categoryCatalog.category?.name ?? "";
     const categoryTemplate=hasCategory?categoryCatalog.templates.find(t=>t.id===categorySelection)??categoryCatalog.templates[0]:undefined;
-    const extraId=isExtraTheme(theme)?extraSelections[theme]??extraCollections[theme].templates[0].id:"";
-    useEffect(()=>setThemeChoice(null),[serviceId]);
+    const extraId="";
     const link = new URL(`/m/${encodeURIComponent(master.slug)}?date=${encodeURIComponent(date)}&service=${serviceId}&time=${encodeURIComponent(time)}`, window.location.origin).toString();
 
     useEffect(() => {
@@ -430,21 +422,16 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
             const preview=canvas.current;
             // A temporary canvas prevents late image loads from overwriting a newer template.
             const offscreen=document.createElement("canvas");
-            void drawStory(offscreen,master,service,date,time,style,link,theme,nailTemplate,hairTemplate,browTemplate,extraId,catalog,categoryTemplate,categoryCatalog.category?.name)
+            void drawStory(offscreen,master,service,date,time,style,link,theme,nailTemplate,hairTemplate,browTemplate,extraId,catalog,categoryTemplate,headline)
                 .then(()=>{if(sequence!==renderSequence.current)return;const c=preview.getContext("2d");if(c){preview.width=offscreen.width;preview.height=offscreen.height;c.drawImage(offscreen,0,0);}})
                 .catch(()=>{if(sequence===renderSequence.current)setError("Не удалось отобразить сторис.");});
         }
-    }, [master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, categoryCatalog.category?.name, hasCategory]);
+    }, [master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, headline, hasCategory]);
     useEffect(() => {
         const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
         window.addEventListener("keydown", handleKey);
         return () => window.removeEventListener("keydown", handleKey);
     }, [onClose]);
-    const chooseStyle = (next: Style) => {
-        setStyle(next);
-        axios.post("/stories/style", { style: next }).catch(() => setError("Не удалось запомнить стиль. Изображение можно сохранить."));
-    };
-
     const saveTemplate=async(collection:string,id:string)=>{
         const selected=collection+":"+id;
         setSavedTemplate(null);
@@ -457,14 +444,14 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         }finally{setSavingTemplate(false);}
     };
     async function prepare() {
-        if (!service || !canvas.current || (theme==="category" && !hasCategory)) return;
+        if (!service || !canvas.current || !hasCategory || !headline.trim()) return;
         setBusy(true);
         setError("");
         setPrepared(null);
         try {
             const response = await axios.get<{available: boolean; reason?: string}>("/stories/availability", {params: {service: service.id, date, time}});
             if (!response.data.available) throw new Error(response.data.reason || "Это время сейчас недоступно.");
-            await drawStory(canvas.current, master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, categoryCatalog.category?.name);
+            await drawStory(canvas.current, master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, headline);
             const blob = await toBlob(canvas.current);
             if(blob.size===0) throw new Error("PNG пустой.");
             setPrepared(new File([blob], `bosh-${date}-${time.replace(":", "-")}.png`, { type: "image/png" }));
@@ -507,15 +494,14 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                         <label>Дата<input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
                         <label>Время<input type="time" step="1800" value={time} onChange={e => setTime(e.target.value)} /></label>
                     </div>
-                    <label>Категория шаблонов<select value={categoryPair[0]} onChange={e=>{const group=categoryCatalog.groups?.find(g=>g.id===e.target.value);if(group){setCategoryPair([group.id,Object.keys(group.activities)[0]]);setThemeChoice("category");setCategorySelection("editorial");}}}>
+                    <label>Категория шаблонов<select value={categoryPair[0]} onChange={e=>{const group=categoryCatalog.groups?.find(g=>g.id===e.target.value);if(group){setCategoryPair([group.id,Object.keys(group.activities)[0]]);setHeadlineOverride(null);setCategorySelection("editorial");}}}>
                         <option value="" disabled>Выберите категорию</option>
                         {categoryCatalog.groups?.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}
                     </select></label>
-                    {categoryPair[0] && <label>Подборка<select value={categoryPair[1]} onChange={e=>{setCategoryPair([categoryPair[0],e.target.value]);setThemeChoice("category");setCategorySelection("editorial");}}>
+                    {categoryPair[0] && <label>Подборка<select value={categoryPair[1]} onChange={e=>{setCategoryPair([categoryPair[0],e.target.value]);setHeadlineOverride(null);setCategorySelection("editorial");}}>
                         {Object.entries(categoryCatalog.groups?.find(g=>g.id===categoryPair[0])?.activities||{}).map(([id,name])=><option key={id} value={id}>{name}</option>)}
                     </select></label>}
-                    <label>Дополнительные тематики<select value={theme} onChange={e=>setThemeChoice(e.target.value as Theme)}>{(Object.keys(themes) as Theme[]).filter(key=>key!=="category"||hasCategory).map(key=><option key={key} value={key}>{key==="category"?categoryCatalog.category?.name:themes[key]}</option>)}</select></label>
-                    <p className="muted small">{hasCategory?"По умолчанию выбрана категория вашего профиля. Старые подборки доступны вручную.":"Тематика подобрана по услуге автоматически. Можно изменить."}</p>
+                    <label>Текст на картинке<textarea value={headline} maxLength={80} rows={3} onChange={e=>setHeadlineOverride(e.target.value)} placeholder="Напишите свой текст" /></label>
                     {theme==="category" && hasCategory && <div>
                         <p className="muted small">{categoryCatalog.category?.name} · 8 вариантов оформления</p>
                         <div className="story-nail-templates" role="group" aria-label="Шаблоны моей категории">
@@ -529,53 +515,9 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                         </div>
                         <p className="muted small" role="status">{savingTemplate?"Сохраняем шаблон…":savedTemplate==="category:"+categoryCatalog.category?.industry+":"+categoryCatalog.category?.activity+":"+categoryTemplate?.id?"Шаблон сохранён":""}</p>
                     </div>}
-                    {theme==="nails" && <div className="story-nail-templates" role="group" aria-label="Маникюрные шаблоны">
-                        {nailTemplates.map(t=><button type="button" key={t.id} aria-pressed={nailTemplate===t.id} className={nailTemplate===t.id?"story-nail-template selected":"story-nail-template"} onClick={()=>{setNailTemplate(t.id);void saveTemplate("bosh-nail-trends",t.id);}}>
-                            <span className="story-nail-thumb" style={{backgroundImage:`linear-gradient(180deg,transparent,rgba(0,0,0,.45)),url("${photoSource(catalog,"nails",t.id,"https://images.unsplash.com/"+t.photo+"?auto=format&fit=crop&w=160&h=260&q=55")}")`}}/>
-                            <span>{t.name}</span>
-                        </button>)}
-                    </div>}
-                    {theme==="hair" && <div>
-                        <p className="muted small">{HAIR_COLLECTION.name}</p>
-                        <div className="story-nail-templates" role="group" aria-label={HAIR_COLLECTION.name}>
-                            {hairTemplates.map(t=><button type="button" key={t.id} aria-pressed={hairTemplate===t.id} className={hairTemplate===t.id?"story-nail-template selected":"story-nail-template"} disabled={savingTemplate} onClick={()=>{setHairTemplate(t.id);void saveTemplate(HAIR_COLLECTION.slug,t.id);}}>
-                                <span className="story-nail-thumb" style={{backgroundImage:`linear-gradient(180deg,transparent,rgba(0,0,0,.40)),url("${photoSource(catalog,"hair",t.id,"https://images.unsplash.com/"+t.photo+"?auto=format&fit=crop&w=160&h=260&q=55")}")`}}/>
-                                <span>{t.name}</span>
-                            </button>)}
-                        </div>
-                        <p className="muted small" role="status">{savingTemplate?"Сохраняем шаблон…":savedTemplate===HAIR_COLLECTION.slug+":"+hairTemplate?"Шаблон сохранён":""}</p>
-                    </div>}
-                    {theme==="brows" && <div>
-                        <p className="muted small">{BROW_COLLECTION.name} · 8 тематических оформлений</p>
-                        <div className="story-nail-templates" role="group" aria-label={BROW_COLLECTION.name}>
-                            {browTemplates.map(t=><button type="button" key={t.id} aria-pressed={browTemplate===t.id} className={browTemplate===t.id?"story-nail-template selected":"story-nail-template"} disabled={savingTemplate} onClick={()=>{setBrowTemplate(t.id);void saveTemplate(BROW_COLLECTION.slug,t.id);}}>
-                                <span className="story-nail-thumb" style={{backgroundImage:`linear-gradient(180deg,transparent,rgba(0,0,0,.45)),url("${photoSource(catalog,"brows",t.id,"https://images.unsplash.com/"+t.photo+"?auto=format&fit=crop&w=160&h=260&q=55")}")`}}/>
-                                <span>{t.name}</span>
-                            </button>)}
-                        </div>
-                        <p className="muted small" role="status">{savingTemplate?"Сохраняем шаблон…":savedTemplate===BROW_COLLECTION.slug+":"+browTemplate?"Шаблон сохранён":""}</p>
-                    </div>}
-                    {isExtraTheme(theme) && <div>
-                        <p className="muted small">{extraCollections[theme].title} · 8 оформлений</p>
-                        <div className="story-nail-templates" role="group" aria-label={extraCollections[theme].title}>
-                            {extraCollections[theme].templates.map((t,i)=><button type="button" key={t.id} aria-pressed={extraId===t.id}
-                                className={extraId===t.id?"story-nail-template selected":"story-nail-template"} disabled={savingTemplate}
-                                onClick={()=>{setExtraSelections(current=>({...current,[theme]:t.id}));void saveTemplate(extraCollections[theme].slug,t.id);}}>
-                                <span className="story-nail-thumb" style={{backgroundImage:catalog[theme]?.[t.id]?.photo_url?`linear-gradient(180deg,transparent,rgba(0,0,0,.45)),url("${catalog[theme]?.[t.id]?.photo_url}")`:undefined,backgroundColor:extraPalette(theme,i).bg}}/>
-                                <span>{t.name}</span>
-                            </button>)}
-                        </div>
-                        <p className="muted small" role="status">{savingTemplate?"Сохраняем шаблон…":savedTemplate===extraCollections[theme].slug+":"+extraId?"Шаблон сохранён":""}</p>
-                    </div>}
-                    {theme==="general" && <div className="story-palettes" role="group" aria-label="Стиль сторис">
-                        {(Object.entries(palettes) as [Style, typeof palettes[Style]][]).map(([key, p]) =>
-                            <button type="button" key={key} className={style === key ? "story-palette selected" : "story-palette"} aria-pressed={style === key} onClick={() => chooseStyle(key)}>
-                                <span className="story-color" style={{background: p.bg, color: p.fg}}>Aa</span><span>{p.name}</span>
-                            </button>)}
-                    </div>}
                     <p className="muted small">Сторис создаётся в размере 1080 × 1920. Ссылка на запись подготовлена отдельно для стикера Instagram.</p>
                     <div className="row wrap">
-                        <button type="button" className="primary" disabled={busy || !service || (theme==="category" && !hasCategory)} onClick={() => void prepare()}>{busy ? "Проверяем время…" : "Создать сторис"}</button>
+                        <button type="button" className="primary" disabled={busy || !service || !hasCategory || !headline.trim()} onClick={() => void prepare()}>{busy ? "Проверяем время…" : "Создать сторис"}</button>
                         {prepared && <button type="button" className="ghost" onClick={download}>Скачать PNG</button>}
                         {prepared && <button type="button" className="ghost" onClick={() => void share()}>Поделиться</button>}
                         {prepared && <button type="button" className="ghost" onClick={() => navigator.clipboard.writeText(link).then(() => setError("Ссылка скопирована.")).catch(() => setError("Не удалось скопировать ссылку."))}>Копировать ссылку</button>}
