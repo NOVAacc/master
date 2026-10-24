@@ -86,6 +86,28 @@ final class CategoryStoryPhotoLibrary
                 'seasonal' => ['id' => 37827719, 'title' => 'Современный живой процесс обучения', 'author' => 'Mica Bassa'],
             ],
         ],
+        'household' => [
+            'photo' => [
+                'editorial' => ['id' => 35888640, 'title' => 'Фотограф в студии — светлый вертикальный портрет', 'author' => 'Davide Comunian'],
+                'proof' => ['id' => 32092180, 'title' => 'Работа с камерой в студии', 'author' => 'kaleef lawal'],
+                'premium' => ['id' => 37542491, 'title' => 'Кинематографический студийный портрет', 'author' => 'Vinícius Vieira ft'],
+                'warm' => ['id' => 20419528, 'title' => 'Фотосъёмка в тёплой студии', 'author' => 'Lisett Kruusimäe'],
+                'urban' => ['id' => 31921820, 'title' => 'Студийное освещение — графичная композиция', 'author' => 'Emanuel Pedro'],
+                'soft' => ['id' => 11180109, 'title' => 'Минималистичная фотостудия, светлый нейтральный фон', 'author' => 'Aleksandra Norboeva'],
+                'promo' => ['id' => 32054999, 'title' => 'Свободная фотостудия с нейтральным фоном', 'author' => 'Caio Mantovani'],
+                'seasonal' => ['id' => 36593892, 'title' => 'Монохромный портрет фотографа', 'author' => 'Enes Türkoğlu'],
+            ],
+            'interior' => [
+                'editorial' => ['id' => 35574723, 'title' => 'Светлая минималистичная гостиная', 'author' => 'Lydia Griva'],
+                'proof' => ['id' => 38139754, 'title' => 'Дизайнер подбирает фактуры и материалы', 'author' => 'Jonathan Borba'],
+                'premium' => ['id' => 34857065, 'title' => 'Нейтральная гостиная с дизайнерскими деталями', 'author' => 'Griselda Belba'],
+                'warm' => ['id' => 35574733, 'title' => 'Тёплый интерьер с натуральным светом', 'author' => 'Lydia Griva'],
+                'urban' => ['id' => 37070073, 'title' => 'Современный светлый интерьер', 'author' => 'UMUT RAW'],
+                'soft' => ['id' => 36962663, 'title' => 'Бежевый интерьер и мягкий солнечный свет', 'author' => 'Luk Sauvage'],
+                'promo' => ['id' => 6580007, 'title' => 'Образцы материалов и колор-карта дизайнера', 'author' => 'cottonbro studio'],
+                'seasonal' => ['id' => 37734652, 'title' => 'Свежий тренд — минималистичная гостиная 9:16', 'author' => 'Misbaa eri'],
+            ],
+        ],
         'auto' => [
             'car-wash' => [
                 'editorial' => ['id' => 30564616, 'title' => 'Монохромный автомобиль в пене, вертикальный кадр', 'author' => 'Borta'],
@@ -99,6 +121,16 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'sport' => [
+            'trainer' => [
+                'editorial' => ['id' => 39480954, 'title' => 'Монохромная студия тренировок — свободное пространство', 'author' => 'Tom Jackson'],
+                'proof' => ['id' => 37963563, 'title' => 'Тренер помогает клиенту выполнить упражнение', 'author' => 'Bulat843'],
+                'premium' => ['id' => 28455439, 'title' => 'Силовая тренировка в тёмном зале', 'author' => 'Jimmy Elizarraras'],
+                'warm' => ['id' => 4854259, 'title' => 'Поддержка клиента тренером в зале', 'author' => 'Ketut Subiyanto'],
+                'urban' => ['id' => 30428668, 'title' => 'Персональное занятие на тренажёре', 'author' => 'more late'],
+                'soft' => ['id' => 6516216, 'title' => 'Занятие фитнесом в минималистичной студии', 'author' => 'Polina Tankilevitch'],
+                'promo' => ['id' => 4854256, 'title' => 'Персональная тренировка — запись на занятие', 'author' => 'Ketut Subiyanto'],
+                'seasonal' => ['id' => 39219660, 'title' => 'Тренер обсуждает программу с клиентом', 'author' => 'Vitaly Gariev'],
+            ],
             'yoga' => [
                 'editorial' => ['id' => 38641908, 'title' => 'Студия йоги — современный портрет', 'author' => 'Luis Pelegrin'],
                 'proof' => ['id' => 37182827, 'title' => 'Инструктор помогает на растяжке', 'author' => 'Robert Ortner'],
