@@ -10,6 +10,7 @@ type Config = {
   image_position: "top" | "center" | "bottom";
   font: "system" | "serif" | "rounded";
   scale: number;
+  shade: number;
   text_color: string;
 };
 const input = document.getElementById("story-preview-data");
@@ -22,6 +23,7 @@ if (input && canvas && form) {
   const reset = form.elements.namedItem("remove_image") as HTMLInputElement;
   const font = form.elements.namedItem("font") as HTMLSelectElement;
   const scale = form.elements.namedItem("scale") as HTMLSelectElement;
+  const shade = form.elements.namedItem("shade") as HTMLSelectElement;
   const color = form.elements.namedItem("text_color") as HTMLInputElement;
   const position = form.elements.namedItem("image_position") as HTMLSelectElement;
   const ctx = canvas.getContext("2d");
@@ -41,6 +43,7 @@ if (input && canvas && form) {
       image_position: position.value,
       font: font.value,
       scale: Number(scale.value),
+      shade: Number(shade.value),
       text_color: color.value,
     };
     const catalog = { [initial.theme]: { [initial.template]: config } } as Parameters<typeof drawStory>[12];
@@ -82,7 +85,7 @@ if (input && canvas && form) {
     if (reset.checked) { release(); image.value = ""; }
     queue();
   });
-  for (const element of [font, scale, color, position]) element.addEventListener("input", queue);
+  for (const element of [font, scale, shade, color, position]) element.addEventListener("input", queue);
   window.addEventListener("pagehide", () => { ++revision; cancelAnimationFrame(frame); release(); }, { once: true });
   queue();
 }
