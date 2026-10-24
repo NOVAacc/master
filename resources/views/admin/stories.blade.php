@@ -8,7 +8,7 @@
 .story-choices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .story-choice{display:flex;align-items:center;gap:11px;padding:9px;border:1px solid #e8e8e8;border-radius:12px;background:#fff;min-width:0}
 .story-choice:hover{border-color:#a4a4a4;text-decoration:none}
-.story-choice img{width:49px;height:72px;flex:none;object-fit:cover;border-radius:7px;background:#eee}
+.story-choice img{width:49px;height:72px;flex:none;object-fit:cover;border-radius:7px;background:#eee}.story-choice img.story-image-unavailable{object-fit:contain;padding:12px;background:#f0f0f0;opacity:.55}.story-choice .story-image-warning{display:none;color:#9c3e37;font-size:10px}.story-choice.story-missing-photo .story-image-warning{display:block}
 .story-choice strong{font-size:12px;line-height:1.25;display:block;overflow-wrap:anywhere}.story-choice .muted{font-size:10px}
 @media(max-width:850px){.story-choices{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:440px){.story-choices{grid-template-columns:1fr}.story-choice img{height:60px;width:42px}}
@@ -24,10 +24,10 @@
 <div class="story-choices">
 @foreach($collection['ids'] as $template)
 @php($config = $catalog[$theme][$template])
-@php($preview = $config['image_url'] ?: 'https://images.unsplash.com/'.$photos[$theme][$template].'?auto=format&fit=crop&w=140&h=210&q=55')
+@php($preview = $config['photo_url'])
 <a class="story-choice" href="{{ route('admin.stories.edit', ['theme'=>$theme,'template'=>$template]) }}">
-<img src="{{ $preview }}" alt="" loading="lazy">
-<div><strong>{{ $labels[$theme][$template] ?? $template }}</strong><span class="muted">{{ $config['image_url'] ? 'Своя фотография' : 'Стандартное фото' }}</span></div>
+<img src="{{ $preview }}" alt="{{ $labels[$theme][$template] ?? $template }}" loading="lazy" referrerpolicy="no-referrer">
+<div><strong>{{ $labels[$theme][$template] ?? $template }}</strong><span class="muted">{{ $config['image_url'] ? 'Своя фотография' : 'Стандартное фото' }}</span><span class="story-image-warning">Изображение недоступно — замените его</span></div>
 </a>
 @endforeach
 </div>
@@ -36,6 +36,7 @@
 <script>
 (()=>{
  const tabs=[...document.querySelectorAll('.story-tab')];
+ document.querySelectorAll('.story-choice img').forEach(img=>img.addEventListener('error',()=>{img.classList.add('story-image-unavailable');img.removeAttribute('src');img.closest('.story-choice')?.classList.add('story-missing-photo');},{once:true}));
  const select=(theme,focus=false)=>{
   const selected=tabs.find(tab=>tab.dataset.theme===theme)||tabs[0];
   if(!selected)return;
