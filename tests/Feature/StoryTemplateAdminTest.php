@@ -88,7 +88,7 @@ class StoryTemplateAdminTest extends TestCase
     public function test_complete_catalog_has_all_72_templates_with_usable_photo_references(): void
     {
         $this->admin();
-        $controller = \\App\\Http\\Controllers\\StoryTemplateAdminController::class;
+        $controller = \App\Http\Controllers\StoryTemplateAdminController::class;
         $this->assertCount(9, $controller::COLLECTIONS);
         $catalog = $controller::catalog();
         $this->assertCount(9, $catalog);
