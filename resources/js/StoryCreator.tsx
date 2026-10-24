@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import CloseButton from "./CloseButton";
 import type { Master, Service } from "./types";
 
@@ -19,7 +19,8 @@ const fontFace=(font:TemplateSetting["font"]|undefined)=>({
 const photoSource=(catalog:StoryCatalog,theme:"nails"|"hair"|"brows"|ExtraTheme,id:string,fallback:string)=>catalog[theme]?.[id]?.image_url||fallback;
 type CategoryTemplate = TemplateSetting & { id: string; name: string; description: string; image_url: string | null; };
 type CategoryGroup = { id: string; name: string; activities: Record<string,string> };
-type CategoryResponse = { groups?: CategoryGroup[]; category: { industry: string; activity: string; name: string } | null; templates: CategoryTemplate[] };
+type StoryEditorOptions = { fonts: Record<string,string>; colors: Record<string,string>; scales: number[]; shades: number[]; zooms: number[] };
+type CategoryResponse = { editor_options?: StoryEditorOptions; groups?: CategoryGroup[]; category: { industry: string; activity: string; name: string } | null; templates: CategoryTemplate[] };
 const categoryLook: Record<string,{bg:string; end:string; fg:string; action:string; actionText:string}>={
  editorial:{bg:"#F4F0E9",end:"#DCD1C5",fg:"#171717",action:"#171717",actionText:"#FFFFFF"},
  proof:{bg:"#27333A",end:"#6B7779",fg:"#FFFFFF",action:"#FFFFFF",actionText:"#27333A"},
@@ -410,7 +411,12 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const hasCategory=!!(categoryCatalog.category && categoryCatalog.category.industry===categoryPair[0] && categoryCatalog.category.activity===categoryPair[1] && categoryCatalog.templates.length);
     const theme:Theme="category";
     const headline=headlineOverride ?? categoryCatalog.category?.name ?? "";
-    const categoryTemplate=hasCategory?categoryCatalog.templates.find(t=>t.id===categorySelection)??categoryCatalog.templates[0]:undefined;
+    const baseCategoryTemplate=hasCategory?categoryCatalog.templates.find(t=>t.id===categorySelection)??categoryCatalog.templates[0]:undefined;
+    const [templateEdits,setTemplateEdits]=useState<Record<string,Partial<TemplateSetting>>>({});
+    const templateKey=categoryPair.join(":")+":"+baseCategoryTemplate?.id;
+    const categoryTemplate=useMemo(()=>baseCategoryTemplate?{...baseCategoryTemplate,...templateEdits[templateKey]}:undefined,[baseCategoryTemplate,templateEdits,templateKey]);
+    const editorOptions=categoryCatalog.editor_options;
+    const editTemplate=(changes:Partial<TemplateSetting>)=>setTemplateEdits(current=>({...current,[templateKey]:{...current[templateKey],...changes}}));
     const extraId="";
     const link = new URL(`/m/${encodeURIComponent(master.slug)}?date=${encodeURIComponent(date)}&service=${serviceId}&time=${encodeURIComponent(time)}`, window.location.origin).toString();
 
@@ -515,7 +521,26 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                         </div>
                         <p className="muted small" role="status">{savingTemplate?"Сохраняем шаблон…":savedTemplate==="category:"+categoryCatalog.category?.industry+":"+categoryCatalog.category?.activity+":"+categoryTemplate?.id?"Шаблон сохранён":""}</p>
                     </div>}
+                    {categoryTemplate && editorOptions && <div className="story-editor-controls">
+                        <div className="story-input-row">
+                            <label>Шрифт<select value={categoryTemplate.font} onChange={e=>editTemplate({font:e.target.value as TemplateSetting["font"]})}>{Object.entries(editorOptions.fonts).map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>
+                            <label>Размер заголовка<select value={categoryTemplate.scale} onChange={e=>editTemplate({scale:Number(e.target.value)})}>{editorOptions.scales.map(value=><option key={value} value={value}>{value}%</option>)}</select></label>
+                        </div>
+                        <label>Цвет текста<select value={categoryTemplate.text_color} onChange={e=>editTemplate({text_color:e.target.value})}>{Object.entries(editorOptions.colors).map(([hex,name])=><option key={hex} value={hex}>{name}</option>)}</select></label>
+                        <div className="story-color-swatches" role="group" aria-label="Цвет текста">
+                            {Object.entries(editorOptions.colors).map(([hex,name])=><button type="button" key={hex} title={name} aria-label={name} aria-pressed={categoryTemplate.text_color===hex} onClick={()=>editTemplate({text_color:hex})}><span style={{background:hex||"conic-gradient(#fff 0 25%,#222 0 50%,#fff 0 75%,#222 0)"}} /></button>)}
+                        </div>
+                        <div className="story-input-row">
+                            <label>Дополнительное затемнение<select value={categoryTemplate.shade??0} onChange={e=>editTemplate({shade:Number(e.target.value)})}>{Array.from(new Set([...editorOptions.shades,categoryTemplate.shade??0])).sort((a,b)=>a-b).map(value=><option key={value} value={value}>{value}%</option>)}</select></label>
+                            <label>Увеличение фото<select value={categoryTemplate.image_zoom??100} onChange={e=>editTemplate({image_zoom:Number(e.target.value)})}>{editorOptions.zooms.map(value=><option key={value} value={value}>{value}%</option>)}</select></label>
+                        </div>
+                        <button type="button" className="ghost" onClick={()=>setTemplateEdits(current=>{const next={...current};delete next[templateKey];return next;})}>Вернуть настройки шаблона</button>
+                    </div>}
                     <p className="muted small">Сторис создаётся в размере 1080 × 1920. Ссылка на запись подготовлена отдельно для стикера Instagram.</p>
+                </div>
+                <canvas ref={canvas} className="story-preview" aria-label="Предпросмотр сторис" />
+            </div>
+            <div className="story-actions">
                     <div className="row wrap">
                         <button type="button" className="primary" disabled={busy || !service || !hasCategory || !headline.trim()} onClick={() => void prepare()}>{busy ? "Проверяем время…" : "Создать сторис"}</button>
                         {prepared && <button type="button" className="ghost" onClick={download}>Скачать PNG</button>}
@@ -523,8 +548,6 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                         {prepared && <button type="button" className="ghost" onClick={() => navigator.clipboard.writeText(link).then(() => setError("Ссылка скопирована.")).catch(() => setError("Не удалось скопировать ссылку."))}>Копировать ссылку</button>}
                     </div>
                     {error && <p role="status" className="muted small">{error}</p>}
-                </div>
-                <canvas ref={canvas} className="story-preview" aria-label="Предпросмотр сторис" />
             </div>
         </section>
     </div>;
