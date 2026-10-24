@@ -11,6 +11,36 @@ final class CategoryStoryPhotoLibrary
 {
     public const COLLECTIONS = [
         'beauty' => [
+            'spa' => [
+                'editorial' => ['id' => 36837602, 'title' => 'Спокойный SPA-интерьер с полотенцем и зеленью', 'author' => 'aiseleer'],
+                'proof' => ['id' => 19572635, 'title' => 'SPA-масла и роллер на мягком полотенце', 'author' => 'Tuğba ÖZTÜRK'],
+                'premium' => ['id' => 7795398, 'title' => 'Янтарные косметические флаконы и нейтральный текстиль', 'author' => 'Alesia Kozik'],
+                'warm' => ['id' => 8842696, 'title' => 'Бежевый SPA-натюрморт с полотенцами', 'author' => 'Karen Laårk Boshoff'],
+                'urban' => ['id' => 7795756, 'title' => 'Масло на бежевом полотенце при естественном свете', 'author' => 'Alesia Kozik'],
+                'soft' => ['id' => 7795409, 'title' => 'Текстура льна и натуральная SPA-косметика', 'author' => 'Alesia Kozik'],
+                'promo' => ['id' => 19167421, 'title' => 'Свеча и светлые полотенца в расслабляющей атмосфере', 'author' => 'Natalia Yamboglo'],
+                'seasonal' => ['id' => 7795662, 'title' => 'Мягкий свет, уходовая косметика и полотенца', 'author' => 'Alesia Kozik'],
+            ],
+            'tattoo' => [
+                'editorial' => ['id' => 20509829, 'title' => 'Тату-машинка в руках мастера на тёмном фоне', 'author' => 'Franco Monsalvo'],
+                'proof' => ['id' => 6593477, 'title' => 'Деталь процесса нанесения татуировки', 'author' => 'Pavel Danilyuk'],
+                'premium' => ['id' => 20267349, 'title' => 'Чёрно-белый кадр профессиональной тату-сессии', 'author' => 'Fatih Doğrul'],
+                'warm' => ['id' => 20531502, 'title' => 'Портрет тату-мастера за работой', 'author' => 'Franco Monsalvo'],
+                'urban' => ['id' => 13346118, 'title' => 'Монохромная тату-сессия крупным планом', 'author' => 'Hirsh Philippe'],
+                'soft' => ['id' => 35833285, 'title' => 'Чёрные чернила и детальная работа тату-мастера', 'author' => 'Matheus Bertelli'],
+                'promo' => ['id' => 20519298, 'title' => 'Татуировка в студии, контрастные детали', 'author' => 'Franco Monsalvo'],
+                'seasonal' => ['id' => 37023021, 'title' => 'Современный графичный тату-процесс', 'author' => 'Mayara Caroline Mombelli'],
+            ],
+            'waxing' => [
+                'editorial' => ['id' => 35103884, 'title' => 'Восковая депиляция в салоне, спокойный свет', 'author' => 'Larysa Stratiichuk'],
+                'proof' => ['id' => 6763621, 'title' => 'Депиляция восковой полоской, крупный план', 'author' => 'Tima Miroshnichenko'],
+                'premium' => ['id' => 6763570, 'title' => 'Восковая полоска на мягком розовом фоне', 'author' => 'Tima Miroshnichenko'],
+                'warm' => ['id' => 6763116, 'title' => 'Деликатный уход за кожей ног с восковой полоской', 'author' => 'Tima Miroshnichenko'],
+                'urban' => ['id' => 6763618, 'title' => 'Работа с восковой полоской, естественные тона', 'author' => 'Tima Miroshnichenko'],
+                'soft' => ['id' => 15764070, 'title' => 'Воск в ёмкости и работа специалиста', 'author' => 'Grove Brands'],
+                'promo' => ['id' => 7795397, 'title' => 'Натуральная уходовая косметика на льняном фоне', 'author' => 'Alesia Kozik'],
+                'seasonal' => ['id' => 26093497, 'title' => 'Инструменты косметолога на нейтральном фоне', 'author' => 'Leticia Curvelo'],
+            ],
             'nails' => [
                 'editorial' => ['id' => 35533836, 'title' => 'Маникюр и украшения — крупный план', 'author' => 'Murat IŞIK'],
                 'proof' => ['id' => 34132695, 'title' => 'Работа мастера — процесс маникюра 9:16', 'author' => 'Bulat843'],
