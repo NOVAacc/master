@@ -278,6 +278,16 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'household' => [
+            'equipment' => [
+                'editorial' => ['id' => 31726725, 'title' => 'Современный белый проектор на спокойном фоне, съёмка 2025', 'author' => 'Alpha En'],
+                'proof' => ['id' => 30670956, 'title' => 'Профессиональная камера на штативе, готовая к съёмке', 'author' => 'Amar Preciado'],
+                'premium' => ['id' => 34516668, 'title' => 'Профессиональная видеокамера в тёмной студии', 'author' => 'Caleb Oquendo'],
+                'warm' => ['id' => 36917952, 'title' => 'Оператор на съёмочной площадке с профессиональным светом, 2026', 'author' => 'Ben Khatry'],
+                'urban' => ['id' => 34228394, 'title' => 'Звуковой пульт крупным планом — современная техника', 'author' => 'TUAN HOANG NGUYEN'],
+                'soft' => ['id' => 33812295, 'title' => 'Строительные электроинструменты на нейтральном бетоне, 2025', 'author' => 'Aleksandra Agashkova'],
+                'promo' => ['id' => 29590426, 'title' => 'Студийное освещение и фон — оборудование для аренды', 'author' => 'Israyosoy S.'],
+                'seasonal' => ['id' => 34068714, 'title' => 'Современная стойка аудиооборудования и микшер', 'author' => 'Icier Llido'],
+            ],
             'cleaning' => [
                 'editorial' => ['id' => 36273684, 'title' => 'Минималистичный домашний кабинет и инвентарь для уборки', 'author' => 'Alec Adriano'],
                 'proof' => ['id' => 28576626, 'title' => 'Средства для уборки на спокойном сером фоне', 'author' => 'Jonathan Borba'],
@@ -404,6 +414,16 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'sport' => [
+            'winter' => [
+                'editorial' => ['id' => 36300021, 'title' => 'Горнолыжники на фоне заснеженных гор, вертикальная съёмка 2026', 'author' => 'Alexandra Dziundzia'],
+                'proof' => ['id' => 36537027, 'title' => 'Лыжники проходят вираж на свежем снегу, сезон 2026', 'author' => 'Toki No Ori'],
+                'premium' => ['id' => 35582776, 'title' => 'Сноубордист на солнечном склоне, оригинальный кадр 9:16', 'author' => 'Meyra'],
+                'warm' => ['id' => 31299009, 'title' => 'Двое лыжников отдыхают с видом на горы, естественный свет', 'author' => 'Andreas Ebner'],
+                'urban' => ['id' => 35879484, 'title' => 'Лыжник на курорте с подъёмником, современный вертикальный кадр', 'author' => 'Osman Arabacı'],
+                'soft' => ['id' => 39895404, 'title' => 'Два лыжника в пастельном горном пейзаже, съёмка 2026', 'author' => 'Maël BALLAND'],
+                'promo' => ['id' => 32010788, 'title' => 'Горнолыжный инструктор на склоне, приглашение на тренировку', 'author' => 'Igor Vieira'],
+                'seasonal' => ['id' => 31434612, 'title' => 'Один лыжник в жёлтой куртке среди снега — минимализм', 'author' => 'Anton Massalov'],
+            ],
             'section' => [
                 'editorial' => ['id' => 37926373, 'title' => 'Футбольный тренер на поле — вертикальный портрет 2026', 'author' => 'Franco Monsalvo'],
                 'proof' => ['id' => 36451465, 'title' => 'Функциональная тренировка с медицинским мячом, 2026', 'author' => 'CRISTIAN CAMILO ESTRADA'],
