@@ -11,6 +11,16 @@ final class CategoryStoryPhotoLibrary
 {
     public const COLLECTIONS = [
         'beauty' => [
+            'salon' => [
+                'editorial' => ['id' => 33867544, 'title' => 'Портрет стилиста в приглушённом бежевом салоне', 'author' => 'Daniel & Hannah Snipes'],
+                'proof' => ['id' => 8834077, 'title' => 'Точная работа парикмахера с волосами клиента', 'author' => 'Kampus Production'],
+                'premium' => ['id' => 18367694, 'title' => 'Готовая многослойная стрижка — портрет', 'author' => 'TONI&GUY PONDICHERRY'],
+                'warm' => ['id' => 34792813, 'title' => 'Уютный салон и работа стилиста в тёплом свете', 'author' => 'Артем Зелюткин'],
+                'urban' => ['id' => 10318038, 'title' => 'Стильная укладка плойкой в салоне', 'author' => 'Ron Lach'],
+                'soft' => ['id' => 7440066, 'title' => 'Мягкая укладка светлых волос крупным планом', 'author' => 'cottonbro studio'],
+                'promo' => ['id' => 7750099, 'title' => 'Чистый современный интерьер салона для анонса записи', 'author' => 'Max Vakhtbovych'],
+                'seasonal' => ['id' => 3993312, 'title' => 'Актуальное окрашивание волос в салоне', 'author' => 'cottonbro studio'],
+            ],
             'kids-hair' => [
                 'editorial' => ['id' => 36741613, 'title' => 'Детская стрижка в светлом салоне', 'author' => 'Usama Mazhar'],
                 'proof' => ['id' => 29317630, 'title' => 'Барбер аккуратно подстригает ребёнка', 'author' => 'Hashtag Melvin'],

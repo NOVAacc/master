@@ -37,6 +37,7 @@ class CuratedCategoryStoryPhotoTest extends TestCase
     public function test_curated_nail_collection_has_eight_unique_verified_source_references(): void
     {
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'nails'));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'salon'));
         $ids = [];
         foreach (['editorial','proof','premium','warm','urban','soft','promo','seasonal'] as $role) {
             $photo = CategoryStoryPhotoLibrary::get('beauty', 'nails', $role);
@@ -83,9 +84,10 @@ class CuratedCategoryStoryPhotoTest extends TestCase
                 }
             }
         }
-        $this->assertCount(208, $allIds);
-        $this->assertCount(208, array_unique($allIds));
-        $this->assertNull(CategoryStoryPhotoLibrary::get('beauty', 'salon', 'editorial'));
+        $this->assertCount(216, $allIds);
+        $this->assertCount(216, array_unique($allIds));
+        $this->assertNotNull(CategoryStoryPhotoLibrary::get('beauty', 'salon', 'editorial'));
+        $this->assertNull(CategoryStoryPhotoLibrary::get('beauty', 'unknown', 'editorial'));
     }
 
     public function test_curated_image_is_proxied_with_validation_and_cached_without_outbound_repeats(): void
