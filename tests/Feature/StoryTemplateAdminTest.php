@@ -90,6 +90,8 @@ class StoryTemplateAdminTest extends TestCase
         $this->admin();
         $this->get('/admin/stories')->assertOk()->assertSee('Ресницы')->assertSee('Эпиляция')
             ->assertSee('/admin/stories/barber/classic')
+            ->assertSee('role="tablist"', false)
+            ->assertSee('Фото используется в')
             ->assertDontSee('name="image"', false);
         $this->get('/admin/stories/lashes/nude')->assertOk()
             ->assertSee('Лёгкий нюд')
