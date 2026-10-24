@@ -255,9 +255,9 @@ class StoryTemplateAdminController extends Controller
         $config = [
             'font' => $data['font'],
             'scale' => (int) $data['scale'],
-            'image_position' => $data['image_position'] ?? 'center',
+            'image_position' => $data['image_position'] ?? ($old['image_position'] ?? 'center'),
             'shade' => (int) ($data['shade'] ?? 0),
-            'image_horizontal' => $data['image_horizontal'] ?? 'center',
+            'image_horizontal' => $data['image_horizontal'] ?? ($old['image_horizontal'] ?? 'center'),
             'image_zoom' => (int) ($data['image_zoom'] ?? 100),
             'text_color' => strtoupper($data['text_color'] ?? ''),
             'path' => ($data['remove_image'] ?? false) ? null : $oldPath,
