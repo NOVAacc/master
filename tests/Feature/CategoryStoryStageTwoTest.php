@@ -151,6 +151,19 @@ class CategoryStoryStageTwoTest extends TestCase
         $this->getJson('/stories/templates/catalog')->assertOk()->assertJsonCount(8,'nails');
     }
 
+    public function test_additional_neutral_text_color_presets_are_available_and_persisted(): void
+    {
+        $this->admin();
+        $this->assertCount(20, \App\Http\Controllers\StoryTemplateAdminController::TEXT_COLORS);
+        $url = '/admin/categories/medicine/dentistry/stories/editorial';
+        $this->get($url)->assertOk()->assertSee('Жемчужный')->assertSee('Шалфей')->assertSee('Тёмно-синий');
+        $this->post($url, [...$this->data(), 'text_color' => '#566A5C'])->assertRedirect($url);
+        $saved = json_decode(SiteSetting::whereKey('category-story.medicine.dentistry.editorial')->value('value'), true);
+        $this->assertSame('#566A5C', $saved['text_color']);
+        $this->post($url, [...$this->data(), 'text_color' => '#ABCDEF'])->assertSessionHasErrors('text_color');
+        $this->assertSame('#566A5C', json_decode(SiteSetting::whereKey('category-story.medicine.dentistry.editorial')->value('value'), true)['text_color']);
+    }
+
     public function test_invalid_parameters_are_rejected_before_writing(): void
     {
         $this->admin();
