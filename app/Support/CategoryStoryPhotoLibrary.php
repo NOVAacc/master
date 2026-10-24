@@ -404,6 +404,26 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'sport' => [
+            'section' => [
+                'editorial' => ['id' => 37926373, 'title' => 'Футбольный тренер на поле — вертикальный портрет 2026', 'author' => 'Franco Monsalvo'],
+                'proof' => ['id' => 36451465, 'title' => 'Функциональная тренировка с медицинским мячом, 2026', 'author' => 'CRISTIAN CAMILO ESTRADA'],
+                'premium' => ['id' => 34006985, 'title' => 'Баскетбольная секция с тренером в современном зале', 'author' => 'khezez | خزاز'],
+                'warm' => ['id' => 38796265, 'title' => 'Групповое силовое занятие в студии 2026', 'author' => 'sum sum'],
+                'urban' => ['id' => 35649996, 'title' => 'Атлетка тренируется с весами — спортивный editorial', 'author' => 'Achi Murusidze'],
+                'soft' => ['id' => 35649998, 'title' => 'Тренировка на современном оборудовании в сдержанных тонах', 'author' => 'Achi Murusidze'],
+                'promo' => ['id' => 38755286, 'title' => 'Спортивная тренировка на футбольном поле, лето 2026', 'author' => 'CRISTIAN CAMILO ESTRADA'],
+                'seasonal' => ['id' => 35649987, 'title' => 'Современная силовая подготовка в минималистичном зале', 'author' => 'Achi Murusidze'],
+            ],
+            'water' => [
+                'editorial' => ['id' => 38928841, 'title' => 'Два сапборда у спокойного озера, вертикальный кадр 2026', 'author' => 'zeynep uluç'],
+                'proof' => ['id' => 40241825, 'title' => 'Каякер на спокойной воде — свежая съёмка октября 2026', 'author' => 'Arda Kaykısız'],
+                'premium' => ['id' => 38928838, 'title' => 'Сапбординг на рассвете в золотом свете, 2026', 'author' => 'zeynep uluç'],
+                'warm' => ['id' => 39827799, 'title' => 'Групповая прогулка на сапбордах у скал, сентябрь 2026', 'author' => 'Hatice Dikçe'],
+                'urban' => ['id' => 39653725, 'title' => 'Три гидроцикла на открытой синей воде, 2026', 'author' => 'Nicole Avagliano'],
+                'soft' => ['id' => 40126404, 'title' => 'Сапбординг на тихом пляже в мягком закатном свете', 'author' => 'Bráulio jardim'],
+                'promo' => ['id' => 39709561, 'title' => 'Прогулка на гидроцикле по голубой воде — запись на занятие', 'author' => 'Frederick Adegoke Snr.'],
+                'seasonal' => ['id' => 40013006, 'title' => 'Серфер на гребне океанской волны, октябрь 2026', 'author' => 'D. Martínez González'],
+            ],
             'games' => [
                 'editorial' => ['id' => 34649303, 'title' => 'Вертикальный кадр командной футбольной тренировки в Барселоне, 2025', 'author' => 'El gringo photo'],
                 'proof' => ['id' => 38745606, 'title' => 'Молодёжная баскетбольная тренировка в зале, 2026', 'author' => 'Vlad Vasnetsov'],
