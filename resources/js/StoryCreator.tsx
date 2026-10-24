@@ -4,7 +4,7 @@ import CloseButton from "./CloseButton";
 import type { Master, Service } from "./types";
 
 type Style = "minimal" | "dark" | "soft" | "accent" | "premium";
-type TemplateSetting = { photo_url?: string; image_url: string | null; font: "system" | "serif" | "rounded"; scale: number; text_color: string; image_position?: "top" | "center" | "bottom"; shade?: number };
+type TemplateSetting = { photo_url?: string; image_url: string | null; font: "system" | "serif" | "rounded"; scale: number; text_color: string; image_position?: "top" | "center" | "bottom"; image_horizontal?: "left" | "center" | "right"; image_zoom?: number; shade?: number };
 type ExtraTheme = "lashes"|"makeup"|"massage"|"skin"|"barber"|"smooth";
 type StoryCatalog = Partial<Record<"nails"|"brows"|"hair"|ExtraTheme, Record<string,TemplateSetting>>>;
 const fontFace=(font:TemplateSetting["font"]|undefined)=>font==="serif"?'Georgia, "Times New Roman", serif':font==="rounded"?'Trebuchet MS, Arial, sans-serif':'system-ui, sans-serif';
@@ -86,7 +86,7 @@ const browTemplates: {id:BrowTemplateId; name:string; top:string; bottom:string;
  {id:"urban",name:"Городской стиль",top:"#DFD5D5",bottom:"#81808B",ink:"#26242E",muted:"#4F4A55",button:"#26242E",buttonInk:"#FFFFFF",skin:"#D9AF9C",brows:"#312D35",detail:"#C8BCC4",photo:"photo-1725886260675-7156c4b56b84",photoCredit:"Alireza Bp"},
  {id:"editorial",name:"Fashion",top:"#392239",bottom:"#A95783",ink:"#FFF1F7",muted:"#F0C4DB",button:"#F2C7DF",buttonInk:"#3F2840",skin:"#DBA7B0",brows:"#473045",detail:"#EAA9CD",photo:"photo-1569597212855-f10721b2e1ac",photoCredit:"Julia Kuzenkov"}
 ];
-async function drawBrowBackground(ctx:CanvasRenderingContext2D,id:BrowTemplateId, imageUrl?:string, imagePosition:"top"|"center"|"bottom"="center"){
+async function drawBrowBackground(ctx:CanvasRenderingContext2D,id:BrowTemplateId, imageUrl?:string, imagePosition:"top"|"center"|"bottom"="center",horizontal:"left"|"center"|"right"="center",zoom=100){
  const t=browTemplates.find(x=>x.id===id)??browTemplates[0];
  const gradient=ctx.createLinearGradient(0,0,0,1920);
  gradient.addColorStop(0,t.top);gradient.addColorStop(1,t.bottom);
@@ -94,7 +94,7 @@ async function drawBrowBackground(ctx:CanvasRenderingContext2D,id:BrowTemplateId
  // Same photographic approach as manicure, with offline fallback.
  const photo=new Image();photo.crossOrigin="anonymous";
  photo.src=imageUrl||"https://images.unsplash.com/"+t.photo+"?auto=format&fit=crop&w=1080&h=1920&q=85";
- try{await photo.decode();ctx.save();ctx.globalAlpha=.88;coverImage(ctx,photo,0,0,1080,1920,imagePosition);ctx.restore();}
+ try{await photo.decode();ctx.save();ctx.globalAlpha=.88;coverImage(ctx,photo,0,0,1080,1920,imagePosition,horizontal,zoom);ctx.restore();}
  catch{drawArt(ctx,"brows");}
  const dark=["luxury","bold","editorial"].includes(id);
  const wash=ctx.createLinearGradient(0,0,0,1920);
@@ -124,14 +124,14 @@ const hairTemplates: {id:HairTemplateId; name:string; top:string; bottom:string;
  {id:"urban",name:"Urban trendy",top:"#D9D8D6",bottom:"#717078",ink:"#202127",muted:"#44464C",button:"#202127",buttonInk:"#FFFFFF",hair:"#292B31",highlight:"#A9A8B1",photo:"photo-1605497788044-5a32c7078486",photoCredit:"Unsplash • salon hair"},
  {id:"chrome",name:"Creative party / chrome",top:"#211B38",bottom:"#66417C",ink:"#FCF4FF",muted:"#E5CBF6",button:"#D7BBEF",buttonInk:"#221932",hair:"#565577",highlight:"#CFB4F4",photo:"photo-1521590832167-7bcbfaa6381f",photoCredit:"Unsplash • editorial hair studio"}
 ];
-async function drawHairBackground(ctx:CanvasRenderingContext2D,id:HairTemplateId, imageUrl?:string, imagePosition:"top"|"center"|"bottom"="center"){
+async function drawHairBackground(ctx:CanvasRenderingContext2D,id:HairTemplateId, imageUrl?:string, imagePosition:"top"|"center"|"bottom"="center",horizontal:"left"|"center"|"right"="center",zoom=100){
  const t=hairTemplates.find(x=>x.id===id)??hairTemplates[0];
  const g=ctx.createLinearGradient(0,0,1080,1920);g.addColorStop(0,t.top);g.addColorStop(1,t.bottom);
  ctx.fillStyle=g;ctx.fillRect(0,0,1080,1920);
  const img=new Image();img.crossOrigin="anonymous";
  img.src=imageUrl||"https://images.unsplash.com/"+t.photo+"?auto=format&fit=crop&w=1080&h=1920&q=85";
  try {
-  await img.decode(); ctx.save();ctx.globalAlpha=.94;coverImage(ctx,img,0,0,1080,1920,imagePosition);ctx.restore();
+  await img.decode(); ctx.save();ctx.globalAlpha=.94;coverImage(ctx,img,0,0,1080,1920,imagePosition,horizontal,zoom);ctx.restore();
  } catch { drawArt(ctx,"hair"); }
  const dark=["brunette","bold","cozy","chrome"].includes(id);
  const wash=ctx.createLinearGradient(0,0,0,1920);
@@ -161,15 +161,19 @@ const nailTemplates:{id:NailTemplateId;name:string;photo:string;top:string;botto
 {id:"chrome",name:"Creative chrome / party",photo:"photo-1684609365994-a144ee021c88",top:"#211239",bottom:"#50317C",ink:"#FDEBFF",muted:"#DEB9FE",button:"#CDA0FA",buttonInk:"#26113C",photoCredit:"Noel Oviedo / Unsplash"}
 ];
 function coverImage(ctx:CanvasRenderingContext2D,img:HTMLImageElement,x:number,y:number,w:number,h:number,position:"top"|"center"|"bottom"="center"){
-const scale=Math.max(w/img.naturalWidth,h/img.naturalHeight),sw=w/scale,sh=h/scale;
-ctx.drawImage(img,(img.naturalWidth-sw)/2,(img.naturalHeight-sh)*(position==="top"?0:position==="bottom"?1:.5),sw,sh,x,y,w,h);
+const magnification=Math.max(1,Math.min(1.5,zoom/100));
+const scale=Math.max(w/img.naturalWidth,h/img.naturalHeight)*magnification;
+const sw=w/scale,sh=h/scale;
+const alignX=horizontal==="left"?0:horizontal==="right"?1:.5;
+const alignY=position==="top"?0:position==="bottom"?1:.5;
+ctx.drawImage(img,(img.naturalWidth-sw)*alignX,(img.naturalHeight-sh)*alignY,sw,sh,x,y,w,h);
 }
-async function drawExtraBackground(ctx:CanvasRenderingContext2D,theme:ExtraTheme,index:number,url?:string,imagePosition:"top"|"center"|"bottom"="center"){
+async function drawExtraBackground(ctx:CanvasRenderingContext2D,theme:ExtraTheme,index:number,url?:string,imagePosition:"top"|"center"|"bottom"="center",horizontal:"left"|"center"|"right"="center",zoom=100){
  const p=extraPalette(theme,index);
  ctx.fillStyle=p.bg;ctx.fillRect(0,0,1080,1920);
  if(url){
   const image=new Image();image.crossOrigin="anonymous";image.src=url;
-  try{await image.decode();coverImage(ctx,image,0,0,1080,1920,imagePosition);}
+  try{await image.decode();coverImage(ctx,image,0,0,1080,1920,imagePosition,horizontal,zoom);}
   catch{drawArt(ctx,theme);}
  }else drawArt(ctx,theme);
  const dark=[2,3,6,7].includes(index),wash=ctx.createLinearGradient(0,0,0,1920);
@@ -178,7 +182,7 @@ async function drawExtraBackground(ctx:CanvasRenderingContext2D,theme:ExtraTheme
  wash.addColorStop(1,dark?"rgba(15,10,17,.84)":"rgba(255,250,247,.93)");
  ctx.fillStyle=wash;ctx.fillRect(0,0,1080,1920);
 }
-async function drawNailBackground(ctx:CanvasRenderingContext2D,template:NailTemplateId,imageUrl?:string, imagePosition:"top"|"center"|"bottom"="center"){
+async function drawNailBackground(ctx:CanvasRenderingContext2D,template:NailTemplateId,imageUrl?:string, imagePosition:"top"|"center"|"bottom"="center",horizontal:"left"|"center"|"right"="center",zoom=100){
 const t=nailTemplates.find(x=>x.id===template)??nailTemplates[0];
 const gradient=ctx.createLinearGradient(0,0,0,1920);
 gradient.addColorStop(0,t.top);gradient.addColorStop(1,t.bottom);
@@ -187,7 +191,7 @@ const image=new Image();image.crossOrigin="anonymous";
 image.src=imageUrl||"https://images.unsplash.com/"+t.photo+"?auto=format&fit=crop&w=1080&h=1920&q=85";
 try{
  await new Promise<void>((resolve,reject)=>{image.onload=()=>resolve();image.onerror=()=>reject(new Error("Image not available"));});
- ctx.save();ctx.globalAlpha=t.id==="urban"?.82:.87;coverImage(ctx,image,0,0,1080,1920,imagePosition);ctx.restore();
+ ctx.save();ctx.globalAlpha=t.id==="urban"?.82:.87;coverImage(ctx,image,0,0,1080,1920,imagePosition,horizontal,zoom);ctx.restore();
 }catch{ drawArt(ctx,"nails"); /* Retain an illustrated fallback offline. */ }
 const wash=ctx.createLinearGradient(0,0,0,1920);
 if(["luxury","red","cozy","urban","chrome"].includes(t.id)){
@@ -236,10 +240,10 @@ export async function drawStory(canvas: HTMLCanvasElement, master: Master, servi
     const family=fontFace(editor?.font);
     const headingSize=Math.max(80,Math.min(120,editor?.scale??100))/100;
     const p = extraTheme ? extraPalette(extraTheme,extraIndex) : theme==="brows" ? {bg:browDesign.top,fg:browDesign.ink,sub:browDesign.muted,action:browDesign.button,actionText:browDesign.buttonInk} : theme==="hair" ? {bg:hairDesign.top,fg:hairDesign.ink,sub:hairDesign.muted,action:hairDesign.button,actionText:hairDesign.buttonInk} : theme==="nails" ? {bg:design.top,fg:design.ink,sub:design.muted,action:design.button,actionText:design.buttonInk} : palettes[style];
-    if(theme==="nails") await drawNailBackground(ctx,nailTemplate,editor?.image_url??undefined,editor?.image_position);
-    else if(theme==="hair") await drawHairBackground(ctx,hairTemplate,editor?.image_url??undefined,editor?.image_position);
-    else if(theme==="brows") await drawBrowBackground(ctx,browTemplate,editor?.image_url??undefined,editor?.image_position);
-    else if(extraTheme) await drawExtraBackground(ctx,extraTheme,extraIndex,editor?.photo_url,editor?.image_position);
+    if(theme==="nails") await drawNailBackground(ctx,nailTemplate,editor?.image_url??undefined,editor?.image_position,editor?.image_horizontal,editor?.image_zoom);
+    else if(theme==="hair") await drawHairBackground(ctx,hairTemplate,editor?.image_url??undefined,editor?.image_position,editor?.image_horizontal,editor?.image_zoom);
+    else if(theme==="brows") await drawBrowBackground(ctx,browTemplate,editor?.image_url??undefined,editor?.image_position,editor?.image_horizontal,editor?.image_zoom);
+    else if(extraTheme) await drawExtraBackground(ctx,extraTheme,extraIndex,editor?.photo_url,editor?.image_position,editor?.image_horizontal,editor?.image_zoom);
     else {ctx.fillStyle=p.bg;ctx.fillRect(0,0,WIDTH,HEIGHT);drawArt(ctx,theme);}
     if(editor?.text_color && /^#[0-9a-fA-F]{6}$/.test(editor.text_color)){p.fg=editor.text_color;p.sub=editor.text_color;}
     const shade=Math.min(40,Math.max(0,Number(editor?.shade)||0));
