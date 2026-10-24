@@ -128,6 +128,7 @@ class CategoryStoryTemplateController extends Controller
         $key = self::key($industry, $activity, $role);
         $saved = json_decode((string) SiteSetting::whereKey($key)->value('value'), true);
         $path = self::path($industry, $activity, $role, is_array($saved) ? $saved : []);
+        if ($path && ! Storage::disk('local')->exists($path)) $path = null;
         if (! $path) {
             $curated = CategoryStoryPhotoLibrary::get($industry, $activity, $role);
             abort_unless($curated && hash_equals($curated['version'], $version), 404);
