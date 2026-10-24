@@ -55,7 +55,7 @@ class CuratedCategoryStoryPhotoTest extends TestCase
     {
         Storage::fake('local');
         $this->admin();
-        $jpg = UploadedFile::fake()->image('photo.jpg', 1080, 1920)->getContent();
+        $jpg = file_get_contents(UploadedFile::fake()->image('photo.jpg', 1080, 1920)->getPathname());
         Http::fake(['images.pexels.com/*' => Http::response($jpg, 200, ['Content-Type' => 'image/jpeg'])]);
         $config = CategoryStoryTemplateController::config('beauty', 'nails', 'proof');
         $this->assertSame('curated', $config['photo_origin']);
