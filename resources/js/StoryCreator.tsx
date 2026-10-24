@@ -18,7 +18,8 @@ const fontFace=(font:TemplateSetting["font"]|undefined)=>({
 }[font??"system"] ?? 'system-ui, sans-serif');
 const photoSource=(catalog:StoryCatalog,theme:"nails"|"hair"|"brows"|ExtraTheme,id:string,fallback:string)=>catalog[theme]?.[id]?.image_url||fallback;
 type CategoryTemplate = TemplateSetting & { id: string; name: string; description: string; image_url: string | null; };
-type CategoryResponse = { category: { industry: string; activity: string; name: string } | null; templates: CategoryTemplate[] };
+type CategoryGroup = { id: string; name: string; activities: Record<string,string> };
+type CategoryResponse = { groups?: CategoryGroup[]; category: { industry: string; activity: string; name: string } | null; templates: CategoryTemplate[] };
 const categoryLook: Record<string,{bg:string; end:string; fg:string; action:string; actionText:string}>={
  editorial:{bg:"#F4F0E9",end:"#DCD1C5",fg:"#171717",action:"#171717",actionText:"#FFFFFF"},
  proof:{bg:"#27333A",end:"#6B7779",fg:"#FFFFFF",action:"#FFFFFF",actionText:"#27333A"},
@@ -386,13 +387,17 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const [mobileStoryView, setMobileStoryView] = useState<"edit" | "preview">("edit");
     const [catalog, setCatalog] = useState<StoryCatalog>({});
     const [categoryCatalog,setCategoryCatalog]=useState<CategoryResponse>({category:null,templates:[]});
-    useEffect(()=>{let live=true;axios.get<CategoryResponse>("/stories/category/catalog").then(({data})=>{if(live)setCategoryCatalog(data);}).catch(()=>{/* Legacy story collections remain usable. */});return()=>{live=false;};},[master.industry,master.activity]);
+    const [categoryPair,setCategoryPair]=useState(()=>{
+        const saved=master.story_template?.split(":");
+        return saved?.[0]==="category" ? [saved[1],saved[2]] : [master.industry||"",master.activity||""];
+    });
+    useEffect(()=>{let live=true;axios.get<CategoryResponse>("/stories/category/catalog",{params:{industry:categoryPair[0],activity:categoryPair[1]}}).then(({data})=>{if(live)setCategoryCatalog(data);}).catch(()=>{if(live)setError("Не удалось загрузить шаблоны категории. Попробуйте ещё раз.");});return()=>{live=false;};},[categoryPair[0],categoryPair[1]]);
     const [prepared, setPrepared] = useState<File | null>(null);
     const canvas = useRef<HTMLCanvasElement>(null);
     const [themeChoice,setThemeChoice]=useState<Theme|null>(null);
     const [categorySelection,setCategorySelection]=useState<string>(()=>{
       const parts=master.story_template?.split(":");
-      return parts?.[0]==="category"&&parts[1]===master.industry&&parts[2]===master.activity?parts[3]:"editorial";
+      return parts?.[0]==="category"?parts[3]:"editorial";
     });
     const [nailTemplate,setNailTemplate]=useState<NailTemplateId>(()=> master.story_template?.startsWith("bosh-nail-trends:") ? (master.story_template.split(":")[1] as NailTemplateId) : "nude");
     const [hairTemplate,setHairTemplate]=useState<HairTemplateId>(()=> master.story_template?.startsWith(HAIR_COLLECTION.slug+":") && hairTemplates.some(t=>t.id===master.story_template?.split(":")[1]) ? master.story_template.split(":")[1] as HairTemplateId : "nude");
@@ -410,7 +415,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const [savedTemplate,setSavedTemplate]=useState<string|null>(master.story_template??null);
     const renderSequence=useRef(0);
     const service = activeServices.find(s => s.id === serviceId);
-    const hasCategory=!!(categoryCatalog.category && categoryCatalog.category.industry===master.industry && categoryCatalog.category.activity===master.activity && categoryCatalog.templates.length);
+    const hasCategory=!!(categoryCatalog.category && categoryCatalog.category.industry===categoryPair[0] && categoryCatalog.category.activity===categoryPair[1] && categoryCatalog.templates.length);
     const theme=themeChoice ?? (hasCategory?"category":service?storyTheme(service,master):"general");
     const categoryTemplate=hasCategory?categoryCatalog.templates.find(t=>t.id===categorySelection)??categoryCatalog.templates[0]:undefined;
     const extraId=isExtraTheme(theme)?extraSelections[theme]??extraCollections[theme].templates[0].id:"";
@@ -421,7 +426,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         const sequence=++renderSequence.current;
         setPrepared(null);
         setError("");
-        if (service && canvas.current && /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{2}:\d{2}$/.test(time)) {
+        if ((theme!=="category" || hasCategory) && service && canvas.current && /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{2}:\d{2}$/.test(time)) {
             const preview=canvas.current;
             // A temporary canvas prevents late image loads from overwriting a newer template.
             const offscreen=document.createElement("canvas");
@@ -429,7 +434,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                 .then(()=>{if(sequence!==renderSequence.current)return;const c=preview.getContext("2d");if(c){preview.width=offscreen.width;preview.height=offscreen.height;c.drawImage(offscreen,0,0);}})
                 .catch(()=>{if(sequence===renderSequence.current)setError("Не удалось отобразить сторис.");});
         }
-    }, [master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, categoryCatalog.category?.name]);
+    }, [master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, categoryCatalog.category?.name, hasCategory]);
     useEffect(() => {
         const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
         window.addEventListener("keydown", handleKey);
@@ -452,7 +457,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         }finally{setSavingTemplate(false);}
     };
     async function prepare() {
-        if (!service || !canvas.current) return;
+        if (!service || !canvas.current || (theme==="category" && !hasCategory)) return;
         setBusy(true);
         setError("");
         setPrepared(null);
@@ -502,7 +507,14 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                         <label>Дата<input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
                         <label>Время<input type="time" step="1800" value={time} onChange={e => setTime(e.target.value)} /></label>
                     </div>
-                    <label>Тематика изображения<select value={theme} onChange={e=>setThemeChoice(e.target.value as Theme)}>{(Object.keys(themes) as Theme[]).filter(key=>key!=="category"||hasCategory).map(key=><option key={key} value={key}>{key==="category"?categoryCatalog.category?.name:themes[key]}</option>)}</select></label>
+                    <label>Категория шаблонов<select value={categoryPair[0]} onChange={e=>{const group=categoryCatalog.groups?.find(g=>g.id===e.target.value);if(group){setCategoryPair([group.id,Object.keys(group.activities)[0]]);setThemeChoice("category");setCategorySelection("editorial");}}}>
+                        <option value="" disabled>Выберите категорию</option>
+                        {categoryCatalog.groups?.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}
+                    </select></label>
+                    {categoryPair[0] && <label>Подборка<select value={categoryPair[1]} onChange={e=>{setCategoryPair([categoryPair[0],e.target.value]);setThemeChoice("category");setCategorySelection("editorial");}}>
+                        {Object.entries(categoryCatalog.groups?.find(g=>g.id===categoryPair[0])?.activities||{}).map(([id,name])=><option key={id} value={id}>{name}</option>)}
+                    </select></label>}
+                    <label>Дополнительные тематики<select value={theme} onChange={e=>setThemeChoice(e.target.value as Theme)}>{(Object.keys(themes) as Theme[]).filter(key=>key!=="category"||hasCategory).map(key=><option key={key} value={key}>{key==="category"?categoryCatalog.category?.name:themes[key]}</option>)}</select></label>
                     <p className="muted small">{hasCategory?"По умолчанию выбрана категория вашего профиля. Старые подборки доступны вручную.":"Тематика подобрана по услуге автоматически. Можно изменить."}</p>
                     {theme==="category" && hasCategory && <div>
                         <p className="muted small">{categoryCatalog.category?.name} · 8 вариантов оформления</p>
@@ -563,7 +575,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                     </div>}
                     <p className="muted small">Сторис создаётся в размере 1080 × 1920. Ссылка на запись подготовлена отдельно для стикера Instagram.</p>
                     <div className="row wrap">
-                        <button type="button" className="primary" disabled={busy || !service} onClick={() => void prepare()}>{busy ? "Проверяем время…" : "Создать сторис"}</button>
+                        <button type="button" className="primary" disabled={busy || !service || (theme==="category" && !hasCategory)} onClick={() => void prepare()}>{busy ? "Проверяем время…" : "Создать сторис"}</button>
                         {prepared && <button type="button" className="ghost" onClick={download}>Скачать PNG</button>}
                         {prepared && <button type="button" className="ghost" onClick={() => void share()}>Поделиться</button>}
                         {prepared && <button type="button" className="ghost" onClick={() => navigator.clipboard.writeText(link).then(() => setError("Ссылка скопирована.")).catch(() => setError("Не удалось скопировать ссылку."))}>Копировать ссылку</button>}

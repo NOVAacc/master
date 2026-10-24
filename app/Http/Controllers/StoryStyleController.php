@@ -17,10 +17,11 @@ class StoryStyleController extends Controller
             }
         }
         $master = MasterProfile::where('user_id', $request->user()->id)->firstOrFail();
-        if ($master->industry && $master->activity
-            && \App\Support\CategoryStoryCatalog::hasCategory($master->industry, $master->activity)) {
-            foreach (array_keys(\App\Support\CategoryStoryCatalog::ROLES) as $role) {
-                $permitted[] = 'category:'.$master->industry.':'.$master->activity.':'.$role;
+        foreach (\App\Support\CategoryStoryCatalog::all() as $industry => $activities) {
+            foreach ($activities as $activity => $category) {
+                foreach ($category['templates'] as $role) {
+                    $permitted[] = 'category:'.$industry.':'.$activity.':'.$role['id'];
+                }
             }
         }
         $data = $request->validate([

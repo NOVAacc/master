@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\MasterProfile;
 use App\Support\CategoryStoryCatalog;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class MasterCategoryStoryController extends Controller
 {
@@ -17,20 +16,23 @@ class MasterCategoryStoryController extends Controller
     public function catalog(Request $request)
     {
         $master = $this->master($request);
-        $category = $master->industry && $master->activity
-            ? CategoryStoryCatalog::forCategory($master->industry, $master->activity)
-            : null;
-
+        $industry = (string) $request->query('industry', $master->industry ?? '');
+        $activity = (string) $request->query('activity', $master->activity ?? '');
+        $category = CategoryStoryCatalog::forCategory($industry, $activity);
+        $groups = [];
+        foreach (config('industries', []) as $id => $definition) {
+            $groups[] = ['id' => $id, 'name' => $definition['name'], 'activities' => $definition['activities']];
+        }
         if (! $category) {
-            return response()->json(['category' => null, 'templates' => []]);
+            return response()->json(['category' => null, 'templates' => [], 'groups' => $groups]);
         }
         $templates = [];
         foreach ($category['templates'] as $role) {
-            $config = CategoryStoryTemplateController::config($master->industry, $master->activity, $role['id']);
+            $config = CategoryStoryTemplateController::config($industry, $activity, $role['id']);
             $version = $config['image_url'] ? basename($config['image_url']) : null;
             // The admin-only URL is never sent to the master.
             $config['image_url'] = $version ? route('stories.category.image', [
-                'industry' => $master->industry, 'activity' => $master->activity,
+                'industry' => $industry, 'activity' => $activity,
                 'role' => $role['id'], 'version' => $version,
             ]) : null;
             $templates[] = array_merge($role, $config);
@@ -38,22 +40,22 @@ class MasterCategoryStoryController extends Controller
 
         return response()->json([
             'category' => [
-                'industry' => $master->industry,
-                'activity' => $master->activity,
+                'industry' => $industry,
+                'activity' => $activity,
                 'name' => $category['activity_name'],
             ],
             'templates' => $templates,
+            'groups' => $groups,
         ]);
     }
 
     public function image(Request $request, string $industry, string $activity, string $role, string $version)
     {
-        $master = $this->master($request);
-        abort_unless($master->industry === $industry && $master->activity === $activity, 404);
+        $this->master($request);
         abort_unless(CategoryStoryTemplateController::allowed($industry, $activity, $role), 404);
 
         // Reuse the path integrity and current-version checks in the admin controller.
-        // It does not require the admin guard itself; this route already verifies ownership.
+        // It does not require the admin guard itself; this route already verifies the authenticated master.
         return app(CategoryStoryTemplateController::class)->image($industry, $activity, $role, $version);
     }
 }
