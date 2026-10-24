@@ -75,6 +75,17 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'education' => [
+            'music' => [
+                'editorial' => ['id' => 32218646, 'title' => 'Тёплая музыкальная комната с пианино и гитарой', 'author' => 'Flávia Vicentini'],
+                'proof' => ['id' => 8520439, 'title' => 'Деталь урока фортепиано — руки учителя и ученика', 'author' => 'Yan Krukau'],
+                'premium' => ['id' => 7521299, 'title' => 'Нотная грамота — спокойная студийная композиция', 'author' => 'Pavel Danilyuk'],
+                'warm' => ['id' => 8520467, 'title' => 'Урок музыки с педагогом в домашней атмосфере', 'author' => 'Yan Krukau'],
+                'urban' => ['id' => 10222304, 'title' => 'Современный индивидуальный урок пианино', 'author' => 'cottonbro studio'],
+                'soft' => ['id' => 7714141, 'title' => 'Мягкий свет на занятии фортепиано', 'author' => 'Boris Pavlikovsky'],
+                'promo' => ['id' => 6671621, 'title' => 'Онлайн-урок музыки со скрипкой', 'author' => 'Tima Miroshnichenko'],
+                'seasonal' => ['id' => 10222313, 'title' => 'Нотная практика, уютная музыкальная студия', 'author' => 'cottonbro studio'],
+            ],
+
             'languages' => [
                 'editorial' => ['id' => 6991507, 'title' => 'Бежевый блокнот с пространством для текста', 'author' => 'DS stories'],
                 'proof' => ['id' => 37811262, 'title' => 'Ученики за занятиями, естественные цвета', 'author' => 'Eduard Perez'],
@@ -130,6 +141,17 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'auto' => [
+            'tires' => [
+                'editorial' => ['id' => 34357281, 'title' => 'Шины и колесо в сдержанной серой композиции', 'author' => 'Erik Mclean'],
+                'proof' => ['id' => 34642048, 'title' => 'Мастер ремонтирует шину на станке', 'author' => 'Aayurdha Binoy'],
+                'premium' => ['id' => 8985859, 'title' => 'Чёрно-белое колесо в мастерской, кадр 9:16', 'author' => 'Artem Podrez'],
+                'warm' => ['id' => 5260115, 'title' => 'Точная замена автомобильного колеса', 'author' => 'Enis Yavuz'],
+                'urban' => ['id' => 8470260, 'title' => 'Современный шиномонтаж — механик проверяет колесо', 'author' => 'Anastasia Shuraeva'],
+                'soft' => ['id' => 33814735, 'title' => 'Автомастерская в спокойных индустриальных тонах', 'author' => 'Renee Razumov'],
+                'promo' => ['id' => 8986134, 'title' => 'Монохромный автосервис — мастер у подъёмника', 'author' => 'Artem Podrez'],
+                'seasonal' => ['id' => 17600886, 'title' => 'Замена колеса в профессиональной мастерской', 'author' => 'Frans van Heerden'],
+            ],
+
             'car-wash' => [
                 'editorial' => ['id' => 30564616, 'title' => 'Монохромный автомобиль в пене, вертикальный кадр', 'author' => 'Borta'],
                 'proof' => ['id' => 35149468, 'title' => 'Полировка кузова крупным планом', 'author' => 'Melih Can'],
@@ -142,6 +164,17 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'sport' => [
+            'dance' => [
+                'editorial' => ['id' => 35538273, 'title' => 'Студийный танцевальный портрет в чёрном', 'author' => 'Miguel Rodríguez'],
+                'proof' => ['id' => 30861353, 'title' => 'Современная танцевальная поза в мягком свете', 'author' => 'Freddy Rezvanian'],
+                'premium' => ['id' => 32178419, 'title' => 'Танец и тени — графичная спокойная композиция', 'author' => 'Israyosoy S.'],
+                'warm' => ['id' => 7318684, 'title' => 'Танцовщица в светлой бежевой студии', 'author' => 'MART PRODUCTION'],
+                'urban' => ['id' => 36189008, 'title' => 'Современный танец в минималистичной студии', 'author' => 'Ana Gonzalez'],
+                'soft' => ['id' => 7318762, 'title' => 'Мягкий свет и балетная поза в нейтральном зале', 'author' => 'MART PRODUCTION'],
+                'promo' => ['id' => 5742990, 'title' => 'Танцевальное занятие на светлом фоне', 'author' => 'cottonbro studio'],
+                'seasonal' => ['id' => 7814850, 'title' => 'Минималистичная современная хореография в белом', 'author' => 'cottonbro studio'],
+            ],
+
             'trainer' => [
                 'editorial' => ['id' => 39480954, 'title' => 'Монохромная студия тренировок — свободное пространство', 'author' => 'Tom Jackson'],
                 'proof' => ['id' => 37963563, 'title' => 'Тренер помогает клиенту выполнить упражнение', 'author' => 'Bulat843'],
