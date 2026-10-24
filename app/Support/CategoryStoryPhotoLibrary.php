@@ -195,6 +195,26 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'education' => [
+            'exams' => [
+                'editorial' => ['id' => 6281016, 'title' => 'Студенты готовятся в библиотеке — нейтральная композиция', 'author' => 'Yaroslav Shuraev'],
+                'proof' => ['id' => 6549859, 'title' => 'Ученица выполняет письменное задание в библиотеке', 'author' => 'Tima Miroshnichenko'],
+                'premium' => ['id' => 5940709, 'title' => 'Подготовка к экзамену в современной библиотеке', 'author' => 'Kampus Production'],
+                'warm' => ['id' => 32526073, 'title' => 'Группа студентов совместно готовится к экзаменам', 'author' => 'jason hu'],
+                'urban' => ['id' => 6140418, 'title' => 'Подготовка к экзаменам с ноутбуком на кампусе', 'author' => 'William Fortunato'],
+                'soft' => ['id' => 5940705, 'title' => 'Спокойная учёба в библиотеке с ноутбуками', 'author' => 'Kampus Production'],
+                'promo' => ['id' => 9572464, 'title' => 'Совместная подготовка студентов к тестам', 'author' => 'Tima Miroshnichenko'],
+                'seasonal' => ['id' => 16420237, 'title' => 'Самостоятельная подготовка в современной библиотеке', 'author' => 'Ludovic Delot'],
+            ],
+            'tutoring' => [
+                'editorial' => ['id' => 5311450, 'title' => 'Репетитор и ученик работают с учебными материалами', 'author' => 'Kaboompics.com'],
+                'proof' => ['id' => 5428011, 'title' => 'Преподаватель помогает ученику на индивидуальном занятии', 'author' => 'Tima Miroshnichenko'],
+                'premium' => ['id' => 4308096, 'title' => 'Индивидуальное обучение с ноутбуком и тетрадями', 'author' => 'Ketut Subiyanto'],
+                'warm' => ['id' => 6929183, 'title' => 'Доверительная беседа преподавателя и ученика', 'author' => 'Polina Tankilevitch'],
+                'urban' => ['id' => 35745334, 'title' => 'Современное занятие с педагогом в светлом классе', 'author' => 'Ahmet Kurt'],
+                'soft' => ['id' => 5311458, 'title' => 'Уютное индивидуальное занятие с тетрадями', 'author' => 'Kaboompics.com'],
+                'promo' => ['id' => 5212354, 'title' => 'Учитель помогает ученику — запись на занятие', 'author' => 'Max Fischer'],
+                'seasonal' => ['id' => 5311406, 'title' => 'Индивидуальный урок в домашней обстановке', 'author' => 'Kaboompics.com'],
+            ],
             'driving' => [
                 'editorial' => ['id' => 37112146, 'title' => 'Учебный автомобиль с опознавательным знаком 2026', 'author' => 'SHOX ART'],
                 'proof' => ['id' => 9518015, 'title' => 'Инструктор объясняет управление автомобилем', 'author' => 'Ron Lach'],
