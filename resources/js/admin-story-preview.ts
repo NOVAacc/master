@@ -5,6 +5,7 @@ type Config = {
   theme: Parameters<typeof drawStory>[7];
   template: string;
   photo_url: string;
+  default_photo_url: string;
   image_url: string | null;
   image_position: "top" | "center" | "bottom";
   font: "system" | "serif" | "rounded";
@@ -33,7 +34,7 @@ if (input && canvas && form) {
   const service = { name: "Пример услуги", price_som: 1500 } as Service;
   const draw = async () => {
     const current = ++revision;
-    const photo = reset.checked ? initial.photo_url : objectUrl || initial.image_url || initial.photo_url;
+    const photo = reset.checked ? initial.default_photo_url : objectUrl || initial.image_url || initial.photo_url;
     const config = {
       photo_url: photo,
       image_url: photo,
