@@ -221,7 +221,7 @@ function wrappedText(ctx: CanvasRenderingContext2D, value: string, maxWidth: num
     }
     return clipped;
 }
-async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId, hairTemplate: HairTemplateId, browTemplate: BrowTemplateId, extraId:string, catalog:StoryCatalog) {
+export async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId, hairTemplate: HairTemplateId, browTemplate: BrowTemplateId, extraId:string, catalog:StoryCatalog) {
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
     const ctx = canvas.getContext("2d");
