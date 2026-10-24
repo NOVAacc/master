@@ -55,15 +55,15 @@ class CategoryStoryStageTwoTest extends TestCase
         $url = '/admin/categories/household/photo/stories/editorial';
         $this->post($url, $this->data())->assertRedirect($url);
         $page = $this->get($url)->assertOk();
-        $page->assertDontSee('name="image_position"', false)->assertDontSee('name="image_horizontal"', false)
+        $page->assertDontSee('name="image_zoom"', false)->assertDontSee('Увеличение фото')->assertDontSee('name="image_position"', false)->assertDontSee('name="image_horizontal"', false)
             ->assertDontSee('Вертикальное положение')->assertDontSee('Горизонтальное положение');
         $payload = $this->data();
-        unset($payload['image_position'], $payload['image_horizontal']);
+        unset($payload['image_position'], $payload['image_horizontal'], $payload['image_zoom']);
         $this->post($url, $payload)->assertRedirect($url);
         $saved = json_decode(SiteSetting::whereKey('category-story.household.photo.editorial')->value('value'), true);
         $this->assertSame('bottom', $saved['image_position']);
         $this->assertSame('left', $saved['image_horizontal']);
-        $this->assertSame(120, $saved['image_zoom']);
+        $this->assertSame(100, $saved['image_zoom']);
     }
 
     public function test_settings_persist_privately_and_autocolor_is_supported(): void
@@ -74,7 +74,7 @@ class CategoryStoryStageTwoTest extends TestCase
         $value = json_decode(SiteSetting::whereKey('category-story.education.languages.editorial')->value('value'), true);
         $this->assertSame('elegant', $value['font']);
         $this->assertSame('#FFF5E7', $value['text_color']);
-        $this->assertSame(120, $value['image_zoom']);
+        $this->assertSame(100, $value['image_zoom']);
         $this->post($url, [...$this->data(), 'text_color' => ''])->assertRedirect($url);
         $this->assertSame('', json_decode(SiteSetting::whereKey('category-story.education.languages.editorial')->value('value'), true)['text_color']);
         $this->get('/admin/categories/education/languages/stories')->assertOk();

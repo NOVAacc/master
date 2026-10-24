@@ -19,7 +19,7 @@ const fontFace=(font:TemplateSetting["font"]|undefined)=>({
 const photoSource=(catalog:StoryCatalog,theme:"nails"|"hair"|"brows"|ExtraTheme,id:string,fallback:string)=>catalog[theme]?.[id]?.image_url||fallback;
 type CategoryTemplate = TemplateSetting & { id: string; name: string; description: string; image_url: string | null; };
 type CategoryGroup = { id: string; name: string; activities: Record<string,string> };
-type StoryEditorOptions = { fonts: Record<string,string>; colors: Record<string,string>; scales: number[]; shades: number[]; zooms: number[] };
+type StoryEditorOptions = { fonts: Record<string,string>; colors: Record<string,string>; scales: number[]; shades: number[] };
 type CategoryResponse = { editor_options?: StoryEditorOptions; groups?: CategoryGroup[]; category: { industry: string; activity: string; name: string } | null; templates: CategoryTemplate[] };
 const categoryLook: Record<string,{bg:string; end:string; fg:string; action:string; actionText:string}>={
  editorial:{bg:"#F4F0E9",end:"#DCD1C5",fg:"#171717",action:"#171717",actionText:"#FFFFFF"},
@@ -184,7 +184,7 @@ const nailTemplates:{id:NailTemplateId;name:string;photo:string;top:string;botto
 {id:"chrome",name:"Creative chrome / party",photo:"photo-1684609365994-a144ee021c88",top:"#211239",bottom:"#50317C",ink:"#FDEBFF",muted:"#DEB9FE",button:"#CDA0FA",buttonInk:"#26113C",photoCredit:"Noel Oviedo / Unsplash"}
 ];
 function coverImage(ctx:CanvasRenderingContext2D,img:HTMLImageElement,x:number,y:number,w:number,h:number,position:"top"|"center"|"bottom"="center",horizontal:"left"|"center"|"right"="center",zoom=100){
-const magnification=Math.max(1,Math.min(1.5,zoom/100));
+const magnification=1;
 const scale=Math.max(w/img.naturalWidth,h/img.naturalHeight)*magnification;
 const sw=w/scale,sh=h/scale;
 const alignX=horizontal==="left"?0:horizontal==="right"?1:.5;
@@ -248,7 +248,7 @@ function wrappedText(ctx: CanvasRenderingContext2D, value: string, maxWidth: num
     }
     return clipped;
 }
-async function drawCategoryStory(canvas:HTMLCanvasElement,master:Master,service:Service,date:string,time:string,link:string,categoryName:string,template:CategoryTemplate){
+async function drawCategoryStory(canvas:HTMLCanvasElement,master:Master,service:Service,date:string,time:string,link:string,categoryName:string,template:CategoryTemplate,showPrice=true){
  const ctx=canvas.getContext("2d");if(!ctx)throw new Error("Canvas недоступен");
  const design=categoryLook[template.id]||categoryLook.editorial;
  const g=ctx.createLinearGradient(0,0,1080,1920);
@@ -288,7 +288,7 @@ async function drawCategoryStory(canvas:HTMLCanvasElement,master:Master,service:
  ctx.fillText(time,108,1360,864);
  const niceDate=new Date(date+"T12:00:00Z").toLocaleDateString("ru-RU",{timeZone:"UTC",day:"numeric",month:"long"});
  ctx.font=`500 46px ${font}`;
- ctx.fillText(niceDate+" · "+service.price_som.toLocaleString("ru-RU")+" сом",108,1495,864);
+ ctx.fillText(niceDate+(showPrice?" · "+service.price_som.toLocaleString("ru-RU")+" сом":""),108,1495,864);
  ctx.fillStyle=design.action;
  ctx.beginPath();ctx.roundRect(108,1560,864,112,55);ctx.fill();
  ctx.fillStyle=design.actionText;ctx.font=`bold 46px ${font}`;
@@ -296,10 +296,10 @@ async function drawCategoryStory(canvas:HTMLCanvasElement,master:Master,service:
  ctx.fillStyle=fg;ctx.font=`500 30px ${font}`;
  const url=new URL(link);ctx.fillText(url.host+url.pathname,108,1740,864);
 }
-export async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId, hairTemplate: HairTemplateId, browTemplate: BrowTemplateId, extraId:string, catalog:StoryCatalog,categoryTemplate?:CategoryTemplate,categoryName?:string) {
+export async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId, hairTemplate: HairTemplateId, browTemplate: BrowTemplateId, extraId:string, catalog:StoryCatalog,categoryTemplate?:CategoryTemplate,categoryName?:string,showPrice=true) {
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
-    if(theme==="category" && categoryTemplate){await drawCategoryStory(canvas,master,service,date,time,link,categoryName||"Услуги",categoryTemplate);return;}
+    if(theme==="category" && categoryTemplate){await drawCategoryStory(canvas,master,service,date,time,link,categoryName||"Услуги",categoryTemplate,showPrice);return;}
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Браузер не поддерживает создание изображений.");
     const design = nailTemplates.find(t=>t.id===nailTemplate)??nailTemplates[0];
@@ -356,7 +356,7 @@ export async function drawStory(canvas: HTMLCanvasElement, master: Master, servi
     ctx.font = `bold 138px ${family}`;
     ctx.fillText(time, margin, 1230, WIDTH-margin*2);
     ctx.font = `500 49px ${family}`;
-    ctx.fillText(niceDate + " · " + service.price_som.toLocaleString("ru-RU") + " сом", margin, 1400, WIDTH-margin*2);
+    ctx.fillText(niceDate + (showPrice ? " · " + service.price_som.toLocaleString("ru-RU") + " сом" : ""), margin, 1400, WIDTH-margin*2);
     ctx.fillStyle = p.action;
     ctx.beginPath();
     ctx.roundRect(margin, 1570, WIDTH - margin * 2, 108, 54);
@@ -387,6 +387,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const [busy, setBusy] = useState(false);
     const [mobileStoryView, setMobileStoryView] = useState<"edit" | "preview">("edit");
     const [catalog] = useState<StoryCatalog>({});
+    const [showPrice,setShowPrice]=useState(true);
     const [headlineOverride,setHeadlineOverride]=useState<string|null>(null);
     const [categoryCatalog,setCategoryCatalog]=useState<CategoryResponse>({category:null,templates:[]});
     const [categoryPair,setCategoryPair]=useState(()=>{
@@ -428,11 +429,11 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
             const preview=canvas.current;
             // A temporary canvas prevents late image loads from overwriting a newer template.
             const offscreen=document.createElement("canvas");
-            void drawStory(offscreen,master,service,date,time,style,link,theme,nailTemplate,hairTemplate,browTemplate,extraId,catalog,categoryTemplate,headline)
+            void drawStory(offscreen,master,service,date,time,style,link,theme,nailTemplate,hairTemplate,browTemplate,extraId,catalog,categoryTemplate,headline,showPrice)
                 .then(()=>{if(sequence!==renderSequence.current)return;const c=preview.getContext("2d");if(c){preview.width=offscreen.width;preview.height=offscreen.height;c.drawImage(offscreen,0,0);}})
                 .catch(()=>{if(sequence===renderSequence.current)setError("Не удалось отобразить сторис.");});
         }
-    }, [master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, headline, hasCategory]);
+    }, [master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, headline, hasCategory, showPrice]);
     useEffect(() => {
         const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
         window.addEventListener("keydown", handleKey);
@@ -457,7 +458,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         try {
             const response = await axios.get<{available: boolean; reason?: string}>("/stories/availability", {params: {service: service.id, date, time}});
             if (!response.data.available) throw new Error(response.data.reason || "Это время сейчас недоступно.");
-            await drawStory(canvas.current, master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, headline);
+            await drawStory(canvas.current, master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, headline, showPrice);
             const blob = await toBlob(canvas.current);
             if(blob.size===0) throw new Error("PNG пустой.");
             setPrepared(new File([blob], `bosh-${date}-${time.replace(":", "-")}.png`, { type: "image/png" }));
@@ -496,6 +497,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
             <div className="story-grid">
                 <div className="story-fields">
                     <label>Услуга<select value={serviceId} onChange={e => setServiceId(Number(e.target.value))}>{activeServices.map(s => <option key={s.id} value={s.id}>{s.name} · {s.price_som.toLocaleString("ru-RU")} сом</option>)}</select></label>
+                    <label className="story-checkbox"><input type="checkbox" checked={showPrice} onChange={e=>setShowPrice(e.target.checked)} />Показывать цену услуги</label>
                     <div className="story-input-row">
                         <label>Дата<input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
                         <label>Время<input type="time" step="1800" value={time} onChange={e => setTime(e.target.value)} /></label>
@@ -532,7 +534,6 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                         </div>
                         <div className="story-input-row">
                             <label>Дополнительное затемнение<select value={categoryTemplate.shade??0} onChange={e=>editTemplate({shade:Number(e.target.value)})}>{Array.from(new Set([...editorOptions.shades,categoryTemplate.shade??0])).sort((a,b)=>a-b).map(value=><option key={value} value={value}>{value}%</option>)}</select></label>
-                            <label>Увеличение фото<select value={categoryTemplate.image_zoom??100} onChange={e=>editTemplate({image_zoom:Number(e.target.value)})}>{editorOptions.zooms.map(value=><option key={value} value={value}>{value}%</option>)}</select></label>
                         </div>
                         <button type="button" className="ghost" onClick={()=>setTemplateEdits(current=>{const next={...current};delete next[templateKey];return next;})}>Вернуть настройки шаблона</button>
                     </div>}

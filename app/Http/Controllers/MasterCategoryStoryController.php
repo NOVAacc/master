@@ -28,7 +28,6 @@ class MasterCategoryStoryController extends Controller
             'colors' => StoryTemplateAdminController::TEXT_COLORS,
             'scales' => [80, 90, 100, 110, 120],
             'shades' => [0, 10, 20, 30, 40],
-            'zooms' => [100, 110, 120, 130, 140, 150],
         ];
         if (! $category) {
             return response()->json(['category' => null, 'templates' => [], 'groups' => $groups, 'editor_options' => $editorOptions]);

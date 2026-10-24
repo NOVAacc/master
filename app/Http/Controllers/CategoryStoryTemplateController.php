@@ -50,7 +50,7 @@ class CategoryStoryTemplateController extends Controller
             'shade' => max(0, min(40, (int) ($saved['shade'] ?? $default['shade']))),
             'image_position' => in_array($saved['image_position'] ?? '', ['top', 'center', 'bottom'], true) ? $saved['image_position'] : 'center',
             'image_horizontal' => in_array($saved['image_horizontal'] ?? '', ['left', 'center', 'right'], true) ? $saved['image_horizontal'] : 'center',
-            'image_zoom' => max(100, min(150, (int) ($saved['image_zoom'] ?? 100))),
+            'image_zoom' => 100,
             'image_url' => ($exists || $curated) ? route('admin.categories.stories.image', [
                 'industry' => $industry, 'activity' => $activity, 'role' => $role,
                 'version' => $exists ? pathinfo($path, PATHINFO_FILENAME) : $curated['version'],
@@ -88,7 +88,7 @@ class CategoryStoryTemplateController extends Controller
             'shade' => ['required', 'integer', 'between:0,40'],
             'image_position' => ['sometimes', Rule::in(['top','center','bottom'])],
             'image_horizontal' => ['sometimes', Rule::in(['left','center','right'])],
-            'image_zoom' => ['required', 'integer', 'between:100,150'],
+            'image_zoom' => ['sometimes', 'integer', 'between:100,150'],
         ]);
         $key = self::key($industry, $activity, $role);
         $saved = json_decode((string) SiteSetting::whereKey($key)->value('value'), true);
@@ -110,7 +110,7 @@ class CategoryStoryTemplateController extends Controller
             'scale' => (int) $data['scale'], 'shade' => (int) $data['shade'],
             'image_position' => $data['image_position'] ?? (is_array($saved) ? ($saved['image_position'] ?? 'center') : 'center'),
             'image_horizontal' => $data['image_horizontal'] ?? (is_array($saved) ? ($saved['image_horizontal'] ?? 'center') : 'center'),
-            'image_zoom' => (int) $data['image_zoom'], 'path' => $path,
+            'image_zoom' => 100, 'path' => $path,
         ];
         try {
             SiteSetting::updateOrCreate(['key' => $key], ['value' => json_encode($value, JSON_THROW_ON_ERROR)]);
