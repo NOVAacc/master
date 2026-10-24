@@ -27,8 +27,6 @@ if (input && canvas && form) {
   const scale = form.elements.namedItem("scale") as HTMLSelectElement;
   const shade = form.elements.namedItem("shade") as HTMLSelectElement;
   const color = form.elements.namedItem("text_color") as HTMLInputElement;
-  const position = form.elements.namedItem("image_position") as HTMLSelectElement;
-  const horizontal = form.elements.namedItem("image_horizontal") as HTMLSelectElement;
   const zoom = form.elements.namedItem("image_zoom") as HTMLSelectElement;
   const ctx = canvas.getContext("2d");
   let objectUrl: string | null = null;
@@ -44,8 +42,8 @@ if (input && canvas && form) {
     const config = {
       photo_url: photo,
       image_url: photo,
-      image_position: position.value,
-      image_horizontal: horizontal.value,
+      image_position: initial.image_position,
+      image_horizontal: initial.image_horizontal,
       image_zoom: Number(zoom.value),
       font: font.value,
       scale: Number(scale.value),
@@ -91,7 +89,7 @@ if (input && canvas && form) {
     if (reset.checked) { release(); image.value = ""; }
     queue();
   });
-  for (const element of [font, scale, shade, color, position, horizontal, zoom]) element.addEventListener("input", queue);
+  for (const element of [font, scale, shade, color, zoom]) element.addEventListener("input", queue);
   window.addEventListener("pagehide", () => { ++revision; cancelAnimationFrame(frame); release(); }, { once: true });
   queue();
 }
