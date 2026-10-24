@@ -385,9 +385,15 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const [busy, setBusy] = useState(false);
     const [mobileStoryView, setMobileStoryView] = useState<"edit" | "preview">("edit");
     const [catalog, setCatalog] = useState<StoryCatalog>({});
+    const [categoryCatalog,setCategoryCatalog]=useState<CategoryResponse>({category:null,templates:[]});
+    useEffect(()=>{let live=true;axios.get<CategoryResponse>("/stories/category/catalog").then(({data})=>{if(live)setCategoryCatalog(data);}).catch(()=>{/* Legacy story collections remain usable. */});return()=>{live=false;};},[master.industry,master.activity]);
     const [prepared, setPrepared] = useState<File | null>(null);
     const canvas = useRef<HTMLCanvasElement>(null);
     const [themeChoice,setThemeChoice]=useState<Theme|null>(null);
+    const [categorySelection,setCategorySelection]=useState<string>(()=>{
+      const parts=master.story_template?.split(":");
+      return parts?.[0]==="category"&&parts[1]===master.industry&&parts[2]===master.activity?parts[3]:"editorial";
+    });
     const [nailTemplate,setNailTemplate]=useState<NailTemplateId>(()=> master.story_template?.startsWith("bosh-nail-trends:") ? (master.story_template.split(":")[1] as NailTemplateId) : "nude");
     const [hairTemplate,setHairTemplate]=useState<HairTemplateId>(()=> master.story_template?.startsWith(HAIR_COLLECTION.slug+":") && hairTemplates.some(t=>t.id===master.story_template?.split(":")[1]) ? master.story_template.split(":")[1] as HairTemplateId : "nude");
     const [browTemplate,setBrowTemplate]=useState<BrowTemplateId>(()=>master.story_template?.startsWith(BROW_COLLECTION.slug+":") && browTemplates.some(t=>t.id===master.story_template?.split(":")[1]) ? master.story_template.split(":")[1] as BrowTemplateId : "soft-pink");
@@ -404,7 +410,9 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const [savedTemplate,setSavedTemplate]=useState<string|null>(master.story_template??null);
     const renderSequence=useRef(0);
     const service = activeServices.find(s => s.id === serviceId);
-    const theme=themeChoice ?? (service ? storyTheme(service,master) : "general");
+    const hasCategory=!!(categoryCatalog.category && categoryCatalog.category.industry===master.industry && categoryCatalog.category.activity===master.activity && categoryCatalog.templates.length);
+    const theme=themeChoice ?? (hasCategory?"category":service?storyTheme(service,master):"general");
+    const categoryTemplate=hasCategory?categoryCatalog.templates.find(t=>t.id===categorySelection)??categoryCatalog.templates[0]:undefined;
     const extraId=isExtraTheme(theme)?extraSelections[theme]??extraCollections[theme].templates[0].id:"";
     useEffect(()=>setThemeChoice(null),[serviceId]);
     const link = new URL(`/m/${encodeURIComponent(master.slug)}?date=${encodeURIComponent(date)}&service=${serviceId}&time=${encodeURIComponent(time)}`, window.location.origin).toString();
@@ -417,11 +425,11 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
             const preview=canvas.current;
             // A temporary canvas prevents late image loads from overwriting a newer template.
             const offscreen=document.createElement("canvas");
-            void drawStory(offscreen,master,service,date,time,style,link,theme,nailTemplate,hairTemplate,browTemplate,extraId,catalog)
+            void drawStory(offscreen,master,service,date,time,style,link,theme,nailTemplate,hairTemplate,browTemplate,extraId,catalog,categoryTemplate,categoryCatalog.category?.name)
                 .then(()=>{if(sequence!==renderSequence.current)return;const c=preview.getContext("2d");if(c){preview.width=offscreen.width;preview.height=offscreen.height;c.drawImage(offscreen,0,0);}})
                 .catch(()=>{if(sequence===renderSequence.current)setError("Не удалось отобразить сторис.");});
         }
-    }, [master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog]);
+    }, [master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, categoryCatalog.category?.name]);
     useEffect(() => {
         const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
         window.addEventListener("keydown", handleKey);
@@ -451,7 +459,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         try {
             const response = await axios.get<{available: boolean; reason?: string}>("/stories/availability", {params: {service: service.id, date, time}});
             if (!response.data.available) throw new Error(response.data.reason || "Это время сейчас недоступно.");
-            await drawStory(canvas.current, master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog);
+            await drawStory(canvas.current, master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, categoryCatalog.category?.name);
             const blob = await toBlob(canvas.current);
             if(blob.size===0) throw new Error("PNG пустой.");
             setPrepared(new File([blob], `bosh-${date}-${time.replace(":", "-")}.png`, { type: "image/png" }));
@@ -494,8 +502,21 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                         <label>Дата<input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
                         <label>Время<input type="time" step="1800" value={time} onChange={e => setTime(e.target.value)} /></label>
                     </div>
-                    <label>Тематика изображения<select value={theme} onChange={e=>setThemeChoice(e.target.value as Theme)}>{(Object.keys(themes) as Theme[]).map(key=><option key={key} value={key}>{themes[key]}</option>)}</select></label>
-                    <p className="muted small">Тематика подобрана по услуге автоматически. Можно изменить.</p>
+                    <label>Тематика изображения<select value={theme} onChange={e=>setThemeChoice(e.target.value as Theme)}>{(Object.keys(themes) as Theme[]).filter(key=>key!=="category"||hasCategory).map(key=><option key={key} value={key}>{key==="category"?categoryCatalog.category?.name:themes[key]}</option>)}</select></label>
+                    <p className="muted small">{hasCategory?"По умолчанию выбрана категория вашего профиля. Старые подборки доступны вручную.":"Тематика подобрана по услуге автоматически. Можно изменить."}</p>
+                    {theme==="category" && hasCategory && <div>
+                        <p className="muted small">{categoryCatalog.category?.name} · 8 вариантов оформления</p>
+                        <div className="story-nail-templates" role="group" aria-label="Шаблоны моей категории">
+                        {categoryCatalog.templates.map(t=><button type="button" key={t.id} aria-pressed={categoryTemplate?.id===t.id}
+                          className={categoryTemplate?.id===t.id?"story-nail-template selected":"story-nail-template"}
+                          disabled={savingTemplate}
+                          onClick={()=>{setCategorySelection(t.id);void saveTemplate("category:"+categoryCatalog.category!.industry+":"+categoryCatalog.category!.activity,t.id);}}>
+                          <span className="story-nail-thumb" style={{backgroundImage:t.image_url?`linear-gradient(180deg,transparent,rgba(0,0,0,.45)),url("${t.image_url}")`:undefined,backgroundColor:categoryLook[t.id]?.bg||"#e9e5df"}}/>
+                          <span>{t.name}</span>
+                        </button>)}
+                        </div>
+                        <p className="muted small" role="status">{savingTemplate?"Сохраняем шаблон…":savedTemplate==="category:"+categoryCatalog.category?.industry+":"+categoryCatalog.category?.activity+":"+categoryTemplate?.id?"Шаблон сохранён":""}</p>
+                    </div>}
                     {theme==="nails" && <div className="story-nail-templates" role="group" aria-label="Маникюрные шаблоны">
                         {nailTemplates.map(t=><button type="button" key={t.id} aria-pressed={nailTemplate===t.id} className={nailTemplate===t.id?"story-nail-template selected":"story-nail-template"} onClick={()=>{setNailTemplate(t.id);void saveTemplate("bosh-nail-trends",t.id);}}>
                             <span className="story-nail-thumb" style={{backgroundImage:`linear-gradient(180deg,transparent,rgba(0,0,0,.45)),url("${photoSource(catalog,"nails",t.id,"https://images.unsplash.com/"+t.photo+"?auto=format&fit=crop&w=160&h=260&q=55")}")`}}/>
