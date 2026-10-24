@@ -48,6 +48,8 @@ class CuratedCategoryStoryPhotoTest extends TestCase
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('education', 'tutoring'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('education', 'children'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('education', 'professional'));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('education', 'courses'));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('auto', 'bodywork'));
         $ids = [];
         foreach (['editorial','proof','premium','warm','urban','soft','promo','seasonal'] as $role) {
             $photo = CategoryStoryPhotoLibrary::get('beauty', 'nails', $role);
@@ -94,8 +96,8 @@ class CuratedCategoryStoryPhotoTest extends TestCase
                 }
             }
         }
-        $this->assertCount(296, $allIds);
-        $this->assertCount(296, array_unique($allIds));
+        $this->assertCount(312, $allIds);
+        $this->assertCount(312, array_unique($allIds));
         $this->assertNotNull(CategoryStoryPhotoLibrary::get('beauty', 'salon', 'editorial'));
         $this->assertNull(CategoryStoryPhotoLibrary::get('beauty', 'unknown', 'editorial'));
     }

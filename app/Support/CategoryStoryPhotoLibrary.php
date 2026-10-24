@@ -195,6 +195,16 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'education' => [
+            'courses' => [
+                'editorial' => ['id' => 7963916, 'title' => 'Творческий курс для взрослых в светлой мастерской', 'author' => 'Roxanne Minnish'],
+                'proof' => ['id' => 33784418, 'title' => 'Практическое занятие по живописи в небольшой группе', 'author' => 'Anya Richter'],
+                'premium' => ['id' => 32623469, 'title' => 'Профессиональный семинар в сдержанном интерьере', 'author' => 'Ab Pixels'],
+                'warm' => ['id' => 7983563, 'title' => 'Преподаватель помогает освоить цифровые навыки', 'author' => 'Kampus Production'],
+                'urban' => ['id' => 7013900, 'title' => 'Онлайн-курс с ноутбуком и преподавателем', 'author' => 'cottonbro studio'],
+                'soft' => ['id' => 7983560, 'title' => 'Спокойный компьютерный класс для взрослых', 'author' => 'Kampus Production'],
+                'promo' => ['id' => 30902100, 'title' => 'Практическое обучение на профессиональном курсе', 'author' => 'Duy Tân Đại học'],
+                'seasonal' => ['id' => 33768800, 'title' => 'Современный креативный групповой воркшоп', 'author' => 'Centre for Ageing Better'],
+            ],
             'children' => [
                 'editorial' => ['id' => 8423125, 'title' => 'Дети учатся в спокойном светлом классе', 'author' => 'Pavel Danilyuk'],
                 'proof' => ['id' => 5905921, 'title' => 'Учитель помогает детям выполнить задание', 'author' => 'Katerina Holmes'],
@@ -311,6 +321,16 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'auto' => [
+            'bodywork' => [
+                'editorial' => ['id' => 37809554, 'title' => 'Кузовной ремонт бампера в современной мастерской, вертикальный кадр', 'author' => 'Bulat843'],
+                'proof' => ['id' => 29945082, 'title' => 'Мастер восстанавливает повреждённый бампер автомобиля', 'author' => 'Alireza Heidarpour'],
+                'premium' => ['id' => 8470881, 'title' => 'Покраска кузова с использованием краскопульта', 'author' => 'Anastasia Shuraeva'],
+                'warm' => ['id' => 29960489, 'title' => 'Два мастера окрашивают кузов в автомастерской', 'author' => 'Mario Spencer'],
+                'urban' => ['id' => 15489247, 'title' => 'Профессиональное оборудование для ремонта автомобилей', 'author' => 'Jae Park'],
+                'soft' => ['id' => 4116231, 'title' => 'Работа в чистой автомастерской, приглушённая палитра', 'author' => 'Jose Ricardo Barraza Morachis'],
+                'promo' => ['id' => 40300576, 'title' => 'Автомастер проверяет деталь автомобиля перед ремонтом', 'author' => 'Usman AbdulrasheedGambo'],
+                'seasonal' => ['id' => 4439588, 'title' => 'Профессиональная работа автомеханика в мастерской', 'author' => 'Matt Jerome Connor'],
+            ],
             'mechanic' => [
                 'editorial' => ['id' => 37809544, 'title' => 'Механик работает с чёрным автомобилем', 'author' => 'Bulat843'],
                 'proof' => ['id' => 37809582, 'title' => 'Осмотр автомобиля в тёмной мастерской', 'author' => 'Bulat843'],
