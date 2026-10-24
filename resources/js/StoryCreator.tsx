@@ -4,7 +4,7 @@ import CloseButton from "./CloseButton";
 import type { Master, Service } from "./types";
 
 type Style = "minimal" | "dark" | "soft" | "accent" | "premium";
-type TemplateSetting = { photo_url?: string; image_url: string | null; font: "system" | "serif" | "rounded"; scale: number; text_color: string; image_position?: "top" | "center" | "bottom" };
+type TemplateSetting = { photo_url?: string; image_url: string | null; font: "system" | "serif" | "rounded"; scale: number; text_color: string; image_position?: "top" | "center" | "bottom"; shade?: number };
 type ExtraTheme = "lashes"|"makeup"|"massage"|"skin"|"barber"|"smooth";
 type StoryCatalog = Partial<Record<"nails"|"brows"|"hair"|ExtraTheme, Record<string,TemplateSetting>>>;
 const fontFace=(font:TemplateSetting["font"]|undefined)=>font==="serif"?'Georgia, "Times New Roman", serif':font==="rounded"?'Trebuchet MS, Arial, sans-serif':'system-ui, sans-serif';
@@ -242,6 +242,15 @@ export async function drawStory(canvas: HTMLCanvasElement, master: Master, servi
     else if(extraTheme) await drawExtraBackground(ctx,extraTheme,extraIndex,editor?.photo_url,editor?.image_position);
     else {ctx.fillStyle=p.bg;ctx.fillRect(0,0,WIDTH,HEIGHT);drawArt(ctx,theme);}
     if(editor?.text_color && /^#[0-9a-fA-F]{6}$/.test(editor.text_color)){p.fg=editor.text_color;p.sub=editor.text_color;}
+    const shade=Math.min(40,Math.max(0,Number(editor?.shade)||0));
+    if(shade>0){
+        const foreground=p.fg.replace("#","");
+        const rgb=/^[0-9a-fA-F]{6}$/.test(foreground)
+            ? [0,2,4].map(i=>parseInt(foreground.slice(i,i+2),16)) : [255,255,255];
+        const luminance=(rgb[0]*299+rgb[1]*587+rgb[2]*114)/1000;
+        ctx.fillStyle=luminance>145?`rgba(0,0,0,${shade/100})`:`rgba(255,255,255,${shade/100})`;
+        ctx.fillRect(0,0,WIDTH,HEIGHT);
+    }
     const margin = 100;
     ctx.textBaseline = "top";
     ctx.fillStyle = p.fg;
