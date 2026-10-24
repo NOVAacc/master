@@ -153,7 +153,7 @@ class CategoryStoryStageTwoTest extends TestCase
         ]);
         $this->actingAs($other)->get('/stories/category/beauty/nails/editorial/image/'.$version)->assertOk();
         $this->getJson('/stories/category/catalog')->assertJsonPath('category.name','Репетиторство')
-            ->assertJsonCount(8,'templates')->assertJsonPath('templates.0.image_url',null);
+            ->assertJsonCount(8,'templates')->assertJsonPath('templates.0.photo_origin', 'curated');
     }
 
     public function test_master_without_category_keeps_legacy_story_choices(): void
