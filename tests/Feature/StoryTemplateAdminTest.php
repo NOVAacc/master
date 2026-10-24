@@ -61,6 +61,38 @@ class StoryTemplateAdminTest extends TestCase
         $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>100,'text_color'=>'bad'])->assertSessionHasErrors('text_color');
     }
 
+    public function test_new_font_styles_and_preset_colors_are_available_to_all_templates(): void
+    {
+        $this->admin();
+        $this->get('/admin/stories/lashes/nude')->assertOk()
+            ->assertSee('Элегантный')
+            ->assertSee('Классический')
+            ->assertSee('Акцентный')
+            ->assertSee('Моноширинный')
+            ->assertSee('Пудровый')
+            ->assertSee('Красный BOSH')
+            ->assertSee('story-color-swatch');
+
+        $this->post('/admin/stories/lashes/nude', [
+            'font' => 'elegant', 'scale' => 100, 'text_color' => '#F6D7E3',
+        ])->assertRedirect('/admin/stories/lashes/nude');
+
+        $this->actingAs(User::factory()->create(), 'web')
+            ->getJson('/stories/templates/catalog')
+            ->assertOk()
+            ->assertJsonPath('lashes.nude.font', 'elegant')
+            ->assertJsonPath('lashes.nude.text_color', '#F6D7E3');
+
+        $this->admin();
+        $this->post('/admin/stories/lashes/nude', [
+            'font' => 'mono', 'scale' => 100, 'text_color' => '',
+        ])->assertRedirect('/admin/stories/lashes/nude');
+        $this->actingAs(User::factory()->create(), 'web')
+            ->getJson('/stories/templates/catalog')
+            ->assertJsonPath('lashes.nude.font', 'mono')
+            ->assertJsonPath('lashes.nude.text_color', '');
+    }
+
     public function test_admin_upload_is_private_versioned_and_removable(): void
     {
         Storage::fake('local');
