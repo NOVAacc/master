@@ -321,6 +321,26 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'auto' => [
+            'dealership' => [
+                'editorial' => ['id' => 7144261, 'title' => 'Консультация покупателя в светлом автомобильном салоне', 'author' => 'Antoni Shkraba'],
+                'proof' => ['id' => 4895421, 'title' => 'Продавец представляет автомобиль клиенту', 'author' => 'Gustavo Fring'],
+                'premium' => ['id' => 37147586, 'title' => 'Люксовый спорткар в современном тёмном шоуруме', 'author' => 'Redyar Rzgar'],
+                'warm' => ['id' => 6817017, 'title' => 'Пара выбирает новый автомобиль в автосалоне', 'author' => 'Gustavo Fring'],
+                'urban' => ['id' => 29802105, 'title' => 'Синий автомобиль в современном выставочном зале', 'author' => 'Nathan Vaganay'],
+                'soft' => ['id' => 29802086, 'title' => 'Белый автомобиль в минималистичном шоуруме', 'author' => 'Nathan Vaganay'],
+                'promo' => ['id' => 7144212, 'title' => 'Передача ключей покупателю нового автомобиля', 'author' => 'Antoni Shkraba'],
+                'seasonal' => ['id' => 18161667, 'title' => 'Чёрный автомобиль в современном автомобильном салоне', 'author' => 'Sofía Nuñez'],
+            ],
+            'rental' => [
+                'editorial' => ['id' => 8033684, 'title' => 'Ключ от автомобиля на фоне машины — минималистичный кадр', 'author' => 'Ishan Kulshrestha'],
+                'proof' => ['id' => 97079, 'title' => 'Передача ключей от автомобиля клиенту', 'author' => 'Negative Space'],
+                'premium' => ['id' => 36498953, 'title' => 'Премиальный автомобиль с водителем для аренды', 'author' => 'Lee Salem'],
+                'warm' => ['id' => 36729874, 'title' => 'Клиент с ключами в арендованном автомобиле', 'author' => 'Vitaly Gariev'],
+                'urban' => ['id' => 3856436, 'title' => 'Геометричный вид сверху на парк автомобилей', 'author' => 'Tom Fisk'],
+                'soft' => ['id' => 5800943, 'title' => 'Светлая стоянка с автомобилями на выбор', 'author' => 'Renato Rocca'],
+                'promo' => ['id' => 13154533, 'title' => 'Автомобиль для самостоятельной поездки на природе', 'author' => 'Umang & Meet'],
+                'seasonal' => ['id' => 173390, 'title' => 'Винтажный кабриолет для туристической поездки', 'author' => 'Snapwire'],
+            ],
             'tuning' => [
                 'editorial' => ['id' => 40046508, 'title' => 'Тюнингованный спорткар в приглушённом городском гараже', 'author' => 'Erik Mclean'],
                 'proof' => ['id' => 31943402, 'title' => 'Деталь тюнинга: чёрный диск и красный суппорт', 'author' => 'Borta'],
