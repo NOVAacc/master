@@ -3,6 +3,7 @@
 @section('content')
 <h1>Категории мастеров</h1>
 <p class="muted">Направления и виды деятельности синхронизированы с регистрацией мастеров BOSH. Количество профилей рассчитывается из базы данных.</p>
+<p class="muted" role="status"><strong>Изображения для сторис: {{ $photoTotal }} из 448</strong> подобраны или загружены. Недостающие категории сохраняют фирменные фоны BOSH.</p>
 <style>
 .master-category-nav{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0}
 .master-category-nav a{border:1px solid #e7e7e7;border-radius:999px;padding:8px 12px;background:#fff;font-size:12px}
@@ -32,6 +33,7 @@
 <strong>{{ $activityName }}</strong>
 <div class="master-category-meta">
 <span class="master-category-total">{{ $counts[$industryId][$activityId] ?? 0 }} мастеров</span>
+<span class="muted">Фото: {{ $photoCoverage[$industryId][$activityId] ?? 0 }}/8</span>
 <a href="{{ route('admin.categories.stories', ['industry' => $industryId, 'activity' => $activityId]) }}">8 будущих шаблонов</a>
 @if($theme)
 <a href="{{ route('admin.stories') }}#{{ $theme }}">Шаблоны сторис</a>
