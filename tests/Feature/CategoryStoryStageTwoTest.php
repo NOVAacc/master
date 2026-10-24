@@ -38,7 +38,7 @@ class CategoryStoryStageTwoTest extends TestCase
         foreach (CategoryStoryCatalog::all() as $industry => $activities) {
             foreach ($activities as $activity => $category) {
                 $this->get("/admin/categories/{$industry}/{$activity}/stories")->assertOk()
-                    ->assertSee('Этап 2 из 3');
+                    ->assertSee('Выберите один из 8 шаблонов');
                 foreach ($category['templates'] as $template) {
                     $this->get("/admin/categories/{$industry}/{$activity}/stories/{$template['id']}")
                         ->assertOk()->assertSee('Сохранить шаблон')->assertSee('storyPreview');
