@@ -136,7 +136,7 @@ class StoryTemplateAdminController extends Controller
     {
         $industries = config('industries', []);
         $counts = [];
-        foreach (\\App\\Models\\MasterProfile::query()
+        foreach (\App\Models\MasterProfile::query()
             ->select('industry', 'activity')
             ->selectRaw('COUNT(*) as total')
             ->whereNotNull('industry')
