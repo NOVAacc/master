@@ -45,7 +45,7 @@ class StoryTemplateAdminController extends Controller
         'smooth' => ['nude' => 'photo-1512290923902-8a9f81dc236c', 'soft' => 'photo-1608248543803-ba4f8c70ae0b', 'premium' => 'photo-1556228720-195a672e8a03', 'bold' => 'photo-1570172619644-dfd03ed5d881', 'natural' => 'photo-1540555700478-4be289fbecef', 'care' => 'photo-1600334129128-685c5582fd35', 'urban' => 'photo-1596462502278-27bfdc403348', 'luxury' => 'photo-1620916566398-39f1143ab7be'],
     ];
     public const FONTS = ['system' => 'Современный', 'serif' => 'Редакционный', 'rounded' => 'Мягкий'];
-    public const DEFAULTS = ['font' => 'system', 'scale' => 100, 'text_color' => '', 'image_position' => 'center'];
+    public const DEFAULTS = ['font' => 'system', 'scale' => 100, 'text_color' => '', 'image_position' => 'center', 'shade' => 0];
 
     private static function settingKey(string $theme, string $template): string
     {
@@ -85,6 +85,7 @@ class StoryTemplateAdminController extends Controller
                     'scale' => max(80, min(120, (int) $cfg['scale'])),
                     'text_color' => preg_match('/^#[0-9a-fA-F]{6}$/D', (string) $cfg['text_color']) ? $cfg['text_color'] : '',
                     'image_position' => in_array($cfg['image_position'] ?? '', ['top', 'center', 'bottom'], true) ? $cfg['image_position'] : 'center',
+                    'shade' => max(0, min(40, (int) ($cfg['shade'] ?? 0))),
                     'photo_url' => $path && Storage::disk('local')->exists($path)
                         ? route('stories.template.image', ['theme' => $theme, 'template' => $id, 'version' => pathinfo($path, PATHINFO_FILENAME)])
                         : 'https://images.unsplash.com/'.self::DEFAULT_PHOTOS[$theme][$id].'?auto=format&fit=crop&w=1080&h=1920&q=85',
@@ -128,6 +129,7 @@ class StoryTemplateAdminController extends Controller
             'font' => ['required', Rule::in(array_keys(self::FONTS))],
             'scale' => ['required', 'integer', 'between:80,120'],
             'image_position' => ['nullable', Rule::in(['top', 'center', 'bottom'])],
+            'shade' => ['nullable', 'integer', 'between:0,40'],
             'text_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/D'],
         ]);
         $old = self::config($theme, $template);
@@ -137,6 +139,7 @@ class StoryTemplateAdminController extends Controller
             'font' => $data['font'],
             'scale' => (int) $data['scale'],
             'image_position' => $data['image_position'] ?? 'center',
+            'shade' => (int) ($data['shade'] ?? 0),
             'text_color' => strtoupper($data['text_color'] ?? ''),
             'path' => ($data['remove_image'] ?? false) ? null : $oldPath,
         ];
