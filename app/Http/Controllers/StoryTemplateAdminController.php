@@ -169,7 +169,7 @@ class StoryTemplateAdminController extends Controller
 
     public function categoryTemplates(string $industry, string $activity)
     {
-        $category = \\App\\Support\\CategoryStoryCatalog::forCategory($industry, $activity);
+        $category = \App\Support\CategoryStoryCatalog::forCategory($industry, $activity);
         abort_unless($category !== null, 404);
 
         return view('admin.category-stories', ['category' => $category]);
