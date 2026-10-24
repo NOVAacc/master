@@ -61,6 +61,7 @@ class CategoryStoryStageTwoTest extends TestCase
         $this->post($url, [...$this->data(), 'text_color' => ''])->assertRedirect($url);
         $this->assertSame('', json_decode(SiteSetting::whereKey('category-story.education.languages.editorial')->value('value'), true)['text_color']);
         $this->get('/admin/categories/education/languages/stories')->assertOk();
+        auth('admin')->logout();
         $this->actingAs(User::factory()->create(), 'web')
             ->post($url, $this->data())->assertRedirect('/admin/login');
         $this->getJson('/stories/templates/catalog')->assertOk()->assertJsonMissingPath('education.languages.editorial');
