@@ -113,6 +113,26 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'medicine' => [
+            'veterinary' => [
+                'editorial' => ['id' => 39550277, 'title' => 'Ветеринар слушает рыжего кота — спокойный портрет 2026', 'author' => 'Ali Merchant'],
+                'proof' => ['id' => 6235650, 'title' => 'Осмотр собаки стетоскопом в клинике', 'author' => 'Tima Miroshnichenko'],
+                'premium' => ['id' => 6235105, 'title' => 'Чёрно-белая ветеринарная консультация', 'author' => 'Tima Miroshnichenko'],
+                'warm' => ['id' => 6816859, 'title' => 'Заботливый осмотр белого кота', 'author' => 'Gustavo Fring'],
+                'urban' => ['id' => 7469216, 'title' => 'Ветеринарная команда и собака в современной клинике', 'author' => 'Mikhail Nilov'],
+                'soft' => ['id' => 6816851, 'title' => 'Нежная проверка белого кота в светлых тонах', 'author' => 'Gustavo Fring'],
+                'promo' => ['id' => 7469234, 'title' => 'Врач осматривает собаку — приглашение на приём', 'author' => 'Mikhail Nilov'],
+                'seasonal' => ['id' => 6604130, 'title' => 'Деликатный осмотр ушей собаки', 'author' => 'Ermelinda Maglione'],
+            ],
+            'psychology' => [
+                'editorial' => ['id' => 7176320, 'title' => 'Психолог внимательно слушает клиента в светлом кабинете', 'author' => 'SHVETS production'],
+                'proof' => ['id' => 3958372, 'title' => 'Записи психолога на консультации — крупный план', 'author' => 'Polina Zimmerman'],
+                'premium' => ['id' => 7176317, 'title' => 'Детали беседы и записи во время терапии', 'author' => 'SHVETS production'],
+                'warm' => ['id' => 7447060, 'title' => 'Доверительная беседа в уютном кабинете', 'author' => 'Gustavo Fring'],
+                'urban' => ['id' => 8560221, 'title' => 'Современная индивидуальная консультация', 'author' => 'Timur Weber'],
+                'soft' => ['id' => 3958407, 'title' => 'Спокойная консультация на мягком диване', 'author' => 'Polina Zimmerman'],
+                'promo' => ['id' => 7176035, 'title' => 'Консультация психолога — мягкая нейтральная композиция', 'author' => 'SHVETS production'],
+                'seasonal' => ['id' => 36729613, 'title' => 'Светлый современный кабинет и консультация 2026', 'author' => 'Vitaly Gariev'],
+            ],
             'massage' => [
                 'editorial' => ['id' => 6628532, 'title' => 'Светлая массажная комната и спокойный интерьер', 'author' => 'KoolShooters'],
                 'proof' => ['id' => 8312875, 'title' => 'Деталь работы массажиста', 'author' => 'RDNE Stock project'],
