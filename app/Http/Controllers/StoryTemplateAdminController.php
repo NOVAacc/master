@@ -3,11 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SiteSetting;
-use App\Rules\ProfileImage;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class StoryTemplateAdminController extends Controller
 {
@@ -130,20 +126,6 @@ class StoryTemplateAdminController extends Controller
         return $result;
     }
 
-    public function index()
-    {
-        $photoCounts = [];
-        foreach (self::DEFAULT_PHOTOS as $photos) {
-            foreach ($photos as $photo) {
-                $photoCounts[$photo] = ($photoCounts[$photo] ?? 0) + 1;
-            }
-        }
-        return view('admin.stories', [
-            'collections' => self::COLLECTIONS, 'catalog' => self::catalog(),
-            'labels' => self::LABELS, 'photos' => self::DEFAULT_PHOTOS, 'photoCounts' => $photoCounts,
-        ]);
-    }
-
     public function categories()
     {
         $industries = config('industries', []);
@@ -218,67 +200,6 @@ class StoryTemplateAdminController extends Controller
             $designs[$template['id']] = \App\Http\Controllers\CategoryStoryTemplateController::config($industry, $activity, $template['id']);
         }
         return view('admin.category-stories', ['category' => $category, 'designs' => $designs]);
-    }
-
-    public function edit(string $theme, string $template)
-    {
-        abort_unless(self::allowed($theme, $template), 404);
-
-        return view('admin.story-edit', [
-            'theme' => $theme, 'template' => $template,
-            'title' => self::COLLECTIONS[$theme]['title'],
-            'label' => self::LABELS[$theme][$template],
-            'config' => self::catalog()[$theme][$template],
-            'photo' => self::DEFAULT_PHOTOS[$theme][$template],
-            'fonts' => self::FONTS,
-            'textColors' => self::TEXT_COLORS,
-        ]);
-    }
-
-    public function update(Request $request, string $theme, string $template)
-    {
-        abort_unless(self::allowed($theme, $template), 404);
-        $data = $request->validate([
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', new ProfileImage, 'max:4096', 'dimensions:max_width=4096,max_height=4096'],
-            'remove_image' => ['sometimes', 'boolean'],
-            'font' => ['required', Rule::in(array_keys(self::FONTS))],
-            'scale' => ['required', 'integer', 'between:80,120'],
-            'image_position' => ['nullable', Rule::in(['top', 'center', 'bottom'])],
-            'shade' => ['nullable', 'integer', 'between:0,40'],
-            'image_horizontal' => ['nullable', Rule::in(['left', 'center', 'right'])],
-            'image_zoom' => ['nullable', 'integer', 'between:100,150'],
-            'text_color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/D'],
-        ]);
-        $old = self::config($theme, $template);
-        $oldPath = self::photoPath($theme, $template, $old);
-        $newPath = null;
-        $config = [
-            'font' => $data['font'],
-            'scale' => (int) $data['scale'],
-            'image_position' => $data['image_position'] ?? ($old['image_position'] ?? 'center'),
-            'shade' => (int) ($data['shade'] ?? 0),
-            'image_horizontal' => $data['image_horizontal'] ?? ($old['image_horizontal'] ?? 'center'),
-            'image_zoom' => (int) ($data['image_zoom'] ?? 100),
-            'text_color' => strtoupper($data['text_color'] ?? ''),
-            'path' => ($data['remove_image'] ?? false) ? null : $oldPath,
-        ];
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $extension = strtolower($file->extension());
-            $newPath = 'story-templates/'.$theme.'/'.$template.'/'.sha1(Str::random(64)).'.'.$extension;
-            if (! Storage::disk('local')->putFileAs(dirname($newPath), $file, basename($newPath))) {
-                return back()->withErrors(['image' => 'Не удалось сохранить изображение.']);
-            }
-            $config['path'] = $newPath;
-        }
-        try {
-            SiteSetting::updateOrCreate(['key' => self::settingKey($theme, $template)], ['value' => json_encode($config, JSON_THROW_ON_ERROR)]);
-        } catch (\Throwable $e) {
-            if ($newPath) Storage::disk('local')->delete($newPath);
-            throw $e;
-        }
-        if ($oldPath && $oldPath !== $config['path']) Storage::disk('local')->delete($oldPath);
-        return redirect()->route('admin.stories.edit', ['theme' => $theme, 'template' => $template])->with('success', 'Шаблон сохранён.');
     }
 
     public function image(string $theme, string $template, string $version)
