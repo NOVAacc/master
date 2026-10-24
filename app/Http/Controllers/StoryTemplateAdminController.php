@@ -62,6 +62,18 @@ class StoryTemplateAdminController extends Controller
         '#F6D7E3' => 'Пудровый',
         '#C52F43' => 'Красный BOSH',
         '#E3C58F' => 'Золотистый',
+        '#FAF8F4' => 'Жемчужный',
+        '#EAE1D6' => 'Лён',
+        '#DFCAB8' => 'Песочный',
+        '#A65A46' => 'Терракота',
+        '#694A40' => 'Какао',
+        '#8A727D' => 'Пыльная роза',
+        '#A7B6A0' => 'Шалфей',
+        '#566A5C' => 'Хвойный',
+        '#B5C8D9' => 'Небесный',
+        '#36465B' => 'Тёмно-синий',
+        '#6E547F' => 'Сливовый',
+        '#E5D69B' => 'Шампань',
     ];
     public const DEFAULTS = ['font' => 'system', 'scale' => 100, 'text_color' => '', 'image_position' => 'center', 'image_horizontal' => 'center', 'image_zoom' => 100, 'shade' => 0];
 
