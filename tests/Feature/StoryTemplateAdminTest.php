@@ -21,6 +21,27 @@ class StoryTemplateAdminTest extends TestCase
         ]);
     }
 
+    public function test_category_directory_uses_every_site_industry_and_activity(): void
+    {
+        $this->get('/admin/categories')->assertRedirect('/admin/login');
+        $this->admin();
+
+        $response = $this->get('/admin/categories')->assertOk()
+            ->assertSee('Категории мастеров')
+            ->assertSee('Тематических сторис пока нет')
+            ->assertSee('/admin/stories#nails');
+
+        $industries = config('industries');
+        $this->assertCount(6, $industries);
+        $this->assertSame(56, array_sum(array_map(fn ($row) => count($row['activities']), $industries)));
+        foreach ($industries as $industry) {
+            $response->assertSee($industry['name']);
+            foreach ($industry['activities'] as $name) {
+                $response->assertSee(e($name), false);
+            }
+        }
+    }
+
     public function test_template_management_is_admin_only(): void
     {
         $this->get('/admin/stories')->assertRedirect('/admin/login');
