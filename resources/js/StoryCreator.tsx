@@ -264,9 +264,9 @@ async function drawCategoryStory(canvas:HTMLCanvasElement,master:Master,service:
  const light=(rgb[0]*299+rgb[1]*587+rgb[2]*114)/1000>145;
  const wash=ctx.createLinearGradient(0,0,0,1920);
  const dark=light?"0,0,0":"255,255,255";
- wash.addColorStop(0,`rgba(${dark},.57)`);
- wash.addColorStop(.5,`rgba(${dark},.32)`);
- wash.addColorStop(1,`rgba(${dark},.67)`);
+ wash.addColorStop(0,`rgba(${dark},.66)`);
+ wash.addColorStop(.5,`rgba(${dark},.48)`);
+ wash.addColorStop(1,`rgba(${dark},.75)`);
  if(template.image_url){ctx.fillStyle=wash;ctx.fillRect(0,0,1080,1920);}
  const shade=Math.min(40,Math.max(0,Number(template.shade)||0));
  if(shade){ctx.fillStyle=`rgba(${dark},${shade/100})`;ctx.fillRect(0,0,1080,1920);}
