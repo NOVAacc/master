@@ -50,6 +50,9 @@ class CuratedCategoryStoryPhotoTest extends TestCase
         $this->assertCount(8, array_unique($ids));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'barber'));
         $this->assertSame(8, CategoryStoryPhotoLibrary::count('sport', 'yoga'));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('medicine', 'dentistry'));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('medicine', 'massage'));
+        $this->assertSame(8, CategoryStoryPhotoLibrary::count('beauty', 'cosmetology'));
         $allIds = [];
         foreach (CategoryStoryPhotoLibrary::COLLECTIONS as $industry => $categories) {
             foreach ($categories as $activity => $photos) {
@@ -60,9 +63,9 @@ class CuratedCategoryStoryPhotoTest extends TestCase
                 }
             }
         }
-        $this->assertCount(24, $allIds);
-        $this->assertCount(24, array_unique($allIds));
-        $this->assertNull(CategoryStoryPhotoLibrary::get('medicine', 'dentistry', 'editorial'));
+        $this->assertCount(48, $allIds);
+        $this->assertCount(48, array_unique($allIds));
+        $this->assertNull(CategoryStoryPhotoLibrary::get('education', 'languages', 'editorial'));
     }
 
     public function test_curated_image_is_proxied_with_validation_and_cached_without_outbound_repeats(): void
