@@ -19,7 +19,9 @@ class RestrictUploads
         $story = $request->is('admin/stories/*') && $request->isMethod('POST')
             && preg_match('~^admin/stories/(?:nails|brows|hair)/[a-z-]+$~D', $request->path());
 
-        if (! $profile && ! $story) {
+        $categoryStory = $request->isMethod('POST')
+            && preg_match('~^admin/categories/[a-z-]+/[a-z-]+/stories/(?:editorial|proof|premium|warm|urban|soft|promo|seasonal)$~D', $request->path());
+        if (! $profile && ! $story && ! $categoryStory) {
             abort(422, 'Загрузка файлов здесь не поддерживается.');
         }
 
