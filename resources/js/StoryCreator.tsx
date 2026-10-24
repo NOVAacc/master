@@ -271,20 +271,20 @@ export async function drawStory(canvas: HTMLCanvasElement, master: Master, servi
     ctx.fillText("BOSH", margin+75, 132);
     ctx.font = `500 36px ${family}`;
     const mast = wrappedText(ctx, master.display_name, 650, 2);
-    mast.forEach((line, i) => ctx.fillText(line, margin, 235 + i * 48));
+    mast.forEach((line, i) => ctx.fillText(line, margin, 235 + i * 48, WIDTH-margin*2));
     ctx.fillStyle = p.sub;
     ctx.font = `500 38px ${family}`;
-    ctx.fillText("ЕСТЬ СВОБОДНОЕ ВРЕМЯ", margin, 580);
+    ctx.fillText("ЕСТЬ СВОБОДНОЕ ВРЕМЯ", margin, 580, WIDTH-margin*2);
     ctx.fillStyle = p.fg;
     ctx.font = `bold ${Math.round(94*headingSize)}px ${family}`;
-    wrappedText(ctx, theme==="nails" ? "Маникюр" : theme==="hair" ? "Волосы" : theme==="brows" ? "Брови" : extraTheme ? themes[extraTheme] : "Освободилось окно", 870, 3).forEach((line, i) => ctx.fillText(line, margin, 690 + i * 112));
+    wrappedText(ctx, theme==="nails" ? "Маникюр" : theme==="hair" ? "Волосы" : theme==="brows" ? "Брови" : extraTheme ? themes[extraTheme] : "Освободилось окно", 870, 3).forEach((line, i) => ctx.fillText(line, margin, 690 + i * 112, WIDTH-margin*2));
     ctx.font = `600 54px ${family}`;
-    wrappedText(ctx, service.name, 860, 2).forEach((line, i) => ctx.fillText(line, margin, 1030 + i * 68));
+    wrappedText(ctx, service.name, 860, 2).forEach((line, i) => ctx.fillText(line, margin, 1030 + i * 68, WIDTH-margin*2));
     const niceDate = new Date(date + "T12:00:00Z").toLocaleDateString("ru-RU", { timeZone: "UTC", day: "numeric", month: "long" });
     ctx.font = `bold 138px ${family}`;
-    ctx.fillText(time, margin, 1230);
+    ctx.fillText(time, margin, 1230, WIDTH-margin*2);
     ctx.font = `500 49px ${family}`;
-    ctx.fillText(niceDate + " · " + service.price_som.toLocaleString("ru-RU") + " сом", margin, 1400);
+    ctx.fillText(niceDate + " · " + service.price_som.toLocaleString("ru-RU") + " сом", margin, 1400, WIDTH-margin*2);
     ctx.fillStyle = p.action;
     ctx.beginPath();
     ctx.roundRect(margin, 1570, WIDTH - margin * 2, 108, 54);
@@ -296,7 +296,7 @@ export async function drawStory(canvas: HTMLCanvasElement, master: Master, servi
     ctx.font = `500 28px ${family}`;
     const url = new URL(link);
     const displayLink = url.host + url.pathname;
-    ctx.fillText(displayLink.length > 46 ? displayLink.slice(0, 43) + "…" : displayLink, margin, 1740);
+    ctx.fillText(displayLink.length > 46 ? displayLink.slice(0, 43) + "…" : displayLink, margin, 1740, WIDTH-margin*2);
 }
 function toBlob(canvas: HTMLCanvasElement): Promise<Blob> {
     return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Не удалось сохранить PNG.")), "image/png"));
