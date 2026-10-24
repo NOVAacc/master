@@ -75,15 +75,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/users', [\App\Http\Controllers\AdminController::class, 'users'])->name('users');
         Route::get('/users/{user}/delete', [\App\Http\Controllers\AdminController::class, 'confirmDeletion'])->whereNumber('user')->name('users.delete');
         Route::delete('/users/{user}', [\App\Http\Controllers\AdminController::class, 'destroyUser'])->whereNumber('user')->middleware('throttle:10,1')->name('users.destroy');
-        Route::get('/stories', [\App\Http\Controllers\StoryTemplateAdminController::class, 'index'])->name('stories');
         Route::get('/categories', [\App\Http\Controllers\StoryTemplateAdminController::class, 'categories'])->name('categories');
         Route::get('/categories/{industry}/{activity}/stories', [\App\Http\Controllers\StoryTemplateAdminController::class, 'categoryTemplates'])->name('categories.stories');
         Route::get('/categories/{industry}/{activity}/stories/{role}', [\App\Http\Controllers\CategoryStoryTemplateController::class, 'edit'])->name('categories.stories.edit');
         Route::post('/categories/{industry}/{activity}/stories/{role}', [\App\Http\Controllers\CategoryStoryTemplateController::class, 'update'])->middleware('throttle:20,1')->name('categories.stories.update');
         Route::get('/categories/{industry}/{activity}/stories/{role}/image/{version}', [\App\Http\Controllers\CategoryStoryTemplateController::class, 'image'])->where('version', '[a-f0-9]{40}')->name('categories.stories.image');
-        Route::get('/stories/{theme}/{template}', [\App\Http\Controllers\StoryTemplateAdminController::class, 'edit'])->name('stories.edit');
-        Route::post('/stories/{theme}/{template}', [\App\Http\Controllers\StoryTemplateAdminController::class, 'update'])
-            ->middleware('throttle:20,1')->name('stories.update');
         Route::get('/settings', [\App\Http\Controllers\AdminController::class, 'settings'])->name('settings');
         Route::post('/settings/social', [\App\Http\Controllers\AdminController::class, 'socialSettings'])->middleware('throttle:20,1')->name('settings.social');
         Route::post('/password', [\App\Http\Controllers\AdminController::class, 'password'])->middleware('throttle:5,10')->name('password');

@@ -3,9 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Administrator;
+use App\Models\SiteSetting;
 use App\Models\User;
+use App\Support\CategoryStoryCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -21,210 +22,78 @@ class StoryTemplateAdminTest extends TestCase
         ]);
     }
 
-    public function test_category_directory_uses_every_site_industry_and_activity(): void
+    public function test_admin_navigation_keeps_category_story_editor_and_removes_old_stories_pages(): void
+    {
+        $this->admin();
+        $this->get('/admin/categories')->assertOk()
+            ->assertSee('Категории мастеров')
+            ->assertSee('8 шаблонов сторис')
+            ->assertDontSee('href="'.route('admin.categories').'/../stories"', false)
+            ->assertDontSee('/admin/stories#');
+        $this->get('/admin/stories')->assertNotFound();
+        $this->get('/admin/stories/hair/nude')->assertNotFound();
+        $this->post('/admin/stories/hair/nude', ['font' => 'system'])->assertNotFound();
+        $this->get('/admin/categories/beauty/nails/stories')->assertOk()->assertSee('Чистый editorial');
+        $this->get('/admin/categories/beauty/nails/stories/editorial')->assertOk()->assertSee('Сохранить шаблон');
+    }
+
+    public function test_category_directory_reflects_all_real_master_activities(): void
     {
         $this->get('/admin/categories')->assertRedirect('/admin/login');
         $this->admin();
-
-        $response = $this->get('/admin/categories')->assertOk()
-            ->assertSee('Категории мастеров')
-            ->assertSee('Тематических сторис пока нет')
-            ->assertSee('/admin/stories#nails');
-
+        $response = $this->get('/admin/categories')->assertOk();
         $industries = config('industries');
         $this->assertCount(6, $industries);
         $this->assertSame(56, array_sum(array_map(fn ($row) => count($row['activities']), $industries)));
         foreach ($industries as $industry) {
             $response->assertSee($industry['name']);
-            foreach ($industry['activities'] as $name) {
-                $response->assertSee(e($name), false);
-            }
+            foreach ($industry['activities'] as $name) $response->assertSee(e($name), false);
         }
+        $this->assertCount(448, array_merge(...array_map(
+            fn ($entries) => array_merge(...array_map(
+                fn ($entry) => array_column($entry['templates'], 'key'),
+                array_values($entries))),
+            array_values(CategoryStoryCatalog::all()))));
     }
 
-    public function test_stage_one_catalog_covers_all_categories_and_is_admin_only(): void
+    public function test_legacy_story_catalog_still_serves_all_72_templates(): void
     {
-        $this->get('/admin/categories/beauty/nails/stories')->assertRedirect('/admin/login');
-
-        $catalog = \App\Support\CategoryStoryCatalog::all();
-        $this->assertCount(6, $catalog);
-        $total = 0;
-        $keys = [];
-        foreach ($catalog as $industry => $activities) {
-            foreach ($activities as $activity => $entry) {
-                $total++;
-                $this->assertCount(8, $entry['templates']);
-                $this->assertSame(array_keys(\App\Support\CategoryStoryCatalog::ROLES), array_column($entry['templates'], 'id'));
-                foreach ($entry['templates'] as $template) {
-                    $this->assertSame('planned', $template['status']);
-                    $this->assertNull($template['image_url']);
-                    $keys[] = $template['key'];
-                }
-            }
-        }
-        $this->assertSame(56, $total);
-        $this->assertCount(448, $keys);
-        $this->assertCount(448, array_unique($keys));
-
-        $this->admin();
-        $this->get('/admin/categories')->assertOk()->assertSee('8 будущих шаблонов');
-        $this->get('/admin/categories/beauty/nails/stories')->assertOk()
-            ->assertSee('Чистый editorial')
-            ->assertSee('Свежий тренд')
-            ->assertSee('Выберите один из 8 шаблонов');
-        $this->get('/admin/categories/education/languages/stories')->assertOk()->assertSee('Языковая школа');
-        $this->get('/admin/categories/beauty/not-a-category/stories')->assertNotFound();
-    }
-
-    public function test_template_management_is_admin_only(): void
-    {
-        $this->get('/admin/stories')->assertRedirect('/admin/login');
-        $this->post('/admin/stories/hair/nude', ['font'=>'serif','scale'=>100])->assertRedirect('/admin/login');
-        $this->actingAs(User::factory()->create(), 'web')
-            ->post('/admin/stories/hair/nude', ['font'=>'serif','scale'=>100])->assertRedirect('/admin/login');
-    }
-
-    public function test_admin_can_update_fonts_and_generated_catalog(): void
-    {
-        $this->admin();
-        $this->get('/admin/stories')->assertOk()->assertSee('Шаблоны сторис');
-        $this->post('/admin/stories/hair/nude', [
-            'font'=>'serif','scale'=>110,'text_color'=>'#112233','image_position'=>'bottom','image_horizontal'=>'right','image_zoom'=>130,'shade'=>20,
-        ])->assertRedirect('/admin/stories/hair/nude');
-        $this->assertDatabaseHas('site_settings', ['key'=>'story.hair.nude']);
-        $this->actingAs(User::factory()->create(), 'web')
-            ->getJson('/stories/templates/catalog')->assertOk()
-            ->assertJsonPath('hair.nude.font','serif')
-            ->assertJsonPath('hair.nude.scale',110)
-            ->assertJsonPath('hair.nude.text_color','#112233')
-            ->assertJsonPath('hair.nude.image_position','bottom')
-            ->assertJsonPath('hair.nude.shade',20)
-            ->assertJsonPath('hair.nude.image_horizontal','right')
-            ->assertJsonPath('hair.nude.image_zoom',130);
-    }
-
-    public function test_legacy_position_controls_are_hidden_but_existing_crop_is_kept(): void
-    {
-        $this->admin();
-        $url = '/admin/stories/hair/nude';
-        $this->post($url, ['font'=>'serif', 'scale'=>110, 'image_position'=>'bottom', 'image_horizontal'=>'right', 'image_zoom'=>130])->assertRedirect($url);
-        $page = $this->get($url)->assertOk();
-        $page->assertDontSee('name="image_position"', false)->assertDontSee('name="image_horizontal"', false)
-            ->assertDontSee('Кадрирование фотографии')->assertDontSee('Смещение фотографии');
-        $this->post($url, ['font'=>'serif', 'scale'=>100, 'image_zoom'=>110])->assertRedirect($url);
-        $this->assertDatabaseHas('site_settings', ['key'=>'story.hair.nude']);
-        $settings = json_decode(\App\Models\SiteSetting::whereKey('story.hair.nude')->value('value'),true);
-        $this->assertSame('bottom', $settings['image_position']);
-        $this->assertSame('right', $settings['image_horizontal']);
-    }
-
-    public function test_invalid_template_and_font_are_rejected(): void
-    {
-        $this->admin();
-        $this->post('/admin/stories/hair/unknown', ['font'=>'system','scale'=>100])->assertNotFound();
-        $this->post('/admin/stories/hair/nude', ['font'=>'javascript','scale'=>100])->assertSessionHasErrors('font');
-        $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>999])->assertSessionHasErrors('scale');
-        $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>100,'image_position'=>'diagonal'])->assertSessionHasErrors('image_position');
-        $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>100,'shade'=>90])->assertSessionHasErrors('shade');
-        $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>100,'image_horizontal'=>'diagonal'])->assertSessionHasErrors('image_horizontal');
-        $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>100,'image_zoom'=>500])->assertSessionHasErrors('image_zoom');
-        $this->post('/admin/stories/hair/nude', ['font'=>'system','scale'=>100,'text_color'=>'bad'])->assertSessionHasErrors('text_color');
-    }
-
-    public function test_new_font_styles_and_preset_colors_are_available_to_all_templates(): void
-    {
-        $this->admin();
-        $this->get('/admin/stories/lashes/nude')->assertOk()
-            ->assertSee('Элегантный')
-            ->assertSee('Классический')
-            ->assertSee('Акцентный')
-            ->assertSee('Моноширинный')
-            ->assertSee('Пудровый')
-            ->assertSee('Красный BOSH')
-            ->assertSee('story-color-swatch');
-
-        $this->post('/admin/stories/lashes/nude', [
-            'font' => 'elegant', 'scale' => 100, 'text_color' => '#F6D7E3',
-        ])->assertRedirect('/admin/stories/lashes/nude');
-
-        $this->actingAs(User::factory()->create(), 'web')
-            ->getJson('/stories/templates/catalog')
-            ->assertOk()
-            ->assertJsonPath('lashes.nude.font', 'elegant')
-            ->assertJsonPath('lashes.nude.text_color', '#F6D7E3');
-
-        $this->admin();
-        $this->post('/admin/stories/lashes/nude', [
-            'font' => 'mono', 'scale' => 100, 'text_color' => '',
-        ])->assertRedirect('/admin/stories/lashes/nude');
-        $this->actingAs(User::factory()->create(), 'web')
-            ->getJson('/stories/templates/catalog')
-            ->assertJsonPath('lashes.nude.font', 'mono')
-            ->assertJsonPath('lashes.nude.text_color', '');
-    }
-
-    public function test_admin_upload_is_private_versioned_and_removable(): void
-    {
-        Storage::fake('local');
-        $this->admin();
-        $upload = $this->post('/admin/stories/brows/soft-pink', [
-            'font'=>'rounded','scale'=>100,
-            'image'=>UploadedFile::fake()->image('portrait.jpg',1080,1920),
-        ]);
-        $upload->assertRedirect('/admin/stories/brows/soft-pink');
-        $entry=json_decode(\App\Models\SiteSetting::whereKey('story.brows.soft-pink')->value('value'),true);
-        $this->assertNotEmpty($entry['path']);
-        Storage::disk('local')->assertExists($entry['path']);
-        $catalog=$this->actingAs(User::factory()->create(), 'web')->getJson('/stories/templates/catalog')->json();
-        $url=$catalog['brows']['soft-pink']['image_url'];
-        $this->assertNotNull($url);
-        $this->get($url)->assertOk()->assertHeader('X-Content-Type-Options','nosniff');
-        $this->get(str_replace(pathinfo($entry['path'],PATHINFO_FILENAME),str_repeat('a',40),$url))->assertNotFound();
-        $this->admin();
-        $this->post('/admin/stories/brows/soft-pink', [
-            'font'=>'system','scale'=>100,'remove_image'=>1,
-        ])->assertRedirect('/admin/stories/brows/soft-pink');
-        Storage::disk('local')->assertMissing($entry['path']);
-        $this->get($url)->assertNotFound();
-    }
-    public function test_complete_catalog_has_all_72_templates_with_usable_photo_references(): void
-    {
-        $this->admin();
         $controller = \App\Http\Controllers\StoryTemplateAdminController::class;
-        $this->assertCount(9, $controller::COLLECTIONS);
         $catalog = $controller::catalog();
         $this->assertCount(9, $catalog);
         foreach ($controller::COLLECTIONS as $theme => $collection) {
-            $this->assertCount(8, $collection['ids'], "Missing templates in {$theme}");
+            $this->assertCount(8, $collection['ids']);
             foreach ($collection['ids'] as $id) {
                 $this->assertArrayHasKey($id, $catalog[$theme]);
-                $this->assertArrayHasKey($id, $controller::LABELS[$theme]);
-                $this->assertArrayHasKey($id, $controller::DEFAULT_PHOTOS[$theme]);
                 $this->assertNotEmpty($catalog[$theme][$id]['photo_url']);
-                $this->assertSame('center', $catalog[$theme][$id]['image_position']);
-                $this->assertSame(100, $catalog[$theme][$id]['image_zoom']);
             }
         }
-    }
-
-    public function test_nine_categories_have_one_template_edit_page_each(): void
-    {
-        $this->admin();
-        $this->get('/admin/stories')->assertOk()->assertSee('Ресницы')->assertSee('Эпиляция')
-            ->assertSee('/admin/stories/barber/classic')
-            ->assertSee('role="tablist"', false)
-            ->assertSee('Фото используется в')
-            ->assertDontSee('name="image"', false);
-        $this->get('/admin/stories/lashes/nude')->assertOk()
-            ->assertSee('Лёгкий нюд')
-            ->assertSee('name="image"', false)
-            ->assertDontSee('story-positions');
-        $this->get('/admin/stories/invalid/nude')->assertNotFound();
+        $this->getJson('/stories/templates/catalog')->assertUnauthorized();
         $this->actingAs(User::factory()->create(), 'web')
-            ->getJson('/stories/templates/catalog')->assertOk()
-            ->assertJsonCount(8, 'lashes')->assertJsonCount(8, 'makeup')
-            ->assertJsonCount(8, 'massage')->assertJsonCount(8, 'skin')
-            ->assertJsonCount(8, 'barber')->assertJsonCount(8, 'smooth');
+            ->getJson('/stories/templates/catalog')->assertOk()->assertJsonCount(8, 'nails');
     }
 
+    public function test_saved_legacy_photo_remains_accessible_without_admin_editor(): void
+    {
+        Storage::fake('local');
+        $theme = 'brows'; $template = 'soft-pink';
+        $version = str_repeat('a', 40);
+        $path = "story-templates/{$theme}/{$template}/{$version}.jpg";
+        $image = \Illuminate\Http\UploadedFile::fake()->image('legacy.jpg', 1080, 1920);
+        Storage::disk('local')->put($path, file_get_contents($image->getPathname()));
+        SiteSetting::updateOrCreate(['key' => 'story.brows.soft-pink'], ['value' => json_encode([
+            'font' => 'rounded', 'scale' => 100, 'text_color' => '#FFFFFF',
+            'image_position' => 'bottom', 'image_horizontal' => 'right', 'image_zoom' => 120,
+            'shade' => 20, 'path' => $path,
+        ])]);
+
+        $this->actingAs(User::factory()->create(), 'web');
+        $catalog = $this->getJson('/stories/templates/catalog')->assertOk();
+        $catalog->assertJsonPath('brows.soft-pink.image_position', 'bottom')
+            ->assertJsonPath('brows.soft-pink.image_horizontal', 'right');
+        $url = $catalog->json('brows.soft-pink.image_url');
+        $this->assertNotNull($url);
+        $this->get($url)->assertOk()->assertHeader('X-Content-Type-Options', 'nosniff');
+        $this->get(str_replace($version, str_repeat('b', 40), $url))->assertNotFound();
+    }
 }

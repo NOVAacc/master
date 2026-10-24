@@ -28,18 +28,12 @@
 <h2>{{ $industry['name'] }} <span class="muted small">· {{ count($industry['activities']) }} категорий</span></h2>
 <div class="master-category-grid">
 @foreach($industry['activities'] as $activityId => $activityName)
-@php($theme = $storyThemes[$industryId][$activityId] ?? null)
 <article class="master-category-card">
 <strong>{{ $activityName }}</strong>
 <div class="master-category-meta">
 <span class="master-category-total">{{ $counts[$industryId][$activityId] ?? 0 }} мастеров</span>
 <span class="muted">Фото: {{ $photoCoverage[$industryId][$activityId] ?? 0 }}/8</span>
-<a href="{{ route('admin.categories.stories', ['industry' => $industryId, 'activity' => $activityId]) }}">8 будущих шаблонов</a>
-@if($theme)
-<a href="{{ route('admin.stories') }}#{{ $theme }}">Шаблоны сторис</a>
-@else
-<span class="muted">Тематических сторис пока нет</span>
-@endif
+<a href="{{ route('admin.categories.stories', ['industry' => $industryId, 'activity' => $activityId]) }}">8 шаблонов сторис</a>
 </div>
 </article>
 @endforeach
