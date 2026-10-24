@@ -44,7 +44,8 @@
 <p id="previewMessage" class="story-preview-status" role="status">Подготовка предпросмотра…</p>
 </section>
 </div>
-<script type="application/json" id="story-preview-data">@json([
+@php
+$storyPreviewData = [
     'theme' => $theme,
     'template' => $template,
     'photo_url' => $config['photo_url'],
@@ -54,6 +55,8 @@
     'font' => $config['font'],
     'scale' => $config['scale'],
     'text_color' => $config['text_color'],
-])</script>
+];
+@endphp
+<script type="application/json" id="story-preview-data">@json($storyPreviewData)</script>
 @vite('resources/js/admin-story-preview.ts')
 @endsection
