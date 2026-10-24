@@ -113,6 +113,26 @@ final class CategoryStoryPhotoLibrary
             ],
         ],
         'medicine' => [
+            'diagnostics' => [
+                'editorial' => ['id' => 36546147, 'title' => 'Современная диагностика МРТ в светлой клинике', 'author' => 'Alnoor Diagnostic Centre'],
+                'proof' => ['id' => 7108415, 'title' => 'Ультразвуковое исследование в медицинском кабинете', 'author' => 'Pavel Danilyuk'],
+                'premium' => ['id' => 7088479, 'title' => 'Высокотехнологичный МРТ-аппарат и врач', 'author' => 'MART PRODUCTION'],
+                'warm' => ['id' => 7089631, 'title' => 'Врач сопровождает пациента во время МРТ', 'author' => 'MART PRODUCTION'],
+                'urban' => ['id' => 7089010, 'title' => 'Врач управляет диагностическим томографом', 'author' => 'MART PRODUCTION'],
+                'soft' => ['id' => 8442499, 'title' => 'Лабораторный анализ медицинских образцов', 'author' => 'Pavel Danilyuk'],
+                'promo' => ['id' => 7089619, 'title' => 'Специалист изучает результаты обследования', 'author' => 'MART PRODUCTION'],
+                'seasonal' => ['id' => 7089392, 'title' => 'Медицинская диагностика на современном томографе', 'author' => 'MART PRODUCTION'],
+            ],
+            'checkups' => [
+                'editorial' => ['id' => 5327581, 'title' => 'Терапевт проверяет дыхание пациента стетоскопом', 'author' => 'Thirdman'],
+                'proof' => ['id' => 5327586, 'title' => 'Осмотр спины пациента во время медосмотра', 'author' => 'Thirdman'],
+                'premium' => ['id' => 8460221, 'title' => 'Тщательный медицинский осмотр в клинике', 'author' => 'Los Muertos Crew'],
+                'warm' => ['id' => 5215023, 'title' => 'Доброжелательный врач проверяет состояние пациента', 'author' => 'Antoni Shkraba'],
+                'urban' => ['id' => 14558557, 'title' => 'Оценка состояния здоровья пациента на приёме', 'author' => 'Imad Clicks'],
+                'soft' => ['id' => 5327584, 'title' => 'Врач проводит спокойный профилактический осмотр', 'author' => 'Thirdman'],
+                'promo' => ['id' => 7653116, 'title' => 'Профилактический осмотр ребёнка у врача', 'author' => 'Pavel Danilyuk'],
+                'seasonal' => ['id' => 5867701, 'title' => 'Проверка здоровья ребёнка в кабинете врача', 'author' => 'cottonbro studio'],
+            ],
             'medical-center' => [
                 'editorial' => ['id' => 33812025, 'title' => 'Минималистичная приёмная медицинского центра', 'author' => 'Jinshu Pulpatta'],
                 'proof' => ['id' => 5214997, 'title' => 'Измерение давления на приёме у врача', 'author' => 'Antoni Shkraba'],
