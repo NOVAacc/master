@@ -226,11 +226,6 @@ export default function AppointmentCalendar({
                     </button>
                 </div>
             </div>
-            <p className="muted small">
-                {timezoneLabel(timezone)} · сетка по 30 минут. Белые участки рабочего дня
-                свободны; серые — вне расписания. Нажмите запись, чтобы открыть
-                детали.
-            </p>
             {loading && (
                 <p role="status" className="muted small">
                     Загружаем записи…
