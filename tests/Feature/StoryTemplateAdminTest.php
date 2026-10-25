@@ -44,12 +44,12 @@ class StoryTemplateAdminTest extends TestCase
         $response = $this->get('/admin/categories')->assertOk();
         $industries = config('industries');
         $this->assertCount(6, $industries);
-        $this->assertSame(56, array_sum(array_map(fn ($row) => count($row['activities']), $industries)));
+        $this->assertSame(57, array_sum(array_map(fn ($row) => count($row['activities']), $industries)));
         foreach ($industries as $industry) {
             $response->assertSee($industry['name']);
             foreach ($industry['activities'] as $name) $response->assertSee(e($name), false);
         }
-        $this->assertCount(448, array_merge(...array_map(
+        $this->assertCount(456, array_merge(...array_map(
             fn ($entries) => array_merge(...array_map(
                 fn ($entry) => array_column($entry['templates'], 'key'),
                 array_values($entries))),
