@@ -51,6 +51,12 @@ class SuspiciousLoginCaptcha
         foreach (self::keys($request, $scope, $identifier) as $key) RateLimiter::hit($key, 600);
     }
 
+    public static function clearIdentifier(Request $request, string $scope, string $identifier): void
+    {
+        [$identityKey] = self::keys($request, $scope, $identifier);
+        RateLimiter::clear($identityKey);
+    }
+
     public static function success(Request $request, string $scope, string $identifier): void
     {
         [$identityKey] = self::keys($request, $scope, $identifier);
