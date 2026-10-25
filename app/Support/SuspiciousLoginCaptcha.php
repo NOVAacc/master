@@ -19,7 +19,7 @@ class SuspiciousLoginCaptcha
     {
         $ip = (string) $request->ip();
         return [
-            'login-risk:'.hash('sha256', $scope.'|'.$ip.'|'.mb_strtolower($identifier)),
+            'login-risk:'.hash('sha256', $scope.'|'.mb_strtolower($identifier)),
             'login-ip-risk:'.hash('sha256', $scope.'|'.$ip),
         ];
     }
