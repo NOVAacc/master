@@ -226,7 +226,6 @@ export default function AppointmentCalendar({
                     </button>
                 </div>
             </div>
-            {onCreateStory && <button type="button" className="ghost" onClick={() => onCreateStory(date)}>Создать сторис о свободном времени</button>}
             <p className="muted small">
                 {timezoneLabel(timezone)} · сетка по 30 минут. Белые участки рабочего дня
                 свободны; серые — вне расписания. Нажмите запись, чтобы открыть

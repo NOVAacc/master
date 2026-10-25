@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\MasterProfile;
 use App\Models\User;
+use App\Mail\RegistrationPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -17,6 +20,52 @@ class AuthController extends Controller
 {
     public function loginPage() { return Inertia::render('Auth', ['register' => false]); }
     public function registerPage() { return Inertia::render('Auth', ['register' => true]); }
+
+    public function register(Request $request)
+    {
+        $request->validate(['phone' => ['required', 'string', 'max:32'], 'email' => ['required', 'string', 'max:255']]);
+        $request->merge([
+            'phone' => $this->phone($request->input('phone')),
+            'email' => strtolower(trim($request->input('email'))),
+        ]);
+        $data = $request->validate([
+            'phone' => ['required', 'unique:users,phone'],
+            'email' => ['required', 'email:rfc', 'max:255', 'unique:users,email'],
+        ], [
+            'phone.unique' => 'Этот номер уже зарегистрирован. Войдите в аккаунт.',
+            'email.unique' => 'Эта почта уже зарегистрирована. Войдите или восстановите пароль.',
+        ]);
+        if (in_array(config('mail.default'), ['log', 'array'], true)) {
+            throw ValidationException::withMessages(['email' => 'Отправка писем временно недоступна. Попробуйте позже.']);
+        }
+        try {
+            DB::transaction(function () use ($data) {
+                $password = Str::password(12, symbols: false);
+                $user = User::create([
+                    'name' => 'Мастер', 'phone' => $data['phone'], 'email' => $data['email'],
+                    'password' => Hash::make($password), 'password_initialized_at' => now(),
+                ]);
+                do { $slug = strtolower(Str::random(7)); }
+                while (MasterProfile::where('slug', $slug)->exists());
+                MasterProfile::create([
+                    'user_id' => $user->id, 'display_name' => 'Мастер',
+                    'phone' => $data['phone'], 'slug' => $slug,
+                ]);
+                $verifyUrl = URL::temporarySignedRoute('security.email.verify', now()->addMinutes(60), [
+                    'user' => $user->id, 'hash' => sha1($user->email),
+                ]);
+                Mail::to($user->email)->send(new RegistrationPassword($data['phone'], $password, $verifyUrl));
+            });
+        } catch (\Illuminate\Database\QueryException $e) {
+            if (in_array((string) $e->getCode(), ['23000', '23505'], true)) {
+                throw ValidationException::withMessages(['email' => 'Телефон или почта уже зарегистрированы. Войдите в аккаунт.']);
+            }
+            throw $e;
+        } catch (\Throwable $e) {
+            throw ValidationException::withMessages(['email' => 'Не удалось отправить пароль на почту. Проверьте адрес и попробуйте ещё раз.']);
+        }
+        return redirect()->route('login')->with('success', 'Пароль отправлен на вашу почту. Войдите по телефону или почте и паролю из письма.');
+    }
 
     private function phone(string $raw): string
     {
@@ -37,8 +86,8 @@ class AuthController extends Controller
             'mode' => ['required', 'in:login,register'],
         ]);
         $phone = $this->phone($data['phone']);
-        if ($data['mode'] === 'register' && empty(trim($data['name'] ?? ''))) {
-            throw ValidationException::withMessages(['name' => 'Введите имя.']);
+        if ($data['mode'] === 'register') {
+            throw ValidationException::withMessages(['phone' => 'Для регистрации укажите телефон и почту на странице создания аккаунта.']);
         }
         $key = config('services.nikita.otp_key');
         if (!$key) {
@@ -111,27 +160,7 @@ class AuthController extends Controller
                 }
                 return $user;
             }
-            if ($pending['mode'] !== 'register') {
-                throw ValidationException::withMessages(['code' => 'Аккаунт не найден. Сначала зарегистрируйтесь.']);
-            }
-            $user = User::create([
-                'name' => $pending['name'],
-                'phone' => $pending['phone'],
-                'phone_verified_at' => now(),
-                'password' => Hash::make(Str::random(48)),
-            ]);
-            // Short, non-sequential public addresses, e.g. bosh.kg/m/k8q2p4z.
-            // Uniqueness is enforced again by the database unique index.
-            do {
-                $slug = strtolower(Str::random(7));
-            } while (MasterProfile::where('slug', $slug)->exists());
-            MasterProfile::create([
-                'user_id' => $user->id,
-                'display_name' => $pending['name'],
-                'phone' => $pending['phone'],
-                'slug' => $slug,
-            ]);
-            return $user;
+            throw ValidationException::withMessages(['code' => 'Аккаунт не найден. Зарегистрируйтесь по телефону и почте.']);
         });
         $request->session()->forget(['pending_otp', 'otp_sent_at']);
         Auth::login($user);

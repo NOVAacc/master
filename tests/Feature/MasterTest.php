@@ -73,11 +73,11 @@ class MasterTest extends TestCase
         $this->get('/dashboard')->assertOk();
     }
 
-    public function test_old_registration_endpoint_is_disabled_and_sms_profiles_have_private_cabinets(): void
+    public function test_registration_requires_phone_and_existing_profiles_have_private_cabinets(): void
     {
         $this->post('/register', ['name' => 'Айзада', 'email' => 'aizada@example.test',
             'password' => 'safe-test-password', 'password_confirmation' => 'safe-test-password',
-            'slug' => 'aizada'])->assertMethodNotAllowed();
+            'slug' => 'aizada'])->assertSessionHasErrors('phone');
         $this->assertGuest();
         $this->assertDatabaseCount('users', 0);
         [$user] = $this->master();
