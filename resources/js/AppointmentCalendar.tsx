@@ -254,6 +254,7 @@ export default function AppointmentCalendar({
                                 key={day}
                                 type="button"
                                 className={`time-day-heading${day === today ? " today" : ""}`}
+                                aria-current={day === today ? "date" : undefined}
                                 aria-label={`Открыть ${dayLabel(day, { day: "numeric", month: "long" })}`}
                                 disabled={loading}
                                 onClick={() => {
@@ -298,7 +299,7 @@ export default function AppointmentCalendar({
                             return (
                                 <div
                                     key={day}
-                                    className="time-day-column"
+                                    className={`time-day-column${view === "week" && day === today ? " today" : ""}`}
                                     style={{ height }}
                                     aria-label={dayLabel(day, {
                                         day: "numeric",

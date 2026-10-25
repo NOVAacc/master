@@ -3297,3 +3297,10 @@ html:has(.landing) { scroll-behavior: auto; }
 
 .story-fields .story-checkbox { display: flex; align-items: center; gap: 8px; font-weight: 400; }
 .story-fields .story-checkbox input { width: 16px; height: 16px; padding: 0; flex: 0 0 auto; }
+
+/* Highlight today's full column in the weekly schedule. */
+.time-calendar.week .time-day-heading.today,
+.time-calendar.week .time-day-heading.today:hover { background: #e3edff; color: #355a90; }
+.time-calendar.week .time-day-heading.today strong { color: #254d88; font-weight: 700; }
+.time-calendar.week .time-day-column.today { background: #eaf0fb; }
+.time-calendar.week .time-day-column.today .calendar-working-time { background: #f0f5ff; }
