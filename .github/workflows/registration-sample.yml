@@ -1,0 +1,49 @@
+name: Send requested BOSH registration sample
+on:
+  push:
+    branches: [ops/registration-sample-20261025]
+    paths: [.github/workflows/registration-sample.yml]
+permissions:
+  contents: read
+jobs:
+  send:
+    if: github.event.created == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      APP_URL: https://bosh.kg
+      MAIL_MAILER: smtp
+      MAIL_HOST: mail.bosh.kg
+      MAIL_PORT: '465'
+      MAIL_SCHEME: smtps
+      MAIL_USERNAME: no-reply@bosh.kg
+      MAIL_PASSWORD: ${{ secrets.BOSH_SMTP_PASSWORD }}
+      MAIL_FROM_ADDRESS: no-reply@bosh.kg
+      MAIL_FROM_NAME: BOSH
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, dom
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Send one sample without creating an account
+        run: |
+          set -euo pipefail
+          test -n "$MAIL_PASSWORD"
+          cp .env.example .env
+          php artisan key:generate
+          php <<'PHP'
+          <?php
+          require 'vendor/autoload.php';
+          $app = require 'bootstrap/app.php';
+          $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+          config(['mail.mailers.smtp.timeout' => 25]);
+          $mail = new App\Mail\RegistrationPassword('996 XXX XX XX XX', 'Demo-BOSH-2026', 'https://bosh.kg/login#test-letter');
+          $mail->withSymfonyMessage(function ($message) {
+              $message->subject('BOSH — ваш пароль для входа (тест)');
+          });
+          Illuminate\Support\Facades\Mail::to('gmederio@gmail.com')->send($mail);
+          echo "SMTP accepted the requested registration sample. No account was created.\n";
+          PHP
