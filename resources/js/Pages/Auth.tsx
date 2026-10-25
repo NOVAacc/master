@@ -108,7 +108,7 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
                         <Field label="Пароль"><input required type="password" autoComplete="current-password" value={f.data.password} onChange={e => f.setData("password", e.target.value)} /></Field>
                     </div>
                     <p className="muted"><Link href="/forgot-password">Забыли пароль?</Link></p>
-                    {(captchaRequired || !!f.errors.captcha) && (turnstileSiteKey ? <Turnstile key={captchaRevision} siteKey={turnstileSiteKey} onToken={token => f.setData("cf-turnstile-response", token)} /> : <p className="muted" role="alert">Проверка Cloudflare недоступна: сайт не получил публичный ключ Turnstile. Обновите страницу; если ошибка повторится, необходимо проверить конфигурацию Laravel на сервере.</p>)}
+                    {(captchaRequired || !!(f.errors as Record<string, string | undefined>).captcha) && (turnstileSiteKey ? <Turnstile key={captchaRevision} siteKey={turnstileSiteKey} onToken={token => f.setData("cf-turnstile-response", token)} /> : <p className="muted" role="alert">Проверка Cloudflare недоступна: сайт не получил публичный ключ Turnstile. Обновите страницу; если ошибка повторится, необходимо проверить конфигурацию Laravel на сервере.</p>)}
                 </> : sent ? <>
                     <Field label="Код подтверждения"><input autoFocus required inputMode="numeric" autoComplete="one-time-code" minLength={5} maxLength={5} pattern="[0-9]{5}" value={f.data.code} onChange={e => f.setData("code", e.target.value.replace(/\D/g, "").slice(0, 5))} /></Field>
                     <p className="muted">Код отправлен на {f.data.phone}.</p>
