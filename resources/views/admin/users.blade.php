@@ -19,6 +19,17 @@
 <p class="muted small">{{ $user->email ?: 'Почта не указана' }} @if($user->email_verified_at)· Подтверждена@endif</p>
 </div>
 <div class="user-side">
+@if($user->login_locked_until && \Illuminate\Support\Carbon::parse($user->login_locked_until)->isFuture())
+<p class="muted small" role="status">Вход заблокирован до {{ \Illuminate\Support\Carbon::parse($user->login_locked_until)->format('d.m.Y H:i') }} (UTC +6)</p>
+@elseif($user->failed_login_attempts > 0)
+<p class="muted small">Ошибок входа: {{ $user->failed_login_attempts }} из 5</p>
+@endif
+@if($user->failed_login_attempts > 0 || ($user->login_locked_until && \Illuminate\Support\Carbon::parse($user->login_locked_until)->isFuture()))
+<form method="post" action="{{ route('admin.users.unlock', $user->id) }}" onsubmit="return confirm('Снять блокировку входа для этого пользователя?')">
+@csrf
+<button class="button small" type="submit">Снять блокировку входа</button>
+</form>
+@endif
 <p class="muted small">Регистрация {{ $user->created_at->timezone(config('app.timezone'))->format('d.m.Y H:i') }}</p>
 @if($user->slug)
 <p><span class="badge">{{ $user->booking_enabled ? 'Приём записей открыт' : 'Приём записей закрыт' }}</span></p>
