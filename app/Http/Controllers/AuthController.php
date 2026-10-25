@@ -86,8 +86,8 @@ class AuthController extends Controller
             'mode' => ['required', 'in:login,register'],
         ]);
         $phone = $this->phone($data['phone']);
-        if ($data['mode'] === 'register' && empty(trim($data['name'] ?? ''))) {
-            throw ValidationException::withMessages(['name' => 'Введите имя.']);
+        if ($data['mode'] === 'register') {
+            throw ValidationException::withMessages(['phone' => 'Для регистрации укажите телефон и почту на странице создания аккаунта.']);
         }
         $key = config('services.nikita.otp_key');
         if (!$key) {
@@ -160,27 +160,7 @@ class AuthController extends Controller
                 }
                 return $user;
             }
-            if ($pending['mode'] !== 'register') {
-                throw ValidationException::withMessages(['code' => 'Аккаунт не найден. Сначала зарегистрируйтесь.']);
-            }
-            $user = User::create([
-                'name' => $pending['name'],
-                'phone' => $pending['phone'],
-                'phone_verified_at' => now(),
-                'password' => Hash::make(Str::random(48)),
-            ]);
-            // Short, non-sequential public addresses, e.g. bosh.kg/m/k8q2p4z.
-            // Uniqueness is enforced again by the database unique index.
-            do {
-                $slug = strtolower(Str::random(7));
-            } while (MasterProfile::where('slug', $slug)->exists());
-            MasterProfile::create([
-                'user_id' => $user->id,
-                'display_name' => $pending['name'],
-                'phone' => $pending['phone'],
-                'slug' => $slug,
-            ]);
-            return $user;
+            throw ValidationException::withMessages(['code' => 'Аккаунт не найден. Зарегистрируйтесь по телефону и почте.']);
         });
         $request->session()->forget(['pending_otp', 'otp_sent_at']);
         Auth::login($user);

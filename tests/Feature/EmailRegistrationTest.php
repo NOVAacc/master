@@ -80,6 +80,15 @@ class EmailRegistrationTest extends TestCase
         Mail::assertNothingSent();
     }
 
+    public function test_sms_registration_cannot_bypass_email_registration(): void
+    {
+        Http::fake();
+        $this->post('/auth/send-code', ['phone' => '0555123456', 'name' => 'Мастер', 'mode' => 'register'])
+            ->assertSessionHasErrors('phone');
+        $this->assertDatabaseCount('users', 0);
+        Http::assertNothingSent();
+    }
+
     public function test_welcome_email_contains_usable_unescaped_verification_url(): void
     {
         $url = 'https://bosh.kg/security/email/verify/1/hash?expires=123&signature=abc';
