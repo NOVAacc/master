@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MasterProfile;
 use App\Models\User;
+use App\Support\SuspiciousLoginCaptcha;
 use App\Mail\RegistrationPassword;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,7 @@ use Inertia\Inertia;
 
 class AuthController extends Controller
 {
-    public function loginPage() { return Inertia::render('Auth', ['register' => false]); }
+    public function loginPage() { return Inertia::render('Auth', ['register' => false, 'turnstileSiteKey' => SuspiciousLoginCaptcha::siteKey()]); }
     public function registerPage() { return Inertia::render('Auth', ['register' => true]); }
 
     public function register(Request $request)
@@ -205,6 +206,7 @@ class AuthController extends Controller
         } else {
             $identifier = strtolower($identifier);
         }
+        SuspiciousLoginCaptcha::check($request, 'master', $identifier);
         $outcome = DB::transaction(function () use ($column, $identifier, $data) {
             $user = User::where($column, $identifier)->lockForUpdate()->first();
             if (!$user) {
@@ -228,6 +230,8 @@ class AuthController extends Controller
             $user->forceFill(['failed_login_attempts' => 0, 'login_locked_until' => null])->save();
             return ['success', $user];
         });
+        if ($outcome[0] === 'invalid') SuspiciousLoginCaptcha::failure($request, 'master', $identifier);
+        if ($outcome[0] === 'success') SuspiciousLoginCaptcha::success($request, 'master', $identifier);
         if ($outcome[0] === 'locked') {
             throw ValidationException::withMessages(['identifier' => 'После 5 неверных попыток вход заблокирован на 1 час.']);
         }

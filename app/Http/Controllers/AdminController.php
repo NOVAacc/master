@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\SuspiciousLoginCaptcha;
 use App\Models\SiteSetting;
 use App\Models\MasterProfile;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class AdminController extends Controller
 {
     public function loginPage()
     {
-        return response()->view('admin.login')->header('Cache-Control', 'no-store, private');
+        return response()->view('admin.login', ['turnstileSiteKey' => SuspiciousLoginCaptcha::siteKey()])->header('Cache-Control', 'no-store, private');
     }
 
     public function login(Request $request)
@@ -28,11 +29,14 @@ class AdminController extends Controller
         if (RateLimiter::tooManyAttempts($key, 5)) {
             throw ValidationException::withMessages(['username' => 'Слишком много попыток. Повторите через '.RateLimiter::availableIn($key).' сек.']);
         }
+        SuspiciousLoginCaptcha::check($request, 'admin', $data['username']);
         if (!Auth::guard('admin')->attempt($data)) {
-            RateLimiter::hit($key, 900);
+            SuspiciousLoginCaptcha::failure($request, 'admin', $data['username']);
+            RateLimiter::hit($key, 3600);
             throw ValidationException::withMessages(['username' => 'Неверный логин или пароль.']);
         }
         RateLimiter::clear($key);
+        SuspiciousLoginCaptcha::success($request, 'admin', $data['username']);
         $request->session()->regenerate();
         $request->session()->put('admin_password_stamp', hash('sha256', Auth::guard('admin')->user()->getAuthPassword()));
         return redirect()->route('admin.users');

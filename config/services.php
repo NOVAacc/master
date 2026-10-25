@@ -1,5 +1,9 @@
 <?php
 return [
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+    ],
     'nikita' => [
         'otp_key' => env('NIKITA_OTP_API_KEY'),
         'sender' => 'SMSPRO.KG', // configured in the Nikita OTP dashboard

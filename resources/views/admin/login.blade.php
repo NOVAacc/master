@@ -10,6 +10,10 @@
 <input id="username" name="username" value="{{ old('username') }}" required maxlength="100" autocomplete="username" autofocus>
 <label for="password">Пароль</label>
 <input id="password" name="password" type="password" required maxlength="128" autocomplete="current-password">
+@if($turnstileSiteKey && $errors->has('captcha'))
+<div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}"></div>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+@endif
 <button class="primary">Войти</button>
 </form>
 </section>

@@ -1,20 +1,46 @@
 import { Head, Link, useForm } from "@inertiajs/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Brand, Errors, Field, Notice } from "../Shared";
 import PhoneInput from "../PhoneInput";
 
-export default function Auth({ register }: { register: boolean }) {
+function Turnstile({ siteKey, onToken }: { siteKey: string; onToken: (token: string) => void }) {
+    const container = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        let active = true;
+        const render = () => {
+            const api = (window as any).turnstile;
+            if (active && container.current && api) {
+                api.render(container.current, { sitekey: siteKey, callback: (token: string) => onToken(token), "expired-callback": () => onToken(""), "error-callback": () => onToken("") });
+            }
+        };
+        const existing = document.querySelector('script[data-bosh-turnstile]');
+        if (existing) render();
+        else {
+            const script = document.createElement("script");
+            script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+            script.async = true; script.defer = true;
+            script.dataset.boshTurnstile = "1";
+            script.addEventListener("load", render);
+            document.head.appendChild(script);
+        }
+        return () => { active = false; if (container.current && (window as any).turnstile) try { (window as any).turnstile.remove(container.current); } catch {} };
+    }, [siteKey]);
+    return <div ref={container} />;
+}
+
+export default function Auth({ register, turnstileSiteKey }: { register: boolean; turnstileSiteKey?: string | null }) {
     const [smsMode, setSmsMode] = useState(false);
     const [sent, setSent] = useState(false);
-    const f = useForm({ phone: "", email: "", code: "", identifier: "", password: "" });
+    const [captchaRequired, setCaptchaRequired] = useState(false);
+    const f = useForm({ phone: "", email: "", code: "", identifier: "", password: "", "cf-turnstile-response": "" });
     function submit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (register) {
             f.transform(d => ({ phone: d.phone, email: d.email }));
             f.post("/register");
         } else if (!smsMode) {
-            f.transform(d => ({ identifier: d.identifier, password: d.password }));
-            f.post("/login", { onFinish: () => f.setData("password", "") });
+            f.transform(d => ({ identifier: d.identifier, password: d.password, "cf-turnstile-response": d["cf-turnstile-response"] }));
+            f.post("/login", { onError: errors => { if (errors.captcha) setCaptchaRequired(true); }, onFinish: () => f.setData("password", "") });
         } else if (sent) {
             f.transform(d => ({ code: d.code }));
             f.post("/auth/verify-code");
@@ -57,6 +83,7 @@ export default function Auth({ register }: { register: boolean }) {
                         <Field label="Пароль"><input required type="password" autoComplete="current-password" value={f.data.password} onChange={e => f.setData("password", e.target.value)} /></Field>
                     </div>
                     <p className="muted"><Link href="/forgot-password">Забыли пароль?</Link></p>
+                    {captchaRequired && turnstileSiteKey && <Turnstile siteKey={turnstileSiteKey} onToken={token => f.setData("cf-turnstile-response", token)} />}
                 </> : sent ? <>
                     <Field label="Код подтверждения"><input autoFocus required inputMode="numeric" autoComplete="one-time-code" minLength={5} maxLength={5} pattern="[0-9]{5}" value={f.data.code} onChange={e => f.setData("code", e.target.value.replace(/\D/g, "").slice(0, 5))} /></Field>
                     <p className="muted">Код отправлен на {f.data.phone}.</p>
