@@ -14,7 +14,10 @@ function Turnstile({ siteKey, onToken }: { siteKey: string; onToken: (token: str
             }
         };
         const existing = document.querySelector('script[data-bosh-turnstile]');
-        if (existing) render();
+        if (existing) {
+            if ((window as any).turnstile) render();
+            else existing.addEventListener("load", render, { once: true });
+        }
         else {
             const script = document.createElement("script");
             script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
@@ -32,6 +35,7 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
     const [smsMode, setSmsMode] = useState(false);
     const [sent, setSent] = useState(false);
     const [captchaRequired, setCaptchaRequired] = useState(false);
+    const [captchaRevision, setCaptchaRevision] = useState(0);
     const f = useForm({ phone: "", email: "", code: "", identifier: "", password: "", "cf-turnstile-response": "" });
     function submit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -40,7 +44,7 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
             f.post("/register");
         } else if (!smsMode) {
             f.transform(d => ({ identifier: d.identifier, password: d.password, "cf-turnstile-response": d["cf-turnstile-response"] }));
-            f.post("/login", { onError: errors => { if (errors.captcha) setCaptchaRequired(true); }, onFinish: () => f.setData("password", "") });
+            f.post("/login", { onError: errors => { if (errors.captcha) setCaptchaRequired(true); setCaptchaRevision(value => value + 1); f.setData("cf-turnstile-response", ""); }, onFinish: () => f.setData("password", "") });
         } else if (sent) {
             f.transform(d => ({ code: d.code }));
             f.post("/auth/verify-code");
@@ -83,7 +87,7 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
                         <Field label="Пароль"><input required type="password" autoComplete="current-password" value={f.data.password} onChange={e => f.setData("password", e.target.value)} /></Field>
                     </div>
                     <p className="muted"><Link href="/forgot-password">Забыли пароль?</Link></p>
-                    {captchaRequired && turnstileSiteKey && <Turnstile siteKey={turnstileSiteKey} onToken={token => f.setData("cf-turnstile-response", token)} />}
+                    {captchaRequired && turnstileSiteKey && <Turnstile key={captchaRevision} siteKey={turnstileSiteKey} onToken={token => f.setData("cf-turnstile-response", token)} />}
                 </> : sent ? <>
                     <Field label="Код подтверждения"><input autoFocus required inputMode="numeric" autoComplete="one-time-code" minLength={5} maxLength={5} pattern="[0-9]{5}" value={f.data.code} onChange={e => f.setData("code", e.target.value.replace(/\D/g, "").slice(0, 5))} /></Field>
                     <p className="muted">Код отправлен на {f.data.phone}.</p>
