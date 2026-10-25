@@ -41,6 +41,16 @@ final class CategoryStoryPhotoLibrary
                 'promo' => ['id' => 3736281, 'title' => 'Подбор косметического ухода в салоне', 'author' => 'Polina Tankilevitch'],
                 'seasonal' => ['id' => 3736398, 'title' => 'Средства ухода за кожей на светлом фоне', 'author' => 'Polina Tankilevitch'],
             ],
+            'baths-saunas' => [
+                'editorial' => ['id' => 40384579, 'title' => 'Традиционная деревянная сауна в мягком свете', 'author' => 'Dmitry Alexandrovich'],
+                'proof' => ['id' => 34097625, 'title' => 'Пар над горячими камнями в деревянной парной', 'author' => 'HUUM │sauna heaters'],
+                'premium' => ['id' => 39912921, 'title' => 'Премиальная сауна с тёплым освещением и камнями', 'author' => 'HUUM │sauna heaters'],
+                'warm' => ['id' => 33517869, 'title' => 'Отдых с друзьями в уютной сауне', 'author' => 'HUUM │sauna heaters'],
+                'urban' => ['id' => 36077607, 'title' => 'Современная сауна, дерево и камень', 'author' => 'HUUM │sauna heaters'],
+                'soft' => ['id' => 35495086, 'title' => 'Спокойная парная в янтарных оттенках', 'author' => 'Burak Eroglu'],
+                'promo' => ['id' => 39912923, 'title' => 'Минималистичная сауна с пространством для анонса записи', 'author' => 'HUUM │sauna heaters'],
+                'seasonal' => ['id' => 39912929, 'title' => 'Актуальный интерьер сауны с подсвеченной каменкой', 'author' => 'HUUM │sauna heaters'],
+            ],
             'spa' => [
                 'editorial' => ['id' => 36837602, 'title' => 'Спокойный SPA-интерьер с полотенцем и зеленью', 'author' => 'aiseleer'],
                 'proof' => ['id' => 19572635, 'title' => 'SPA-масла и роллер на мягком полотенце', 'author' => 'Tuğba ÖZTÜRK'],
