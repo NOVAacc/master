@@ -5,30 +5,51 @@ import PhoneInput from "../PhoneInput";
 
 function Turnstile({ siteKey, onToken }: { siteKey: string; onToken: (token: string) => void }) {
     const container = useRef<HTMLDivElement>(null);
+    const [loadError, setLoadError] = useState(false);
     useEffect(() => {
         let active = true;
+        let widgetId: string | undefined;
+        const apiUrl = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
         const render = () => {
             const api = (window as any).turnstile;
-            if (active && container.current && api) {
-                api.render(container.current, { sitekey: siteKey, callback: (token: string) => onToken(token), "expired-callback": () => onToken(""), "error-callback": () => onToken("") });
+            if (!active || !container.current || !api || widgetId !== undefined) return;
+            try {
+                widgetId = api.render(container.current, {
+                    sitekey: siteKey,
+                    callback: (token: string) => { if (active) onToken(token); },
+                    "expired-callback": () => { if (active) onToken(""); },
+                    "error-callback": () => { if (active) { onToken(""); setLoadError(true); } },
+                });
+                setLoadError(false);
+            } catch {
+                setLoadError(true);
             }
         };
-        const existing = document.querySelector('script[data-bosh-turnstile]');
-        if (existing) {
-            if ((window as any).turnstile) render();
-            else existing.addEventListener("load", render, { once: true });
-        }
-        else {
-            const script = document.createElement("script");
-            script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-            script.async = true; script.defer = true;
+        let script = document.querySelector<HTMLScriptElement>('script[data-bosh-turnstile]');
+        const onError = () => { if (active) setLoadError(true); };
+        if (!script) {
+            script = document.createElement("script");
+            script.src = apiUrl;
+            script.async = true;
             script.dataset.boshTurnstile = "1";
-            script.addEventListener("load", render);
             document.head.appendChild(script);
         }
-        return () => { active = false; if (container.current && (window as any).turnstile) try { (window as any).turnstile.remove(container.current); } catch {} };
+        script.addEventListener("load", render);
+        script.addEventListener("error", onError);
+        if ((window as any).turnstile) render();
+        return () => {
+            active = false;
+            script?.removeEventListener("load", render);
+            script?.removeEventListener("error", onError);
+            if (widgetId !== undefined) {
+                try { (window as any).turnstile?.remove(widgetId); } catch {}
+            }
+        };
     }, [siteKey]);
-    return <div ref={container} />;
+    return <div className="auth-captcha">
+        <div ref={container} />
+        {loadError && <p className="muted" role="alert">Не удалось загрузить проверку Cloudflare. Отключите блокировщик содержимого для этого сайта и обновите страницу.</p>}
+    </div>;
 }
 
 export default function Auth({ register, turnstileSiteKey }: { register: boolean; turnstileSiteKey?: string | null }) {
@@ -87,7 +108,7 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
                         <Field label="Пароль"><input required type="password" autoComplete="current-password" value={f.data.password} onChange={e => f.setData("password", e.target.value)} /></Field>
                     </div>
                     <p className="muted"><Link href="/forgot-password">Забыли пароль?</Link></p>
-                    {captchaRequired && turnstileSiteKey && <Turnstile key={captchaRevision} siteKey={turnstileSiteKey} onToken={token => f.setData("cf-turnstile-response", token)} />}
+                    {(captchaRequired || !!f.errors.captcha) && (turnstileSiteKey ? <Turnstile key={captchaRevision} siteKey={turnstileSiteKey} onToken={token => f.setData("cf-turnstile-response", token)} /> : <p className="muted" role="alert">Проверка Cloudflare недоступна: сайт не получил публичный ключ Turnstile. Обновите страницу; если ошибка повторится, необходимо проверить конфигурацию Laravel на сервере.</p>)}
                 </> : sent ? <>
                     <Field label="Код подтверждения"><input autoFocus required inputMode="numeric" autoComplete="one-time-code" minLength={5} maxLength={5} pattern="[0-9]{5}" value={f.data.code} onChange={e => f.setData("code", e.target.value.replace(/\D/g, "").slice(0, 5))} /></Field>
                     <p className="muted">Код отправлен на {f.data.phone}.</p>
