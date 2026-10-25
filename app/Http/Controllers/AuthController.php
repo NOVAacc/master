@@ -206,6 +206,11 @@ class AuthController extends Controller
         } else {
             $identifier = strtolower($identifier);
         }
+        // An account lock must be reported before CAPTCHA, including for correct passwords.
+        $existing = User::where($column, $identifier)->first();
+        if ($existing && $existing->login_locked_until && $existing->login_locked_until->isFuture()) {
+            throw ValidationException::withMessages(['identifier' => 'Вход временно заблокирован до '.$existing->login_locked_until->timezone('Asia/Bishkek')->format('d.m.Y H:i').' (UTC +6). Обратитесь к администратору или попробуйте позже.']);
+        }
         SuspiciousLoginCaptcha::check($request, 'master', $identifier);
         $outcome = DB::transaction(function () use ($column, $identifier, $data) {
             $user = User::where($column, $identifier)->lockForUpdate()->first();
