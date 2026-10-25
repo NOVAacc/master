@@ -16,7 +16,7 @@ class IndustryTest extends TestCase
     {
         $industries = config('industries');
         $this->assertCount(6, $industries);
-        $this->assertSame(56, array_sum(array_map(fn ($i) => count($i['activities']), $industries)));
+        $this->assertSame(57, array_sum(array_map(fn ($i) => count($i['activities']), $industries)));
         $this->profile('barbertarget', 'beauty', 'barber');
         foreach (['/?industry=beauty&activity=barber', '/?industry=medicine', '/?industry=medicine&activity=barber'] as $url) {
             $this->get($url)->assertOk()->assertInertia(fn (Assert $p) => $p
