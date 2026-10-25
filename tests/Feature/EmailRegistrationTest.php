@@ -34,7 +34,7 @@ class EmailRegistrationTest extends TestCase
         Mail::assertSent(RegistrationPassword::class, function ($mail) use ($user, &$password, &$verifyUrl) {
             $password = $mail->temporaryPassword;
             $verifyUrl = $mail->verifyUrl;
-            return $mail->hasTo($user->email) && strlen($password) >= 12 && Hash::check($password, $user->password);
+            return $mail->hasTo($user->email) && preg_match('/^(?=[A-Za-z0-9]{6}$)(?=[^0-9]*[0-9][^0-9]*$)(?=.*[a-z])(?=.*[A-Z])[A-Za-z0-9]+$/', $password) === 1 && Hash::check($password, $user->password);
         });
         Http::assertNothingSent();
         $this->get($verifyUrl)->assertRedirect('/login');

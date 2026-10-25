@@ -40,7 +40,7 @@ class AuthController extends Controller
         }
         try {
             DB::transaction(function () use ($data) {
-                $password = Str::password(12, symbols: false);
+                $password = $this->generatedPassword();
                 $user = User::create([
                     'name' => 'Мастер', 'phone' => $data['phone'], 'email' => $data['email'],
                     'password' => Hash::make($password), 'password_initialized_at' => now(),
@@ -65,6 +65,24 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['email' => 'Не удалось отправить пароль на почту. Проверьте адрес и попробуйте ещё раз.']);
         }
         return redirect()->route('login')->with('success', 'Пароль отправлен на вашу почту. Войдите по телефону или почте и паролю из письма.');
+    }
+
+    // Exactly six characters: one uppercase, four lowercase and one digit.
+    // Draw from a cryptographically secure random source and shuffle without bias.
+    private function generatedPassword(): string
+    {
+        $characters = [
+            chr(random_int(65, 90)),
+            chr(random_int(48, 57)),
+        ];
+        for ($i = 0; $i < 4; $i++) {
+            $characters[] = chr(random_int(97, 122));
+        }
+        for ($i = count($characters) - 1; $i > 0; $i--) {
+            $j = random_int(0, $i);
+            [$characters[$i], $characters[$j]] = [$characters[$j], $characters[$i]];
+        }
+        return implode('', $characters);
     }
 
     private function phone(string $raw): string
