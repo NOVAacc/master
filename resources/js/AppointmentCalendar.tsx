@@ -1,5 +1,4 @@
 import CloseButton from "./CloseButton";
-import { timezoneLabel } from "./timezone";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { Appointment, Hour } from "./types";
