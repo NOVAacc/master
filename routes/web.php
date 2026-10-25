@@ -74,7 +74,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(\App\Http\Middleware\RequireAdministrator::class)->group(function () {
         Route::get('/', fn () => redirect()->route('admin.users'))->name('home');
         Route::get('/users', [\App\Http\Controllers\AdminController::class, 'users'])->name('users');
-        Route::post('/users/{user}/unlock', [\\App\\Http\\Controllers\\AdminController::class, 'unlockUser'])->whereNumber('user')->middleware('throttle:10,1')->name('users.unlock');
+        Route::post('/users/{user}/unlock', [\App\Http\Controllers\AdminController::class, 'unlockUser'])->whereNumber('user')->middleware('throttle:10,1')->name('users.unlock');
         Route::get('/users/{user}/delete', [\App\Http\Controllers\AdminController::class, 'confirmDeletion'])->whereNumber('user')->name('users.delete');
         Route::delete('/users/{user}', [\App\Http\Controllers\AdminController::class, 'destroyUser'])->whereNumber('user')->middleware('throttle:10,1')->name('users.destroy');
         Route::get('/categories', [\App\Http\Controllers\StoryTemplateAdminController::class, 'categories'])->name('categories');
