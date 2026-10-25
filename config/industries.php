@@ -7,6 +7,7 @@ return [
             'salon' => 'Салон красоты',
             'barber' => 'Барбершоп',
             'spa' => 'SPA',
+            'baths-saunas' => 'Бани и сауны',
             'tattoo' => 'Тату',
             'cosmetology' => 'Косметология',
             'tanning' => 'Солярий',
