@@ -43,23 +43,13 @@ class DashboardController extends Controller
             return $appointment;
         };
 
-        // Fetch group attendees once, scoped to the authenticated master.
-        // No private participant details are exposed by public booking endpoints.
-        $groupParticipants = DB::table('master_group_participants as p')
-            ->join('master_group_sessions as s', 's.id', '=', 'p.master_group_session_id')
-            ->where('s.master_profile_id', $master->id)
-            ->where('s.ends_at', '>', now('UTC')->subDays(7))
-            ->orderBy('p.id')
-            ->get(['p.id', 'p.master_group_session_id', 'p.client_name', 'p.client_phone', 'p.status'])
-            ->groupBy('master_group_session_id');
-
         return Inertia::render('Dashboard', [
             'industries' => config('industries'),
             'calendarDate' => $calendarDate,
-            'calendarAppointments' => $master->appointments()->where('starts_at', '<', $calendarEnd->utc())
+            'calendarAppointments' => fn () => $master->appointments()->where('starts_at', '<', $calendarEnd->utc())
                 ->where('ends_at', '>', $calendarStart->utc())
                 ->with(['notifications:id,master_appointment_id,recipient,status,error_code,revision', 'changes'])->orderBy('starts_at')->get()->map($presentAppointment),
-            'calendarBlocks' => DB::table('master_time_blocks')->where('master_profile_id', $master->id)
+            'calendarBlocks' => fn () => DB::table('master_time_blocks')->where('master_profile_id', $master->id)
                 ->where('starts_at', '<', $calendarEnd->utc())->where('ends_at', '>', $calendarStart->utc())->get()
                 ->map(fn ($block) => ['id' => $block->id, 'starts_at' => CarbonImmutable::parse($block->starts_at, 'UTC')->toIso8601String(),
                     'ends_at' => CarbonImmutable::parse($block->ends_at, 'UTC')->toIso8601String(), 'reason' => $block->reason]),
@@ -69,7 +59,15 @@ class DashboardController extends Controller
                 'emailVerified' => $request->user()->email_verified_at !== null,
                 'passwordSet' => $request->user()->password_initialized_at !== null,
             ],
-            'groupSessions' => DB::table('master_group_sessions')
+            'groupSessions' => function () use ($master) {
+                $groupParticipants = DB::table('master_group_participants as p')
+                    ->join('master_group_sessions as s', 's.id', '=', 'p.master_group_session_id')
+                    ->where('s.master_profile_id', $master->id)
+                    ->where('s.ends_at', '>', now('UTC')->subDays(7))
+                    ->orderBy('p.id')
+                    ->get(['p.id', 'p.master_group_session_id', 'p.client_name', 'p.client_phone', 'p.status'])
+                    ->groupBy('master_group_session_id');
+                return DB::table('master_group_sessions')
                 ->where('master_profile_id', $master->id)
                 ->where('ends_at', '>', now('UTC')->subDays(7))
                 ->orderBy('starts_at')->limit(100)
@@ -84,15 +82,16 @@ class DashboardController extends Controller
                     'reserved_seats' => $session->reserved_seats,
                     'status' => $session->status,
                     'price_som' => $session->price_som,
-                ]),
-            'clients' => DB::table('master_clients')
+                ]);
+            },
+            'clients' => fn () => DB::table('master_clients')
                 ->where('master_profile_id', $master->id)
                 ->whereNull('archived_at')
                 ->orderByDesc('updated_at')
                 ->limit(200)
                 ->get(['id', 'name', 'phone_digits', 'notes']),
-            'services' => $master->services()->orderBy('sort_order')->get(),
-            'hours' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->orderBy('weekday')->get()
+            'services' => fn () => $master->services()->orderBy('sort_order')->get(),
+            'hours' => fn () => DB::table('master_working_hours')->where('master_profile_id', $master->id)->orderBy('weekday')->get()
                 ->map(fn ($hour) => [
                     'weekday' => (int) $hour->weekday,
                     'starts_at' => substr($hour->starts_at, 0, 5),
@@ -100,7 +99,7 @@ class DashboardController extends Controller
                     'break_starts_at' => $hour->break_starts_at ? substr($hour->break_starts_at, 0, 5) : null,
                     'break_ends_at' => $hour->break_ends_at ? substr($hour->break_ends_at, 0, 5) : null,
                 ]),
-            'appointments' => $master->appointments()->where('ends_at', '>=', now('UTC')->subDays(30))
+            'appointments' => fn () => $master->appointments()->where('ends_at', '>=', now('UTC')->subDays(30))
                 ->with(['notifications:id,master_appointment_id,recipient,status,error_code,revision', 'changes'])->orderBy('starts_at')->limit(200)->get()->map($presentAppointment),
             'whatsappAutomatic' => app(WhatsApp::class)->configured(),
             'publicUrl' => route('public.master', $master->slug),
