@@ -63,6 +63,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
         address_url: master.address_url || "",
         timezone: master.timezone,
         booking_enabled: master.booking_enabled,
+        show_busy_slots: master.show_busy_slots ?? false,
         auto_confirm: master.auto_confirm,
         whatsapp_notifications: master.whatsapp_notifications || false,
         avatar: null as File | null,
@@ -392,6 +393,12 @@ export default function ProfileSettings({ master }: { master: Master }) {
                         />
                         Принимать онлайн-записи
                     </label>
+                    <label className="check">
+                        <input type="checkbox" checked={f.data.show_busy_slots}
+                            onChange={(e) => f.setData("show_busy_slots", e.target.checked)} />
+                        Показывать занятое время зачёркнутым
+                    </label>
+                    <p className="muted small">Занятые часы будут видны клиенту, но выбрать их нельзя. Если выключить — показывается только свободное время.</p>
                     <label className="check">
                         <input
                             type="checkbox"
