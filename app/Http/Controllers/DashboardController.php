@@ -165,7 +165,7 @@ class DashboardController extends Controller
                 }],
             'timezone' => ['required', 'timezone'],
             'booking_enabled' => ['required', 'boolean'],
-            'show_busy_slots' => ['required', 'boolean'],
+            'show_busy_slots' => ['sometimes', 'boolean'],
             'auto_confirm' => ['required', 'boolean'],
             'whatsapp_notifications' => ['sometimes', 'boolean'],
         ]);
