@@ -62,7 +62,7 @@ class PublicBookingController extends Controller
         }
 
         return Inertia::render('Booking', [
-            'master' => $master->only('slug', 'display_name', 'specialty', 'bio', 'phone', 'address', 'address_url', 'timezone', 'booking_enabled', 'is_demo', 'auto_confirm', 'instagram_username', 'instagram_url', 'avatar_url', 'cover_url', 'work1_url', 'work2_url', 'work3_url', 'profile_theme'),
+            'master' => $master->only('slug', 'display_name', 'specialty', 'bio', 'phone', 'address', 'address_url', 'timezone', 'booking_enabled', 'show_busy_slots', 'is_demo', 'auto_confirm', 'instagram_username', 'instagram_url', 'avatar_url', 'cover_url', 'work1_url', 'work2_url', 'work3_url', 'profile_theme'),
             'services' => $services->map->only(['id', 'name', 'description', 'duration_minutes', 'price_som']),
             'groupSessions' => DB::table('master_group_sessions')
                 ->where('master_profile_id', $master->id)->where('status', 'open')
