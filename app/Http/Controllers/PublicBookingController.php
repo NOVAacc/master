@@ -54,8 +54,9 @@ class PublicBookingController extends Controller
                         CarbonImmutable::parse($b->ends_at, 'UTC')->gt($start));
                 $groupOverlap = $groupBlocks->contains(fn ($g) => CarbonImmutable::parse($g->starts_at, 'UTC')->lt($end)
                     && CarbonImmutable::parse($g->ends_at, 'UTC')->gt($start));
-                if (! $overlap && ! $groupOverlap) {
-                    $slots[] = ['value' => $start->toIso8601String(), 'label' => $cursor->format('H:i')];
+                $available = ! $overlap && ! $groupOverlap;
+                if ($available || $master->show_busy_slots) {
+                    $slots[] = ['value' => $start->toIso8601String(), 'label' => $cursor->format('H:i'), 'available' => $available];
                 }
             }
         }
