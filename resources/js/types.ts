@@ -19,6 +19,7 @@ export type Master = {
     address_url?: string | null;
     timezone: string;
     booking_enabled: boolean;
+    show_busy_slots: boolean;
     is_demo?: boolean;
     auto_confirm: boolean;
     whatsapp_notifications: boolean;
