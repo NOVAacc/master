@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
-import { router } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import { BrandMark } from "./Shared";
 
 type DisplayMode = "auto" | "mobile" | "desktop";
@@ -66,6 +66,11 @@ export default function DisplayModeFooter({ initialInstagramUsername }: { initia
                 <a href="/" aria-label="BOSH — главная страница"><BrandMark small /></a>
                 <p className="muted small">BOSH — время для вашего дела.</p>
             </div>
+            <nav className="footer-legal" aria-label="Правовые документы">
+                <Link href="/legal/terms">Условия использования</Link>
+                <Link href="/legal/privacy">Конфиденциальность</Link>
+                <Link href="/legal/cookies">Cookie</Link>
+            </nav>
             <a className="site-instagram" href={`https://www.instagram.com/${encodeURIComponent(instagramUsername)}/`} target="_blank" rel="noopener noreferrer" aria-label={`Instagram BOSH: @${instagramUsername}`}>
                 <Icon name="instagram" /><span>@{instagramUsername}</span>
             </a>
