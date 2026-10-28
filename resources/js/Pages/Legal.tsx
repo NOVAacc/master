@@ -102,7 +102,7 @@ export default function Legal({ document }: { document: DocumentKey }) {
             <p className="eyebrow">BOSH · ПРАВОВАЯ ИНФОРМАЦИЯ</p>
             <h1>{current.title}</h1>
             <p className="muted">{current.intro}</p>
-            <p className="muted small">Редакция от 28 октября 2026 года · Проект для юридического согласования</p>
+            <p className="muted small">Редакция от 28 октября 2026 года</p>
             <nav className="legal-nav" aria-label="Правовые документы">
                 <Link href="/legal/terms">Условия использования</Link>
                 <Link href="/legal/privacy">Конфиденциальность</Link>
