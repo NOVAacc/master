@@ -16,7 +16,7 @@ type Props = {
     date: string;
     minDate: string;
     maxDate: string;
-    slots: { value: string; label: string }[];
+    slots: { value: string; label: string; available: boolean }[];
     whatsappAutomatic: boolean;
     storyTime?: string | null;
     bookingReceipt: {
@@ -30,7 +30,7 @@ type Props = {
 export default function Booking(p: Props) {
     const f = useForm({
         service_ids: p.selectedServices,
-        starts_at: p.storyTime ? (p.slots.find(s => s.label === p.storyTime)?.value ?? "") : "",
+        starts_at: p.storyTime ? (p.slots.find(s => s.available && s.label === p.storyTime)?.value ?? "") : "",
         client_name: "",
         client_phone: "",
         client_comment: "",
@@ -332,16 +332,13 @@ export default function Booking(p: Props) {
                                     (s) => (
                                         <button
                                             type="button"
-                                            className={
-                                                f.data.starts_at === s.value
-                                                    ? "slot selected"
-                                                    : "slot"
-                                            }
+                                            className={s.available ? (f.data.starts_at === s.value ? "slot selected" : "slot") : "slot slot-unavailable"}
                                             key={s.value}
                                             aria-pressed={
                                                 f.data.starts_at === s.value
                                             }
-                                            disabled={f.processing}
+                                            disabled={f.processing || !s.available}
+                                            aria-label={s.available ? s.label : `${s.label}, занято`}
                                             onClick={() =>
                                                 f.setData("starts_at", s.value)
                                             }
@@ -360,7 +357,7 @@ export default function Booking(p: Props) {
                                     <p className="muted small">
                                         Сначала выберите услуги.
                                     </p>
-                                ) : ready && !p.slots.length ? (
+                                ) : ready && !p.slots.some(s => s.available) ? (
                                     <p className="empty">
                                         На этот день нет свободного времени на
                                         все выбранные услуги. Выберите другую
