@@ -59,11 +59,16 @@ Route::middleware('auth')->group(function () {
 Route::post('/onboarding/industry', function (\Illuminate\Http\Request $request) {
     $industries = config('industries');
     $data = $request->validate([
+        'name' => ['required', 'string', 'min:2', 'max:100'],
         'industry' => ['required', 'string', \Illuminate\Validation\Rule::in(array_keys($industries))],
         'activity' => ['required', 'string'],
     ]);
     abort_unless(isset($industries[$data['industry']]['activities'][$data['activity']]), 422);
-    \App\Models\MasterProfile::where('user_id', $request->user()->id)->update([...$data, 'onboarding_industry_done' => true]);
+    $profile = \App\Models\MasterProfile::where('user_id', $request->user()->id)->firstOrFail();
+    $profile->update(['display_name' => trim($data['name']), 'industry' => $data['industry'], 'activity' => $data['activity'], 'onboarding_industry_done' => true]);
+    if (! $request->user()->name || $request->user()->name === 'Мастер') {
+        $request->user()->update(['name' => trim($data['name'])]);
+    }
     return redirect()->route('dashboard');
 })->middleware(['auth', 'throttle:15,1'])->name('onboarding.industry');
 Route::get('/stories/templates/catalog', fn () => response()->json(\App\Http\Controllers\StoryTemplateAdminController::catalog()))->middleware(['auth', 'throttle:60,1'])->name('stories.template.catalog');
