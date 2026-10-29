@@ -57,11 +57,11 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
     const [sent, setSent] = useState(false);
     const [captchaRequired, setCaptchaRequired] = useState(false);
     const [captchaRevision, setCaptchaRevision] = useState(0);
-    const f = useForm({ phone: "", email: "", code: "", identifier: "", password: "", "cf-turnstile-response": "" });
+    const f = useForm({ name: "", phone: "", email: "", code: "", identifier: "", password: "", "cf-turnstile-response": "" });
     function submit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (register) {
-            f.transform(d => ({ phone: d.phone, email: d.email }));
+            f.transform(d => ({ name: d.name, phone: d.phone, email: d.email }));
             f.post("/register");
         } else if (!smsMode) {
             f.transform(d => ({ identifier: d.identifier, password: d.password, "cf-turnstile-response": d["cf-turnstile-response"] }));
@@ -92,7 +92,7 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
             <Head title={register ? "Регистрация" : "Вход"} />
             <p className="eyebrow">BOSH · КАБИНЕТ МАСТЕРА</p>
             <h1>{register ? "Начать работу" : "Войти в BOSH"}</h1>
-            <p className="muted">{register ? "Укажите телефон и почту. Пароль для входа отправим письмом." :
+            <p className="muted">{register ? "Укажите имя, телефон и почту. В письме будет кнопка подтверждения и временный пароль." :
                 !smsMode ? "Введите телефон или почту и ваш пароль." :
                 sent ? "Введите пятизначный код из SMS. Он действует 3 минуты." :
                 "Для аккаунтов, зарегистрированных раньше по SMS и ещё не установивших пароль."}</p>
@@ -100,6 +100,7 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
             <form onSubmit={submit}>
                 <Errors errors={f.errors} />
                 {register ? <>
+                    <Field label="Ваше имя"><input required minLength={2} maxLength={100} autoComplete="given-name" value={f.data.name} onChange={e => f.setData("name", e.target.value)} placeholder="Как к вам обращаться" /></Field>
                     <Field label="Номер телефона"><PhoneInput required fixedPrefix showHint={false} value={f.data.phone} onChange={value => f.setData("phone", value)} /></Field>
                     <Field label="Электронная почта"><input required type="email" maxLength={255} autoComplete="email" placeholder="mail@example.com" value={f.data.email} onChange={e => f.setData("email", e.target.value)} /></Field>
                 </> : !smsMode ? <>
