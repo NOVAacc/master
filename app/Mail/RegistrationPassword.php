@@ -7,6 +7,7 @@ use Illuminate\Mail\Mailable;
 class RegistrationPassword extends Mailable
 {
     public function __construct(
+        public string $name,
         public string $phone,
         public string $temporaryPassword,
         public string $verifyUrl,
@@ -14,6 +15,6 @@ class RegistrationPassword extends Mailable
 
     public function build()
     {
-        return $this->subject('BOSH — ваш пароль для входа')->text('mail.registration-password');
+        return $this->subject('BOSH — подтвердите почту и начните работу')->view('mail.registration-password')->text('mail.registration-password-text');
     }
 }
