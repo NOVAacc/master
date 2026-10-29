@@ -51,7 +51,7 @@ class AuthController extends Controller
                 do { $slug = strtolower(Str::random(7)); }
                 while (MasterProfile::where('slug', $slug)->exists());
                 MasterProfile::create([
-                    'user_id' => $user->id, 'display_name' => $data['name'],
+                    'user_id' => $user->id, 'display_name' => $data['name'], 'onboarding_industry_done' => false,
                     'phone' => $data['phone'], 'slug' => $slug,
                 ]);
                 $verifyUrl = URL::temporarySignedRoute('security.email.verify', now()->addMinutes(60), [
