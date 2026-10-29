@@ -19,10 +19,10 @@ class IndustryOnboardingTest extends TestCase
             'onboarding_industry_done' => false,
         ]);
         $this->actingAs($user)->post('/onboarding/industry', [
-            'name' => 'Айгүл', 'industry' => 'leisure', 'activity' => 'sauna',
+            'industry' => 'leisure', 'activity' => 'sauna',
         ])->assertRedirect('/dashboard')->assertSessionHasNoErrors();
         $profile->refresh();
-        $this->assertSame('Айгүл', $profile->display_name);
+        $this->assertSame('Мастер', $profile->display_name);
         $this->assertSame('leisure', $profile->industry);
         $this->assertSame('sauna', $profile->activity);
         $this->assertTrue($profile->onboarding_industry_done);
