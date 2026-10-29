@@ -63,7 +63,7 @@ Route::post('/onboarding/industry', function (\Illuminate\Http\Request $request)
         'activity' => ['required', 'string'],
     ]);
     abort_unless(isset($industries[$data['industry']]['activities'][$data['activity']]), 422);
-    \App\Models\MasterProfile::where('user_id', $request->user()->id)->update($data);
+    \App\Models\MasterProfile::where('user_id', $request->user()->id)->update([...$data, 'onboarding_industry_done' => true]);
     return redirect()->route('dashboard');
 })->middleware(['auth', 'throttle:15,1'])->name('onboarding.industry');
 Route::get('/stories/templates/catalog', fn () => response()->json(\App\Http\Controllers\StoryTemplateAdminController::catalog()))->middleware(['auth', 'throttle:60,1'])->name('stories.template.catalog');
