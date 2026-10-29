@@ -147,7 +147,7 @@ class CategoryStoryStageTwoTest extends TestCase
         $this->postJson('/stories/style', ['template' => 'category:beauty:barber:editorial'])
             ->assertOk();
         $this->getJson('/stories/category/catalog?industry=beauty&activity=barber')
-            ->assertOk()->assertJsonPath('category.activity', 'barber')->assertJsonCount(6, 'groups')->assertJsonCount(8, 'templates');
+            ->assertOk()->assertJsonPath('category.activity', 'barber')->assertJsonCount(9, 'groups')->assertJsonCount(8, 'templates');
 
         $other = User::factory()->create();
         \App\Models\MasterProfile::create([
