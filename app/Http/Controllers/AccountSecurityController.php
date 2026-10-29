@@ -82,7 +82,7 @@ class AccountSecurityController extends Controller
     {
         abort_unless(hash_equals(sha1((string) $user->email), $hash), 403);
         $user->forceFill(['email_verified_at' => now()])->save();
-        return redirect()->route('login')->with('success', 'Почта подтверждена. Теперь можно восстановить пароль через email.');
+        return redirect()->route('login')->with('success', 'Почта подтверждена. Войдите с временным паролем из приветственного письма BOSH.');
     }
 
     public function forgotPage() { return Inertia::render('PasswordRecovery', ['reset' => false]); }
