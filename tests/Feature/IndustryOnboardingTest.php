@@ -19,9 +19,10 @@ class IndustryOnboardingTest extends TestCase
             'onboarding_industry_done' => false,
         ]);
         $this->actingAs($user)->post('/onboarding/industry', [
-            'industry' => 'leisure', 'activity' => 'sauna',
+            'name' => 'Айгүл', 'industry' => 'leisure', 'activity' => 'sauna',
         ])->assertRedirect('/dashboard')->assertSessionHasNoErrors();
         $profile->refresh();
+        $this->assertSame('Айгүл', $profile->display_name);
         $this->assertSame('leisure', $profile->industry);
         $this->assertSame('sauna', $profile->activity);
         $this->assertTrue($profile->onboarding_industry_done);
@@ -35,7 +36,7 @@ class IndustryOnboardingTest extends TestCase
             'onboarding_industry_done' => false,
         ]);
         $this->actingAs($user)->post('/onboarding/industry', [
-            'industry' => 'beauty', 'activity' => 'sauna',
+            'name' => 'Айгүл', 'industry' => 'beauty', 'activity' => 'sauna',
         ])->assertStatus(422);
         $this->assertNull($profile->fresh()->industry);
         $this->assertFalse($profile->fresh()->onboarding_industry_done);
