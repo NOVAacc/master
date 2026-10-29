@@ -76,7 +76,7 @@ class EmailRegistrationTest extends TestCase
         Mail::fake();
         config()->set('mail.default', 'log');
         $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test'])->assertSessionHasErrors('email');
-        $this->post('/register', ['phone' => '123', 'email' => 'master@example.test'])->assertSessionHasErrors('phone');
+        $this->post('/register', ['name' => 'Айгүл', 'phone' => '123', 'email' => 'master@example.test'])->assertSessionHasErrors('phone');
         $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'invalid'])->assertSessionHasErrors('email');
         $this->assertDatabaseCount('users', 0);
         Mail::assertNothingSent();
@@ -97,7 +97,12 @@ class EmailRegistrationTest extends TestCase
         $body = (new RegistrationPassword('Айгүл', '996555123456', 'test-password', $url))->render();
         $this->assertStringContainsString('Здравствуйте, Айгүл!', $body);
         $this->assertStringContainsString('Подтвердить почту', $body);
-        $this->assertStringContainsString($url, $body);
-        $this->assertStringNotContainsString('&amp;signature', $body);
+        $this->assertStringContainsString('expires=123&amp;signature=abc', $body);
+        $textBody = view('mail.registration-password-text', [
+            'name' => 'Айгүл', 'phone' => '996555123456',
+            'temporaryPassword' => 'test-password', 'verifyUrl' => $url,
+        ])->render();
+        $this->assertStringContainsString($url, $textBody);
+        $this->assertStringNotContainsString('&amp;signature', $textBody);
     }
 }
