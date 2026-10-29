@@ -4,7 +4,7 @@ import type { Industries, Master } from "./types";
 export default function FirstIndustryChoice({ master }: { master: Master }) {
     const { industries } = usePage<{ industries: Industries }>().props;
     const f = useForm({ industry: master.industry || "", activity: master.activity || "" });
-    if (master.industry && master.activity) return null;
+    if (master.onboarding_industry_done !== false) return null;
     const activities = industries[f.data.industry]?.activities ?? {};
     return <div className="industry-onboarding-backdrop">
         <section className="industry-onboarding" role="dialog" aria-modal="true" aria-labelledby="industry-title">
