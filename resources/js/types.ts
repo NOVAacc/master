@@ -12,6 +12,7 @@ export type Master = {
     display_name: string;
     specialty: string;
     industry?: string | null;
+    onboarding_industry_done?: boolean;
     activity?: string | null;
     bio: string;
     phone: string;
