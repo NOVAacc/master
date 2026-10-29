@@ -24,12 +24,14 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate(['phone' => ['required', 'string', 'max:32'], 'email' => ['required', 'string', 'max:255']]);
+        $request->validate(['name' => ['required', 'string', 'min:2', 'max:100'], 'phone' => ['required', 'string', 'max:32'], 'email' => ['required', 'string', 'max:255']]);
         $request->merge([
+            'name' => trim((string) $request->input('name')),
             'phone' => $this->phone($request->input('phone')),
             'email' => strtolower(trim($request->input('email'))),
         ]);
         $data = $request->validate([
+            'name' => ['required', 'string', 'min:2', 'max:100'],
             'phone' => ['required', 'unique:users,phone'],
             'email' => ['required', 'email:rfc', 'max:255', 'unique:users,email'],
         ], [
@@ -43,19 +45,19 @@ class AuthController extends Controller
             DB::transaction(function () use ($data) {
                 $password = $this->generatedPassword();
                 $user = User::create([
-                    'name' => 'Мастер', 'phone' => $data['phone'], 'email' => $data['email'],
+                    'name' => $data['name'], 'phone' => $data['phone'], 'email' => $data['email'],
                     'password' => Hash::make($password), 'password_initialized_at' => now(),
                 ]);
                 do { $slug = strtolower(Str::random(7)); }
                 while (MasterProfile::where('slug', $slug)->exists());
                 MasterProfile::create([
-                    'user_id' => $user->id, 'display_name' => 'Мастер',
+                    'user_id' => $user->id, 'display_name' => $data['name'],
                     'phone' => $data['phone'], 'slug' => $slug,
                 ]);
                 $verifyUrl = URL::temporarySignedRoute('security.email.verify', now()->addMinutes(60), [
                     'user' => $user->id, 'hash' => sha1($user->email),
                 ]);
-                Mail::to($user->email)->send(new RegistrationPassword($data['phone'], $password, $verifyUrl));
+                Mail::to($user->email)->send(new RegistrationPassword($data['name'], $data['phone'], $password, $verifyUrl));
             });
         } catch (\Illuminate\Database\QueryException $e) {
             if (in_array((string) $e->getCode(), ['23000', '23505'], true)) {
@@ -65,7 +67,7 @@ class AuthController extends Controller
         } catch (\Throwable $e) {
             throw ValidationException::withMessages(['email' => 'Не удалось отправить пароль на почту. Проверьте адрес и попробуйте ещё раз.']);
         }
-        return redirect()->route('login')->with('success', 'Пароль отправлен на вашу почту. Войдите по телефону или почте и паролю из письма.');
+        return redirect()->route('login')->with('success', 'Письмо отправлено. Сначала подтвердите почту по ссылке в письме, затем войдите с временным паролем.');
     }
 
     // Exactly six characters: one uppercase, four lowercase and one digit.
