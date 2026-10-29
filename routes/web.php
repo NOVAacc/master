@@ -56,6 +56,16 @@ Route::middleware('auth')->group(function () {
     Route::match(['put', 'post'], '/schedule', [DashboardController::class, 'schedule']);
     Route::match(['put', 'post'], '/appointments/{appointment}', [DashboardController::class, 'status']);
 });
+Route::post('/onboarding/industry', function (\Illuminate\Http\Request $request) {
+    $industries = config('industries');
+    $data = $request->validate([
+        'industry' => ['required', 'string', \Illuminate\Validation\Rule::in(array_keys($industries))],
+        'activity' => ['required', 'string'],
+    ]);
+    abort_unless(isset($industries[$data['industry']]['activities'][$data['activity']]), 422);
+    \App\Models\MasterProfile::where('user_id', $request->user()->id)->update($data);
+    return redirect()->route('dashboard');
+})->middleware(['auth', 'throttle:15,1'])->name('onboarding.industry');
 Route::get('/stories/templates/catalog', fn () => response()->json(\App\Http\Controllers\StoryTemplateAdminController::catalog()))->middleware(['auth', 'throttle:60,1'])->name('stories.template.catalog');
 Route::get('/stories/templates/{theme}/{template}/{version}', [\App\Http\Controllers\StoryTemplateAdminController::class, 'image'])
     ->where('version', '[a-f0-9]{40}')->name('stories.template.image');
