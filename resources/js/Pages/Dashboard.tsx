@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Icon from "../Icon";
 import ProfileSettings from "../ProfileSettings";
+import FirstIndustryChoice from "../FirstIndustryChoice";
 import AccountSecurity from "../AccountSecurity";
 import type { SecurityStatus } from "../AccountSecurity";
 import { MasterAvatar } from "../ProfileIdentity";
@@ -481,6 +482,7 @@ export default function Dashboard({
     return (
         <div className="shell">
             <Head title="Кабинет" />
+            <FirstIndustryChoice master={master} />
             <aside className={`sidebar${mobileMenuOpen ? " mobile-menu-open" : ""}`}>
                 <div className="sidebar-mobile-header">
                     <Brand />
