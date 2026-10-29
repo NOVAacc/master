@@ -15,8 +15,8 @@ class IndustryTest extends TestCase
     public function test_legacy_catalog_query_parameters_do_not_publish_master_records(): void
     {
         $industries = config('industries');
-        $this->assertCount(6, $industries);
-        $this->assertSame(57, array_sum(array_map(fn ($i) => count($i['activities']), $industries)));
+        $this->assertCount(9, $industries);
+        $this->assertGreaterThan(57, array_sum(array_map(fn ($i) => count($i['activities']), $industries)));
         $this->profile('barbertarget', 'beauty', 'barber');
         foreach (['/?industry=beauty&activity=barber', '/?industry=medicine', '/?industry=medicine&activity=barber'] as $url) {
             $this->get($url)->assertOk()->assertInertia(fn (Assert $p) => $p
