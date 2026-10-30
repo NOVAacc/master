@@ -65,6 +65,42 @@ class AdminController extends Controller
         ]);
     }
 
+    public function createOnboardingTestUser(Request $request)
+    {
+        // No shared/default test password. A fresh random credential is shown to the admin once.
+        $password = Str::password(20);
+        $token = Str::lower(Str::random(10));
+        $email = 'onboarding-'.$token.'@example.invalid';
+        $phone = null;
+        DB::transaction(function () use ($password, $email, $phone, $token) {
+            $user = User::create([
+                'name' => 'Тестовый мастер', 'email' => $email, 'phone' => $phone,
+                'password' => Hash::make($password), 'password_initialized_at' => now(),
+                'email_verified_at' => now(),
+            ]);
+            MasterProfile::create([
+                'user_id' => $user->id, 'slug' => 'test-onboarding-'.$token,
+                'display_name' => 'Тестовый мастер', 'booking_enabled' => false,
+                'is_demo' => true, 'onboarding_industry_done' => false,
+                'industry' => null, 'activity' => null,
+            ]);
+        });
+        return redirect()->route('admin.users')->with('test_onboarding_credentials', [
+            'email' => $email, 'password' => $password,
+        ]);
+    }
+
+    public function resetOnboardingTestUser(Request $request, User $user)
+    {
+        $profile = MasterProfile::where('user_id', $user->id)->firstOrFail();
+        abort_unless($profile->is_demo && Str::startsWith($profile->slug, 'test-onboarding-')
+            && Str::endsWith((string) $user->email, '@example.invalid'), 403);
+        $profile->update([
+            'industry' => null, 'activity' => null, 'onboarding_industry_done' => false,
+        ]);
+        return redirect()->route('admin.users')->with('success', 'Тестовый профиль сброшен. При следующем входе снова появится окно выбора.');
+    }
+
     public function unlockUser(Request $request, User $user)
     {
         DB::transaction(function () use ($user) {
