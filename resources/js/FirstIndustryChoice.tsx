@@ -1,4 +1,5 @@
 import { useForm, usePage } from "@inertiajs/react";
+import { Notice } from "./Shared";
 import type { Industries, Master } from "./types";
 
 export default function FirstIndustryChoice({ master }: { master: Master }) {
@@ -19,6 +20,7 @@ export default function FirstIndustryChoice({ master }: { master: Master }) {
             <p className="eyebrow">BOSH · НАЧАЛО РАБОТЫ</p>
             <h2 id="industry-title">Чем вы занимаетесь?</h2>
             <p className="muted small">Всего два выбора — и можно работать. Направление можно изменить позже в профиле.</p>
+            <Notice />
             <form onSubmit={e => {
                 e.preventDefault();
                 if (!catalog[f.data.industry]?.activities?.[f.data.activity]) return;
