@@ -25,7 +25,6 @@ export default function FirstIndustryChoice({ master }: { master: Master }) {
     const category = useForm({ industry: master.industry || "", activity: master.activity || "" });
     const schedule = useForm<{ hours: { weekday: number; starts_at: string; ends_at: string; break_starts_at: null; break_ends_at: null }[] }>({ hours: [] });
     const service = useForm({ services: [{ name: "", duration_minutes: 60, price_som: 0 }] });
-    const [chosenActivity, setChosenActivity] = useState(master.activity || "");
     const [drafted, setDrafted] = useState(false);
     const step = firstStep;
     if (step === 3) return null;
