@@ -130,6 +130,7 @@ export default function Dashboard({
     hours,
     appointments,
     publicUrl,
+    onboardingCompleted,
     whatsappAutomatic,
     calendarDate,
     calendarAppointments,
@@ -143,6 +144,7 @@ export default function Dashboard({
     hours: Hour[];
     appointments: Appointment[];
     publicUrl: string;
+    onboardingCompleted: boolean;
     whatsappAutomatic: boolean;
     calendarDate: string;
     calendarAppointments: Appointment[];
@@ -482,7 +484,7 @@ export default function Dashboard({
     return (
         <div className="shell">
             <Head title="Кабинет" />
-            <FirstIndustryChoice master={master} />
+            <FirstIndustryChoice master={master} publicUrl={publicUrl} completed={onboardingCompleted} />
             <aside className={`sidebar${mobileMenuOpen ? " mobile-menu-open" : ""}`}>
                 <div className="sidebar-mobile-header">
                     <Brand />
