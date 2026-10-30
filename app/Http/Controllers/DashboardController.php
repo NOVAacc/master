@@ -45,6 +45,7 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard', [
             'industries' => config('industries'),
+            'onboardingCompleted' => (bool) $request->session()->get('onboarding_completed', false),
             'onboarding' => [
                 'hoursCount' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->count(),
                 'servicesCount' => $master->services()->count(),
