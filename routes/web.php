@@ -56,6 +56,26 @@ Route::middleware('auth')->group(function () {
     Route::match(['put', 'post'], '/schedule', [DashboardController::class, 'schedule']);
     Route::match(['put', 'post'], '/appointments/{appointment}', [DashboardController::class, 'status']);
 });
+Route::post('/onboarding/services', function (\Illuminate\Http\Request $request) {
+    $data = $request->validate([
+        'services' => ['required', 'array', 'min:1', 'max:3'],
+        'services.*.name' => ['required', 'string', 'max:150'],
+        'services.*.duration_minutes' => ['required', 'integer', 'min:5', 'max:720'],
+        'services.*.price_som' => ['required', 'integer', 'min:0', 'max:10000000'],
+    ]);
+    \Illuminate\Support\Facades\DB::transaction(function () use ($request, $data) {
+        $profile = \App\Models\MasterProfile::where('user_id', $request->user()->id)->lockForUpdate()->firstOrFail();
+        if ($profile->services()->exists()) return;
+        foreach ($data['services'] as $i => $service) {
+            $profile->services()->create([
+                'name' => trim($service['name']), 'duration_minutes' => $service['duration_minutes'],
+                'price_som' => $service['price_som'], 'description' => null,
+                'is_active' => true, 'sort_order' => $i + 1,
+            ]);
+        }
+    });
+    return redirect()->route('dashboard')->with('success', 'Первые услуги добавлены.');
+})->middleware(['auth', 'throttle:10,1'])->name('onboarding.services');
 Route::post('/onboarding/industry', function (\Illuminate\Http\Request $request) {
     $industries = config('industries');
     $data = $request->validate([
