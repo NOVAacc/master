@@ -52,6 +52,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
             <p className="muted small">Шаг {step + 1} из 3</p>
             <div className="onboarding-progress">{[0, 1, 2].map(i => <span key={i} className={i <= step ? "active" : ""} />)}</div>
             <Notice />
+            {step === 3 && <section><h2>Ваша страница готова!</h2><p>{publicUrl}</p><button type="button" onClick={() => setDone(true)}>Перейти в кабинет</button></section>}
             {step === 0 && <>
                 <h2 id="industry-title">Чем вы занимаетесь?</h2>
                 <p className="muted small">Выберите сферу и направление. Их можно изменить позже.</p>
