@@ -1,6 +1,7 @@
 import { useForm, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import { Notice } from "./Shared";
+import ShareProfile from "./ShareProfile";
 import type { Industries, Master } from "./types";
 
 type Counts = { hoursCount: number; servicesCount: number };
@@ -50,10 +51,10 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
     return <div className="industry-onboarding-backdrop">
         <section className="industry-onboarding" role="dialog" aria-modal="true" aria-labelledby="industry-title">
             <p className="eyebrow">BOSH · БЫСТРЫЙ СТАРТ</p>
-            <p className="muted small">Шаг {step + 1} из 3</p>
-            <div className="onboarding-progress">{[0, 1, 2].map(i => <span key={i} className={i <= step ? "active" : ""} />)}</div>
+            {step < 3 && <p className="muted small">Шаг {step + 1} из 3</p>}
+            {step < 3 && <div className="onboarding-progress">{[0, 1, 2].map(i => <span key={i} className={i <= step ? "active" : ""} />)}</div>}
             <Notice />
-            {step === 3 && <section><h2>Ваша страница готова!</h2><p>{publicUrl}</p><button type="button" onClick={() => setDone(true)}>Перейти в кабинет</button></section>}
+            {step === 3 && <section><h2>Ваша страница готова!</h2><p className="muted small">Поделитесь ссылкой, чтобы клиенты могли записываться к вам.</p><ShareProfile url={publicUrl} /><button className="primary wide" type="button" onClick={() => setDone(true)}>Перейти в кабинет</button></section>}
             {step === 0 && <>
                 <h2 id="industry-title">Чем вы занимаетесь?</h2>
                 <p className="muted small">Выберите сферу и направление. Их можно изменить позже.</p>
