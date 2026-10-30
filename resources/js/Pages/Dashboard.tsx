@@ -5,6 +5,7 @@ import axios from "axios";
 import Icon from "../Icon";
 import ProfileSettings from "../ProfileSettings";
 import FirstIndustryChoice from "../FirstIndustryChoice";
+import ShareProfile from "../ShareProfile";
 import AccountSecurity from "../AccountSecurity";
 import type { SecurityStatus } from "../AccountSecurity";
 import { MasterAvatar } from "../ProfileIdentity";
@@ -838,6 +839,18 @@ export default function Dashboard({
                                     {publicUrl} ↗
                                 </a>
                             </p>
+                            <div className="bosh-profile-next">
+                                <strong>Дополните вашу страницу</strong>
+                                <p className="muted small">Эти детали необязательны для запуска, но помогут клиентам найти вас и записаться.</p>
+                                <ul>
+                                    <li>{master.avatar_url ? "✓" : "○"} Фотография профиля</li>
+                                    <li>{master.bio?.trim() ? "✓" : "○"} Описание услуг и опыта</li>
+                                    <li>{master.instagram_username ? "✓" : "○"} Instagram</li>
+                                    <li>{master.address?.trim() ? "✓" : "○"} Адрес приёма</li>
+                                    <li>{master.address_url?.trim() ? "✓" : "○"} Ссылка 2GIS для построения маршрута</li>
+                                </ul>
+                                <ShareProfile url={publicUrl} />
+                            </div>
                             <ProfileSettings master={master} />
                         </>
                     )}
