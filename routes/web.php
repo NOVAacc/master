@@ -74,7 +74,7 @@ Route::post('/onboarding/services', function (\Illuminate\Http\Request $request)
             ]);
         }
     });
-    return redirect()->route('dashboard')->with('success', 'Первые услуги добавлены.');
+    return redirect()->route('dashboard')->with('onboarding_completed', true);
 })->middleware(['auth', 'throttle:10,1'])->name('onboarding.services');
 Route::post('/onboarding/industry', function (\Illuminate\Http\Request $request) {
     $industries = config('industries');
