@@ -32,9 +32,14 @@ export default function FirstIndustryChoice({ master }: { master: Master }) {
     const suggested = starters[master.activity ?? ""] ?? ["Первая услуга"];
     const submitSchedule = () => {
         if (!days.length || start >= end) return;
+        schedule.setData("hours", days.map(weekday => ({
+            weekday, starts_at: start, ends_at: end, break_starts_at: null, break_ends_at: null,
+        })));
+        // Submit the current values directly so the form does not send stale state.
         schedule.transform(() => ({ hours: days.map(weekday => ({
             weekday, starts_at: start, ends_at: end, break_starts_at: null, break_ends_at: null,
-        })) })).post("/schedule", { preserveScroll: true });
+        })) }));
+        schedule.post("/schedule", { preserveScroll: true });
     };
     const submitServices = () => {
         if (!service.data.services.every(s => s.name.trim() && s.duration_minutes >= 5 && s.price_som >= 0)) return;
@@ -68,7 +73,7 @@ export default function FirstIndustryChoice({ master }: { master: Master }) {
             </>}
             {step === 1 && <>
                 <h2 id="industry-title">Когда вы работаете?</h2>
-                <p className="muted small">Выберите дни и обычные рабочие часы. Индивидуальное расписание можно настроить позже.</p>
+                <p className="muted small">Выберите дни и обычные рабочие часы. Индивидуальное расписание и обеденный перерыв можно настроить позже в настройках расписания.</p>
                 <div className="onboarding-weekdays">{weekdays.map((name, i) => <button type="button" key={name} aria-pressed={days.includes(i+1)}
                     className={days.includes(i+1) ? "selected" : ""} onClick={() => setDays(old => old.includes(i+1) ? old.filter(d => d !== i+1) : [...old, i+1].sort())}>{name}</button>)}</div>
                 <div className="onboarding-time">
