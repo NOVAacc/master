@@ -45,6 +45,10 @@ class DashboardController extends Controller
 
         return Inertia::render('Dashboard', [
             'industries' => config('industries'),
+            'onboarding' => [
+                'hoursCount' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->count(),
+                'servicesCount' => $master->services()->count(),
+            ],
             'calendarDate' => $calendarDate,
             'calendarAppointments' => fn () => $master->appointments()->where('starts_at', '<', $calendarEnd->utc())
                 ->where('ends_at', '>', $calendarStart->utc())
