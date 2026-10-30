@@ -10,7 +10,7 @@ const starters: Record<string, string[]> = {
     massage: ["Массаж 60 минут"], "brows-lashes": ["Оформление бровей", "Окрашивание бровей"],
     cosmetology: ["Консультация", "Уход за лицом"], tutoring: ["Индивидуальное занятие"],
 };
-export default function FirstIndustryChoice({ master }: { master: Master }) {
+export default function FirstIndustryChoice({ master, publicUrl, completed }: { master: Master; publicUrl: string; completed: boolean }) {
     const { industries, onboarding } = usePage<{ industries?: Industries; onboarding?: Counts }>().props;
     const catalog = industries ?? {};
     const counts = onboarding ?? { hoursCount: 0, servicesCount: 0 };
@@ -26,8 +26,9 @@ export default function FirstIndustryChoice({ master }: { master: Master }) {
     const schedule = useForm<{ hours: { weekday: number; starts_at: string; ends_at: string; break_starts_at: null; break_ends_at: null }[] }>({ hours: [] });
     const service = useForm({ services: [{ name: "", duration_minutes: 60, price_som: 0 }] });
     const [drafted, setDrafted] = useState(false);
+    const [done, setDone] = useState(false);
     const step = firstStep;
-    if (step === 3) return null;
+    if (step === 3 && (!completed || done)) return null;
     const active = catalog[category.data.industry]?.activities ?? {};
     const suggested = starters[master.activity ?? ""] ?? ["Первая услуга"];
     const submitSchedule = () => {
