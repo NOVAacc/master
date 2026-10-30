@@ -14,7 +14,8 @@ class HandleInertiaRequests extends Middleware
         return [...parent::share($request),
             'site' => ['instagramUsername' => \App\Models\SiteSetting::instagramUsername()],
             'auth' => ['user' => $request->user()?->only('id', 'name', 'email')],
-            'flash' => ['success' => fn () => $request->session()->get('success')],
+            'flash' => ['success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error')],
         ];
     }
 }
