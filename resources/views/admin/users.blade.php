@@ -3,6 +3,23 @@
 @section('content')
 <h1>Пользователи</h1>
 <p class="muted">Всего: {{ $total }} · Зарегистрировано сегодня: {{ $registeredToday }}</p>
+<div class="panel">
+<strong>Тест регистрации мастера</strong>
+<p class="muted small">Создаёт отдельный демонстрационный аккаунт с пустыми сферой и направлением. Пароль показывается один раз. Записи клиентов отключены.</p>
+<form method="post" action="{{ route('admin.users.onboarding-test') }}">
+@csrf
+<button type="submit" class="button">Создать тестовый профиль</button>
+</form>
+@if(session('test_onboarding_credentials'))
+@php($test = session('test_onboarding_credentials'))
+<div class="panel" role="status">
+<strong>Данные тестового входа — сохраните сейчас, пароль повторно не показывается</strong>
+<p>Почта: <code>{{ $test['email'] }}</code></p>
+<p>Пароль: <code>{{ $test['password'] }}</code></p>
+<p><a href="{{ route('login') }}" target="_blank" rel="noopener">Открыть страницу входа</a></p>
+</div>
+@endif
+</div>
 <form method="get" action="{{ route('admin.users') }}" class="search" role="search">
 <input name="q" value="{{ $search }}" maxlength="100" aria-label="Поиск пользователей" placeholder="Имя, телефон, почта или адрес страницы">
 <button class="primary">Найти</button>
@@ -36,6 +53,12 @@
 <a class="small" href="{{ route('public.master', $user->slug) }}" target="_blank" rel="noopener">Открыть страницу мастера ↗</a>
 @else
 <span class="badge">Профиль не заполнен</span>
+@endif
+@if($user->slug && \Illuminate\Support\Str::startsWith($user->slug, 'test-onboarding-') && \Illuminate\Support\Str::endsWith((string) $user->email, '@example.invalid'))
+<form method="post" action="{{ route('admin.users.onboarding-reset', $user->id) }}">
+@csrf
+<button type="submit" class="button small">Сбросить заполнение профиля</button>
+</form>
 @endif
 <p><a class="button danger small" href="{{ route('admin.users.delete', $user->id) }}">Удалить аккаунт</a></p>
 </div>
