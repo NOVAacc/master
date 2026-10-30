@@ -1,5 +1,5 @@
 import { useForm, usePage } from "@inertiajs/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Notice } from "./Shared";
 import type { Industries, Master } from "./types";
 
@@ -27,7 +27,8 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
     const service = useForm({ services: [{ name: "", duration_minutes: 60, price_som: 0 }] });
     const [drafted, setDrafted] = useState(false);
     const [done, setDone] = useState(false);
-    const step = firstStep;
+    const [step, setStep] = useState(firstStep);
+    useEffect(() => { setStep(firstStep); }, [firstStep]);
     if (step === 3 && (!completed || done)) return null;
     const active = catalog[category.data.industry]?.activities ?? {};
     const suggested = starters[master.activity ?? ""] ?? ["Первая услуга"];
@@ -40,11 +41,11 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
         schedule.transform(() => ({ hours: days.map(weekday => ({
             weekday, starts_at: start, ends_at: end, break_starts_at: null, break_ends_at: null,
         })) }));
-        schedule.post("/schedule", { preserveScroll: true });
+        schedule.post("/schedule", { preserveScroll: true, preserveState: true, onSuccess: () => setStep(2) });
     };
     const submitServices = () => {
         if (!service.data.services.every(s => s.name.trim() && s.duration_minutes >= 5 && s.price_som >= 0)) return;
-        service.post("/onboarding/services", { preserveScroll: true });
+        service.post("/onboarding/services", { preserveScroll: true, preserveState: true, onSuccess: () => setStep(3) });
     };
     return <div className="industry-onboarding-backdrop">
         <section className="industry-onboarding" role="dialog" aria-modal="true" aria-labelledby="industry-title">
@@ -56,7 +57,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
             {step === 0 && <>
                 <h2 id="industry-title">Чем вы занимаетесь?</h2>
                 <p className="muted small">Выберите сферу и направление. Их можно изменить позже.</p>
-                <form onSubmit={e => { e.preventDefault(); category.post("/onboarding/industry", { preserveScroll: true }); }}>
+                <form onSubmit={e => { e.preventDefault(); category.post("/onboarding/industry", { preserveScroll: true, preserveState: true, onSuccess: () => setStep(1) }); }}>
                     <label className="field"><span>Сфера деятельности</span>
                         <select required value={category.data.industry} onChange={e => category.setData({ industry: e.target.value, activity: "" })}>
                             <option value="">Выберите сферу</option>
