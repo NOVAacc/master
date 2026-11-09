@@ -3493,3 +3493,24 @@ html:has(.landing) { scroll-behavior: auto; }
     .demo-content { padding: 18px 12px; }
     .demo-list-item { padding: 13px 12px; }
 }
+
+
+/* Booking edge cases: long content and narrow viewports. */
+.booking-retry { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+.booking-retry .errors { flex: 1 1 220px; margin: 0; }
+.booking-retry button { flex: 0 0 auto; }
+.demo-content, .demo-list-item, .demo-appointment-detail, .demo-list-item > div,
+.calendar-appointment, .calendar-detail, .booking-service-info, .booking-grid > * {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.calendar-appointment strong, .demo-list-item strong { overflow-wrap: anywhere; }
+@media (max-width: 380px) {
+    .demo-topbar { gap: 10px; }
+    .demo-topbar .brand { font-size: 20px; }
+    .demo-topbar > .primary { padding: 10px 12px; font-size: 12px; }
+    .demo-sidebar nav button { padding: 10px; }
+    .demo-content { padding: 16px 10px; }
+    .demo-footer .primary { width: 100%; }
+    .booking-retry button { width: 100%; }
+}
