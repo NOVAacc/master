@@ -189,33 +189,22 @@ class AuthController extends Controller
         return redirect()->route('dashboard');
     }
 
-    // Existing legacy email/password users and new phone/password users share one lockout policy.
+    // Email/password sign-in shares the existing account lockout and CAPTCHA policy.
     public function login(Request $request)
     {
         $data = $request->validate([
-            'identifier' => ['nullable', 'string', 'max:255'],
-            'email' => ['nullable', 'email'],
+            'identifier' => ['required', 'email:rfc', 'max:255'],
             'password' => ['required', 'string'],
         ]);
-        $identifier = trim((string) ($data['identifier'] ?? $data['email'] ?? ''));
-        if (!$identifier) {
-            throw ValidationException::withMessages(['identifier' => 'Введите номер телефона или почту.']);
-        }
-        $column = str_contains($identifier, '@') ? 'email' : 'phone';
-        if ($column === 'phone') {
-            try { $identifier = $this->phone($identifier); }
-            catch (ValidationException $e) { throw ValidationException::withMessages(['identifier' => 'Введите корректный номер телефона.']); }
-        } else {
-            $identifier = strtolower($identifier);
-        }
+        $identifier = strtolower(trim($data['identifier']));
         // An account lock must be reported before CAPTCHA, including for correct passwords.
-        $existing = User::where($column, $identifier)->first();
+        $existing = User::where('email', $identifier)->first();
         if ($existing && $existing->login_locked_until && $existing->login_locked_until->isFuture()) {
             throw ValidationException::withMessages(['identifier' => 'Вход временно заблокирован до '.$existing->login_locked_until->timezone('Asia/Bishkek')->format('d.m.Y H:i').' (UTC +6). Обратитесь к администратору или попробуйте позже.']);
         }
         SuspiciousLoginCaptcha::check($request, 'master', $identifier);
-        $outcome = DB::transaction(function () use ($column, $identifier, $data) {
-            $user = User::where($column, $identifier)->lockForUpdate()->first();
+        $outcome = DB::transaction(function () use ($identifier, $data) {
+            $user = User::where('email', $identifier)->lockForUpdate()->first();
             if (!$user) {
                 // Prevent obvious timing distinction between existing/missing accounts.
                 Hash::check($data['password'], '$2y$12$KbQiHKyt3oc0UghTmumD/eJbcTsVHBDrY5r65J5xt2.jV4PaLNIuu');
@@ -243,7 +232,7 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['identifier' => 'После 5 неверных попыток вход заблокирован на 1 час.']);
         }
         if ($outcome[0] !== 'success') {
-            throw ValidationException::withMessages(['identifier' => 'Неверный номер, почта или пароль.']);
+            throw ValidationException::withMessages(['identifier' => 'Неверная почта или пароль.']);
         }
         Auth::login($outcome[1]);
         $request->session()->regenerate();
