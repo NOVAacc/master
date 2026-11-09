@@ -140,6 +140,9 @@ export default function Booking(p: Props) {
                                     </p>
                                 )
                             )}
+                            <button type="button" className="button small" onClick={() => router.get(`/m/${p.master.slug}`, {}, { replace: true })}>
+                                Записаться ещё раз
+                            </button>
                             {p.bookingReceipt.masterLink ? (
                                 <>
                                     <a
@@ -163,7 +166,7 @@ export default function Booking(p: Props) {
                             )}
                         </section>
                     )}
-                    {p.groupSessions?.length > 0 && !p.master.is_demo && (
+                    {!p.bookingReceipt && p.groupSessions?.length > 0 && !p.master.is_demo && (
                         <section>
                             <h2>Групповые занятия</h2>
                             <p className="muted small">Выберите занятие и запишитесь на свободное место.</p>
@@ -196,7 +199,7 @@ export default function Booking(p: Props) {
                             ))}
                         </section>
                     )}
-                    {p.master.is_demo ? (
+                    {p.bookingReceipt ? null : p.master.is_demo ? (
                         <div>
                             <p className="notice">Демонстрационный профиль. Мастер вымышленный, фотографии — иллюстрации. Цены примерные. Запись недоступна.</p>
                             {p.services.map(service => (
@@ -226,6 +229,17 @@ export default function Booking(p: Props) {
                                 )
                                     return;
                                 f.post(`/m/${p.master.slug}/book`, {
+                                    preserveScroll: true,
+                                    onError: (errors) => {
+                                        if (errors.starts_at) {
+                                            f.setData("starts_at", "");
+                                            router.reload({
+                                                only: ["slots"],
+                                                preserveState: true,
+                                                preserveScroll: true,
+                                            });
+                                        }
+                                    },
                                     onSuccess: (page) => {
                                         setChosenDate(
                                             page.props.date as string,
