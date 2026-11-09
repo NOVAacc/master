@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Support\SuspiciousLoginCaptcha;
 use App\Models\SiteSetting;
 use App\Models\MasterProfile;
+use App\Models\MasterAppointment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -47,7 +48,11 @@ class AdminController extends Controller
         return view('admin.dashboard', [
             'totalUsers' => User::count(),
             'registeredToday' => User::whereDate('created_at', today())->count(),
-            'masters' => MasterProfile::where('is_demo', false)->count(),
+            'upcomingAppointments' => MasterAppointment::query()
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->where('ends_at', '>', now('UTC'))
+                ->whereHas('masterProfile', fn ($query) => $query->where('is_demo', false))
+                ->count(),
         ]);
     }
 

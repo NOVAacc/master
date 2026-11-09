@@ -13,9 +13,9 @@
         <strong class="admin-stat-number">{{ number_format($registeredToday, 0, ',', ' ') }}</strong>
     </div>
     <div class="panel admin-stat">
-        <p class="admin-stat-label">Профилей мастеров</p>
-        <strong class="admin-stat-number">{{ number_format($masters, 0, ',', ' ') }}</strong>
-        <p class="muted small">Без тестовых профилей</p>
+        <p class="admin-stat-label">Актуальные записи клиентов</p>
+        <strong class="admin-stat-number">{{ number_format($upcomingAppointments, 0, ',', ' ') }}</strong>
+        <p class="muted small">Ожидают или подтверждены · ещё не закончились</p>
     </div>
 </section>
 <div class="admin-dashboard-actions">
