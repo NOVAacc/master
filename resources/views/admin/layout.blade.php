@@ -22,6 +22,7 @@
         .badge{display:inline-block;background:#f1f1f1;border-radius:999px;padding:3px 9px;font-size:11px}.pagination{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:24px 0}.errors{padding:12px 16px;border-radius:12px;background:#fff0f0;color:#a42e3b;margin:18px 0}.notice{padding:12px 16px;background:#e4f5ed;color:#216c4b;border-radius:12px;margin:18px 0}
         .danger{background:#fff0f0;color:#a42e3b}.danger-primary{background:#b8323e;color:#fff}.deletion-confirmation{display:flex;align-items:flex-start;gap:10px;font-weight:400}.deletion-confirmation input{width:18px;height:18px;flex-shrink:0;margin-top:2px}.delete-summary{padding-left:20px}.delete-actions{margin-top:24px}
         .password-form{max-width:460px}.password-form button{margin-top:24px}
+        .admin-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:24px 0}.admin-stat{margin:0;min-width:0;padding:22px}.admin-stat-label{font-size:13px;color:#777;margin:0 0 8px}.admin-stat-number{display:block;font-size:32px;line-height:1.2;letter-spacing:-1px;font-weight:700;font-variant-numeric:tabular-nums}.admin-dashboard-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}.admin-dashboard-actions .button{border:1px solid #e6e6e6}@media(max-width:600px){.admin-stats{grid-template-columns:1fr;gap:10px}.admin-stat{padding:18px}.admin-stat-number{font-size:30px}}
         @media(max-width:600px){main{padding:24px 12px}header>div{padding:14px 12px;gap:14px}header .wordmark{display:none}nav{gap:14px}.panel{padding:20px}.user{display:block}.user .user-side{margin-top:12px}.user-side{text-align:left}.pagination{font-size:12px}}
     </style>
 </head>
@@ -29,6 +30,7 @@
 <header><div><span class="wordmark">BOSH</span><span class="muted small">Администрирование</span>
 @auth('admin')
 <nav aria-label="Администрирование">
+<a href="{{ route('admin.home') }}" @if(request()->routeIs('admin.home')) aria-current="page" @endif>Обзор</a>
 <a href="{{ route('admin.users') }}" @if(request()->routeIs('admin.users')) aria-current="page" @endif>Пользователи</a>
 <a href="{{ route('admin.categories') }}" @if(request()->routeIs('admin.categories')) aria-current="page" @endif>Категории</a>
 <a href="{{ route('admin.settings') }}" @if(request()->routeIs('admin.settings')) aria-current="page" @endif>Настройки</a>
