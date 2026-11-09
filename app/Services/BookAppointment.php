@@ -56,6 +56,22 @@ final class BookAppointment
                 throw ValidationException::withMessages(['booking' => 'Онлайн-запись отключена.']);
             }
 
+            // Public bookings must use the same 30-minute local slot grid and
+            // 90-day calendar window displayed on the booking page. Manual
+            // bookings remain unrestricted by the public slot grid.
+            if (! $manual) {
+                $localStart = $startsAtUtc->setTimezone($lockedMaster->timezone);
+                $today = CarbonImmutable::now($lockedMaster->timezone)->startOfDay();
+                if ($localStart->minute % 30 !== 0 || $localStart->second !== 0 ||
+                    $localStart->micro !== 0 ||
+                    $localStart->startOfDay()->lessThan($today) ||
+                    $localStart->startOfDay()->greaterThan($today->addDays(90))) {
+                    throw ValidationException::withMessages([
+                        'starts_at' => 'Выберите доступное время в календаре мастера.',
+                    ]);
+                }
+            }
+
             $endsAtUtc = $startsAtUtc->addMinutes($duration);
             $overlap = MasterAppointment::query()
                 ->where('master_profile_id', $lockedMaster->id)
