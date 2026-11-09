@@ -42,6 +42,15 @@ class AdminController extends Controller
         return redirect()->route('admin.users');
     }
 
+    public function dashboard()
+    {
+        return view('admin.dashboard', [
+            'totalUsers' => User::count(),
+            'registeredToday' => User::whereDate('created_at', today())->count(),
+            'masters' => MasterProfile::where('is_demo', false)->count(),
+        ]);
+    }
+
     public function users(Request $request)
     {
         $data = $request->validate(['q' => 'nullable|string|max:100']);
