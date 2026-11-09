@@ -2,7 +2,7 @@ import PhoneInput from "../PhoneInput";
 import WorkGallery from "../WorkGallery";
 import Icon from "../Icon";
 import { Head, router, useForm } from "@inertiajs/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import ProfileIdentity from "../ProfileIdentity";
 import BookingCalendar from "../BookingCalendar";
 import { Brand, Errors, Field, Notice } from "../Shared";
@@ -40,6 +40,7 @@ export default function Booking(p: Props) {
     const [chosenDate, setChosenDate] = useState(p.date);
     const [loading, setLoading] = useState(false);
     const [loadError, setLoadError] = useState("");
+    const submitting = useRef(false);
     const selected = p.services.filter((s) =>
         f.data.service_ids.includes(s.id),
     );
@@ -67,6 +68,7 @@ export default function Booking(p: Props) {
                         "Не удалось обновить свободное время. Повторите выбор даты.",
                     ),
                 onFinish: () => setLoading(false),
+                onCancel: () => setLoading(false),
             },
         );
     };
@@ -223,13 +225,19 @@ export default function Booking(p: Props) {
                             onSubmit={(e) => {
                                 e.preventDefault();
                                 if (
+                                    submitting.current ||
+                                    f.processing ||
+                                    loading ||
+                                    !!loadError ||
                                     !ready ||
                                     !selected.length ||
                                     !f.data.starts_at
                                 )
                                     return;
+                                submitting.current = true;
                                 f.post(`/m/${p.master.slug}/book`, {
                                     preserveScroll: true,
+                                    onFinish: () => { submitting.current = false; },
                                     onError: (errors) => {
                                         if (errors.starts_at) {
                                             f.setData("starts_at", "");
@@ -334,9 +342,11 @@ export default function Booking(p: Props) {
                                 }
                             />
                             {loadError && (
-                                <p className="errors" role="alert">
-                                    {loadError}
-                                </p>
+                                <div className="booking-retry" role="alert">
+                                    <p className="errors">{loadError}</p>
+                                    <button type="button" className="ghost" disabled={loading || f.processing}
+                                        onClick={() => change(chosenDate, f.data.service_ids)}>Повторить загрузку</button>
+                                </div>
                             )}
                             <p className="field-title">Свободное время</p>
                             <div className="slots">
@@ -362,10 +372,10 @@ export default function Booking(p: Props) {
                             </div>
                             <div aria-live="polite">
                                 {loading ? (
-                                    <p className="muted small">
-                                        Обновляем свободное время…
+                                    <p className="muted small" role="status">
+                                        Обновляем свободное время… Пожалуйста, дождитесь результата.
                                     </p>
-                                ) : !selected.length ? (
+                                ) : loadError ? null : !selected.length ? (
                                     <p className="muted small">
                                         Сначала выберите услуги.
                                     </p>

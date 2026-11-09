@@ -15,6 +15,7 @@ export default function QuickBooking({ services, timezone, date, initialClient, 
     services: Service[]; timezone: string; date: string; initialClient?: Client | null; onClose: () => void;
 }) {
     const dialog = useRef<HTMLDialogElement>(null);
+    const submitting = useRef(false);
     const active = services.filter(s => s.is_active);
     const today = localDay(new Date(), timezone);
     const [day, setDay] = useState(date >= today && date <= addDays(today, 90) ? date : today);
@@ -75,8 +76,11 @@ export default function QuickBooking({ services, timezone, date, initialClient, 
             </div>
             <form className="quick-booking-form" onSubmit={e => {
                 e.preventDefault();
+                if (submitting.current || f.processing) return;
+                submitting.current = true;
                 f.post("/appointments", {
                     preserveScroll: true,
+                    onFinish: () => { submitting.current = false; },
                     onSuccess: onClose,
                     onError: errors => {
                         if (errors.starts_at) {
