@@ -15,7 +15,7 @@ class EmailRegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_registration_emails_password_and_preserves_phone_and_email_login(): void
+    public function test_registration_emails_password_and_supports_email_login(): void
     {
         config()->set('mail.default', 'smtp');
         Mail::fake();
@@ -41,9 +41,6 @@ class EmailRegistrationTest extends TestCase
         Http::assertNothingSent();
         $this->get($verifyUrl)->assertRedirect('/login');
         $this->assertNotNull($user->fresh()->email_verified_at);
-        $this->post('/login', ['identifier' => $user->phone, 'password' => $password])->assertRedirect('/dashboard');
-        $this->assertAuthenticatedAs($user);
-        $this->post('/logout');
         $this->post('/login', ['identifier' => $user->email, 'password' => $password])->assertRedirect('/dashboard');
         $this->assertAuthenticatedAs($user);
     }
@@ -86,7 +83,7 @@ class EmailRegistrationTest extends TestCase
     {
         Http::fake();
         $this->post('/auth/send-code', ['phone' => '0555123456', 'name' => 'Мастер', 'mode' => 'register'])
-            ->assertSessionHasErrors('phone');
+            ->assertNotFound();
         $this->assertDatabaseCount('users', 0);
         Http::assertNothingSent();
     }
