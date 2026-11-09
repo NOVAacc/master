@@ -57,11 +57,11 @@ class AdminTest extends TestCase
 
         $todayUser = User::factory()->create();
         $oldUser = User::factory()->create(['created_at' => now()->subDays(2)]);
-        $realMaster = \\App\\Models\\MasterProfile::create([
+        $realMaster = \App\Models\MasterProfile::create([
             'user_id' => $todayUser->id, 'slug' => 'real-master', 'display_name' => 'Real master',
             'is_demo' => false,
         ]);
-        \\App\\Models\\MasterProfile::create([
+        \App\Models\MasterProfile::create([
             'user_id' => $oldUser->id, 'slug' => 'demo-master', 'display_name' => 'Demo master',
             'is_demo' => true,
         ]);
