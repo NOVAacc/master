@@ -3346,3 +3346,93 @@ html:has(.landing) { scroll-behavior: auto; }
 .onboarding-progress{display:flex;gap:6px;margin:12px 0 20px}.onboarding-progress span{height:4px;border-radius:9px;background:#e5e5e8;flex:1}.onboarding-progress span.active{background:#232426}.onboarding-weekdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin:18px 0}.onboarding-weekdays button{min-width:0;padding:10px 0;border:1px solid #e4e4e7;background:#fff;border-radius:9px;font-size:12px;cursor:pointer}.onboarding-weekdays button.selected{background:#242529;color:white;border-color:#242529}.onboarding-time{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.onboarding-time input,.onboarding-time select{width:100%;min-width:0}.onboarding-service{padding:12px 0;border-bottom:1px solid #ededf0}.onboarding-suggestions{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}.industry-onboarding{max-height:min(90vh,760px);overflow-y:auto}.industry-onboarding .primary.wide{width:100%;margin-top:18px}
 
 .bosh-share-panel{display:grid;gap:12px;margin:18px 0}.bosh-share-panel .field input{width:100%;min-width:0}.bosh-share-buttons{display:flex;gap:8px;flex-wrap:wrap}.bosh-share-buttons>a,.bosh-share-buttons>button{flex:1 1 140px;text-align:center}.bosh-share-qr{display:flex;align-items:center;flex-direction:column;gap:10px;padding:16px;border:1px solid #e8e8ea;border-radius:14px}.bosh-share-qr img{max-width:100%;height:auto}.bosh-profile-next{border:1px solid #e8e8eb;border-radius:16px;padding:20px;margin:18px 0}.bosh-profile-next ul{list-style:none;padding:0;display:grid;gap:7px;margin:16px 0;color:#555}.bosh-profile-next li{font-size:14px}.industry-onboarding .bosh-share-panel{margin-bottom:20px}
+
+
+/* Email-first sign-in: deliberately separate from the registration layout. */
+.auth-wrap.auth-wrap--login {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: none;
+    min-height: 100svh;
+    padding: 32px 18px;
+    gap: 0;
+}
+.auth-wrap--login .auth-form {
+    width: min(100%, 420px);
+    padding: 36px;
+}
+.auth-login-brand {
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #202020;
+    margin-bottom: 28px;
+}
+.auth-wrap--login .auth-form h1 {
+    margin: 0 0 25px;
+    font-size: 27px;
+    letter-spacing: -0.7px;
+}
+.auth-wrap--login .auth-login-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 15px;
+}
+.auth-wrap--login .auth-login-fields > .field {
+    margin: 0;
+    gap: 9px;
+}
+.auth-wrap--login .auth-login-fields .field > span {
+    font-size: 13px;
+    font-weight: 650;
+    color: #353535;
+}
+.auth-wrap--login .auth-login-fields input {
+    min-height: 52px;
+    height: 52px;
+    padding: 13px 15px;
+    border-radius: 13px;
+    border-color: #d6d6d6;
+    background: #fff;
+    font-size: 15px;
+}
+.auth-wrap--login .auth-login-fields input:focus {
+    border-color: #5e5e5e;
+    outline: 3px solid #e8e8e8;
+    outline-offset: 0;
+}
+.auth-login-recovery {
+    margin: 13px 0 22px;
+    text-align: right;
+    font-size: 12px;
+}
+.auth-wrap--login form > .primary.wide {
+    margin: 0;
+    min-height: 48px;
+    font-size: 14px;
+}
+.auth-login-register {
+    border-top: 1px solid #ededed;
+    padding-top: 20px;
+    margin-top: 25px;
+    text-align: center;
+    color: #737373;
+    font-size: 12px;
+}
+.auth-login-register a,
+.auth-login-recovery a {
+    color: #252525;
+    font-weight: 650;
+}
+@media (max-width: 700px) {
+    .auth-wrap.auth-wrap--login {
+        display: flex;
+        padding: 20px 14px;
+        min-height: 100svh;
+    }
+    .auth-wrap--login .auth-form {
+        padding: 29px 22px;
+    }
+}
