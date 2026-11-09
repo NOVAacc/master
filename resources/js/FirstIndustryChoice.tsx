@@ -60,7 +60,10 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
             {step < 3 && <button type="button" className="button small" onClick={() => setDismissed(true)}>Продолжить позже</button>}
             {step === 3 && <section>
                 <h2 id="industry-title">Ваша страница готова!</h2>
-                <p className="muted small">Клиенты уже могут записываться. Добавьте адрес и ссылку на 2GIS сейчас или позже в разделе «Моя страница».</p>
+                <p className="muted small">Всё готово. Отправьте клиентам ссылку — они смогут выбрать услугу и время самостоятельно.</p>
+                <ShareProfile url={publicUrl} />
+                <h3>Где вы принимаете клиентов?</h3>
+                <p className="muted small">Необязательно: адрес и ссылку на 2ГИС можно добавить сейчас или позже в разделе «Моя страница».</p>
                 <form onSubmit={e => { e.preventDefault(); location.post("/onboarding/location", {
                     preserveScroll: true, preserveState: true, onSuccess: () => setLocationSaved(true),
                 }); }}>
@@ -74,7 +77,6 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
                     {locationSaved && <p className="muted small" role="status">Адрес сохранён.</p>}
                     <button type="submit" className="button wide" disabled={location.processing}>{location.processing ? "Сохранение…" : "Сохранить адрес"}</button>
                 </form>
-                <ShareProfile url={publicUrl} />
                 <button className="primary wide" type="button" onClick={() => setDone(true)}>Перейти в кабинет</button>
             </section>}
             {step === 0 && <>
