@@ -31,7 +31,7 @@ class AccountSecurityController extends Controller
             'login_locked_until' => null,
             'remember_token' => Str::random(60),
         ])->save();
-        return back()->with('success', 'Пароль сохранён. Теперь входите по номеру телефона и паролю.');
+        return back()->with('success', 'Пароль сохранён. Теперь входите по электронной почте и паролю.');
     }
 
     private function ensureMailer(): void
@@ -125,6 +125,6 @@ class AccountSecurityController extends Controller
         if ($status !== Password::PASSWORD_RESET) {
             throw ValidationException::withMessages(['email' => 'Ссылка недействительна или истекла. Запросите новую.']);
         }
-        return redirect()->route('login')->with('success', 'Пароль обновлён. Войдите по телефону и новому паролю.');
+        return redirect()->route('login')->with('success', 'Пароль обновлён. Войдите по электронной почте и новому паролю.');
     }
 }

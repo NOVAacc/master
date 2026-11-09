@@ -54,6 +54,30 @@ Route::middleware('auth')->group(function () {
     Route::match(['put', 'post'], '/schedule', [DashboardController::class, 'schedule']);
     Route::match(['put', 'post'], '/appointments/{appointment}', [DashboardController::class, 'status']);
 });
+Route::post('/onboarding/location', function (\Illuminate\Http\Request $request) {
+    $data = $request->validate([
+        'address' => ['nullable', 'string', 'max:255'],
+        'address_url' => ['nullable', 'string', 'max:2048', 'url:https', function ($attribute, $value, $fail) {
+            $url = parse_url($value);
+            $host = strtolower($url['host'] ?? '');
+            $allowed = false;
+            foreach (['2gis.kg', '2gis.ru', '2gis.com', '2gis.kz', '2gis.uz', '2gis.ae'] as $domain) {
+                if ($host === $domain || str_ends_with($host, '.'.$domain)) {
+                    $allowed = true;
+                    break;
+                }
+            }
+            if (! $allowed || isset($url['user']) || isset($url['pass']) || isset($url['port'])) {
+                $fail('Вставьте ссылку HTTPS из 2ГИС.');
+            }
+        }],
+    ]);
+    \App\Models\MasterProfile::where('user_id', $request->user()->id)->firstOrFail()->update([
+        'address' => $data['address'] ?? null,
+        'address_url' => $data['address_url'] ?? null,
+    ]);
+    return redirect()->route('dashboard')->with('onboarding_completed', true);
+})->middleware(['auth', 'throttle:15,1'])->name('onboarding.location');
 Route::post('/onboarding/services', function (\Illuminate\Http\Request $request) {
     $data = $request->validate([
         'services' => ['required', 'array', 'min:1', 'max:3'],
