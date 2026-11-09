@@ -89,7 +89,7 @@ export default function Home() {
                         <p className="landing-kicker"><span />ОНЛАЙН-ЗАПИСЬ ДЛЯ ВАШЕГО ДЕЛА</p>
                         <h1>Вы занимаетесь делом.<br /><span>Клиенты записываются сами.</span></h1>
                         <p className="landing-lead">Ваша страница с услугами, свободное время и записи — в одном месте. Меньше переписок о времени. Больше внимания клиентам.</p>
-                        <div className="landing-hero-actions"><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link><a className="landing-text-link" href="#start">Как это работает <span aria-hidden="true">↗</span></a></div>
+                        <div className="landing-hero-actions"><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link><Link className="landing-text-link" href="/demo">Посмотреть демо <Icon name="arrow" /></Link></div>
                         <p className="landing-hero-note"><Icon name="check" /> Бесплатно. На телефоне и компьютере.</p>
                     </div>
                     <BookingExample />
