@@ -66,8 +66,8 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
             f.post("/login", { onError: errors => { if (errors.captcha) setCaptchaRequired(true); setCaptchaRevision(value => value + 1); f.setData("cf-turnstile-response", ""); }, onFinish: () => f.setData("password", "") });
         }
     }
-    return <main className="auth-wrap">
-        <section className="auth-intro">
+    return <main className={register ? "auth-wrap" : "auth-wrap auth-wrap--login"}>
+        {register && <section className="auth-intro">
             <Brand />
             <h1>Время для вашего дела.</h1>
             <p>Услуги, расписание и запись клиентов — в одном кабинете.</p>
@@ -76,12 +76,17 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
                 <h2>Ваше дело.<br />Ваше расписание.</h2>
                 <p>Создайте аккаунт, заполните профиль и принимайте записи. BOSH — бесплатно.</p>
             </div>
-        </section>
+        </section>}
         <section className="auth-form panel">
             <Head title={register ? "Регистрация" : "Вход"} />
-            <p className="eyebrow">BOSH · КАБИНЕТ МАСТЕРА</p>
-            <h1>{register ? "Начать работу" : "Войти в BOSH"}</h1>
-            <p className="muted">{register ? "Укажите имя, телефон и почту. В письме будет кнопка подтверждения и временный пароль." : "Введите электронную почту и пароль."}</p>
+            {register ? <>
+                <p className="eyebrow">BOSH · КАБИНЕТ МАСТЕРА</p>
+                <h1>Начать работу</h1>
+                <p className="muted">Укажите имя, телефон и почту. В письме будет кнопка подтверждения и временный пароль.</p>
+            </> : <>
+                <div className="auth-login-brand">BOSH</div>
+                <h1>Вход</h1>
+            </>}
             <Notice />
             <form onSubmit={submit}>
                 <Errors errors={f.errors} />
@@ -94,12 +99,14 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
                         <Field label="Электронная почта"><input required type="email" autoComplete="username" autoCapitalize="none" spellCheck={false} maxLength={255} placeholder="mail@example.com" value={f.data.identifier} onChange={e => f.setData("identifier", e.target.value)} /></Field>
                         <Field label="Пароль"><input required type="password" autoComplete="current-password" value={f.data.password} onChange={e => f.setData("password", e.target.value)} /></Field>
                     </div>
-                    <p className="muted"><Link href="/forgot-password">Забыли пароль?</Link></p>
+                    <div className="auth-login-recovery"><Link href="/forgot-password">Забыли пароль?</Link></div>
                     {(captchaRequired || !!(f.errors as Record<string, string | undefined>).captcha) && (turnstileSiteKey ? <Turnstile key={captchaRevision} siteKey={turnstileSiteKey} onToken={token => f.setData("cf-turnstile-response", token)} /> : <p className="muted" role="alert">Проверка Cloudflare недоступна: сайт не получил публичный ключ Turnstile. Обновите страницу; если ошибка повторится, необходимо проверить конфигурацию Laravel на сервере.</p>)}
                 </>}
                 <button className="primary wide" disabled={f.processing}>{f.processing ? "Подождите…" : register ? "Получить пароль на почту" : "Войти"}</button>
             </form>
-            <p className="muted">{register ? "Уже есть аккаунт?" : "Ещё нет аккаунта?"} <Link href={register ? "/login" : "/register"}>{register ? "Войти" : "Начать работу"}</Link></p>
+            {register
+                ? <p className="muted">Уже есть аккаунт? <Link href="/login">Войти</Link></p>
+                : <div className="auth-login-register">Нет аккаунта? <Link href="/register">Зарегистрироваться</Link></div>}
         </section>
     </main>;
 }
