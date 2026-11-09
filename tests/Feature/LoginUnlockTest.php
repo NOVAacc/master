@@ -22,7 +22,7 @@ class LoginUnlockTest extends TestCase
             'failed_login_attempts' => 5,
             'login_locked_until' => now()->addHour(),
         ]);
-        $this->post('/login', ['identifier' => $user->phone, 'password' => 'CorrectPassword!'])
+        $this->post('/login', ['identifier' => $user->email, 'password' => 'CorrectPassword!'])
             ->assertRedirect()->assertSessionHasErrors('identifier');
         $this->assertGuest();
         $this->assertSame(5, $user->fresh()->failed_login_attempts);
@@ -53,7 +53,7 @@ class LoginUnlockTest extends TestCase
         $this->assertSame(0, $user->fresh()->failed_login_attempts);
         $this->assertSame($hash, $user->fresh()->password);
         $this->post('/admin/logout');
-        $this->post('/login', ['identifier' => $user->phone, 'password' => 'CorrectPassword!'])
+        $this->post('/login', ['identifier' => $user->email, 'password' => 'CorrectPassword!'])
             ->assertRedirect('/dashboard');
     }
 }

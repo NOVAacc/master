@@ -13,23 +13,23 @@ class AccountSecurityTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_phone_login_locks_for_one_hour_after_five_failed_attempts(): void
+    public function test_email_login_locks_for_one_hour_after_five_failed_attempts(): void
     {
         $user = User::factory()->create(['phone' => '996555123456', 'password' => Hash::make('abcde'),
             'password_initialized_at' => now(), 'failed_login_attempts' => 0]);
         foreach (range(1, 4) as $attempt) {
-            $this->post('/login', ['identifier' => '+996 555 123 456', 'password' => 'wrong'])
+            $this->post('/login', ['identifier' => $user->email, 'password' => 'wrong'])
                 ->assertSessionHasErrors('identifier');
         }
-        $this->post('/login', ['identifier' => '+996 555 123 456', 'password' => 'wrong'])
+        $this->post('/login', ['identifier' => $user->email, 'password' => 'wrong'])
             ->assertSessionHasErrors('identifier');
         $user->refresh();
         $this->assertEquals(5, $user->failed_login_attempts);
         $this->assertTrue($user->login_locked_until->isFuture());
-        $this->post('/login', ['identifier' => '996555123456', 'password' => 'abcde'])
+        $this->post('/login', ['identifier' => $user->email, 'password' => 'abcde'])
             ->assertSessionHasErrors('identifier');
         $this->travel(61)->minutes();
-        $this->post('/login', ['identifier' => '996555123456', 'password' => 'abcde'])
+        $this->post('/login', ['identifier' => $user->email, 'password' => 'abcde'])
             ->assertRedirect('/dashboard');
         $this->assertAuthenticatedAs($user);
         $this->assertEquals(0, $user->fresh()->failed_login_attempts);
@@ -43,7 +43,7 @@ class AccountSecurityTest extends TestCase
             ['password' => '12345', 'password_confirmation' => '12345'])->assertSessionHasNoErrors();
         $this->assertNotNull($user->fresh()->password_initialized_at);
         $this->post('/logout');
-        $this->post('/login', ['identifier' => '996555123456', 'password' => '12345'])
+        $this->post('/login', ['identifier' => $user->email, 'password' => '12345'])
             ->assertRedirect('/dashboard');
     }
 

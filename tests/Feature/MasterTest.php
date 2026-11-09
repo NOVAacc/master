@@ -150,8 +150,8 @@ class MasterTest extends TestCase
     public function test_login_logout_and_invalid_password(): void
     {
         [$user] = $this->master();
-        $this->post('/login', ['email' => $user->email, 'password' => 'wrong'])->assertSessionHasErrors('identifier');
-        $this->post('/login', ['email' => $user->email, 'password' => 'password'])->assertRedirect('/dashboard');
+        $this->post('/login', ['identifier' => $user->email, 'password' => 'wrong'])->assertSessionHasErrors('identifier');
+        $this->post('/login', ['identifier' => $user->email, 'password' => 'password'])->assertRedirect('/dashboard');
         $this->assertAuthenticatedAs($user);
         $this->post('/logout')->assertRedirect('/login');
         $this->assertGuest();
