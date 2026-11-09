@@ -130,7 +130,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [\App\Http\Controllers\AdminController::class, 'loginPage'])->name('login');
     Route::post('/login', [\App\Http\Controllers\AdminController::class, 'login'])->middleware('throttle:20,1')->name('login.submit');
     Route::middleware(\App\Http\Middleware\RequireAdministrator::class)->group(function () {
-        Route::get('/', fn () => redirect()->route('admin.users'))->name('home');
+        Route::get('/', [\App\Http\Controllers\AdminController::class, 'dashboard'])->name('home');
         Route::get('/users', [\App\Http\Controllers\AdminController::class, 'users'])->name('users');
         Route::post('/users/onboarding-test', [\App\Http\Controllers\AdminController::class, 'createOnboardingTestUser'])->middleware('throttle:5,10')->name('users.onboarding-test');
         Route::post('/users/{user}/onboarding-reset', [\App\Http\Controllers\AdminController::class, 'resetOnboardingTestUser'])->whereNumber('user')->middleware('throttle:10,1')->name('users.onboarding-reset');

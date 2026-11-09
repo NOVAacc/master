@@ -39,7 +39,16 @@ class AdminController extends Controller
         SuspiciousLoginCaptcha::success($request, 'admin', $data['username']);
         $request->session()->regenerate();
         $request->session()->put('admin_password_stamp', hash('sha256', Auth::guard('admin')->user()->getAuthPassword()));
-        return redirect()->route('admin.users');
+        return redirect()->route('admin.home');
+    }
+
+    public function dashboard()
+    {
+        return view('admin.dashboard', [
+            'totalUsers' => User::count(),
+            'registeredToday' => User::whereDate('created_at', today())->count(),
+            'masters' => MasterProfile::where('is_demo', false)->count(),
+        ]);
     }
 
     public function users(Request $request)
