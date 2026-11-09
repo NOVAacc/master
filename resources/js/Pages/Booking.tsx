@@ -235,7 +235,6 @@ export default function Booking(p: Props) {
                                             f.setData("starts_at", "");
                                             router.reload({
                                                 only: ["slots"],
-                                                preserveState: true,
                                                 preserveScroll: true,
                                             });
                                         }
