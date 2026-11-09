@@ -41,13 +41,38 @@ class AdminTest extends TestCase
         $admin = $this->admin();
         $this->post('/admin/login', ['username' => 'admin', 'password' => 'wrong'])->assertSessionHasErrors('username');
         $this->assertGuest('admin');
-        $this->post('/admin/login', ['username' => 'admin', 'password' => 'Test-admin-password!'])->assertRedirect('/admin/users');
+        $this->post('/admin/login', ['username' => 'admin', 'password' => 'Test-admin-password!'])->assertRedirect('/admin');
         $this->assertAuthenticatedAs($admin, 'admin');
         $this->assertGuest('web');
         $this->get('/admin/users')->assertOk();
         $this->post('/admin/logout')->assertRedirect('/admin/login');
         $this->assertGuest('admin');
         $this->get('/admin/users')->assertRedirect('/admin/login');
+    }
+
+    public function test_dashboard_is_private_and_shows_correct_user_counts(): void
+    {
+        $this->get('/admin')->assertRedirect('/admin/login');
+        $admin = $this->admin();
+
+        $todayUser = User::factory()->create();
+        $oldUser = User::factory()->create(['created_at' => now()->subDays(2)]);
+        $realMaster = \\App\\Models\\MasterProfile::create([
+            'user_id' => $todayUser->id, 'slug' => 'real-master', 'display_name' => 'Real master',
+            'is_demo' => false,
+        ]);
+        \\App\\Models\\MasterProfile::create([
+            'user_id' => $oldUser->id, 'slug' => 'demo-master', 'display_name' => 'Demo master',
+            'is_demo' => true,
+        ]);
+
+        $this->signIn($admin)->get('/admin')->assertOk()
+            ->assertViewIs('admin.dashboard')
+            ->assertViewHas('totalUsers', 2)
+            ->assertViewHas('registeredToday', 1)
+            ->assertViewHas('masters', 1)
+            ->assertSee('Всего пользователей')
+            ->assertSee('Профилей мастеров');
     }
 
     public function test_users_are_paginated_searchable_and_passwords_never_rendered(): void
