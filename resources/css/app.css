@@ -3436,3 +3436,24 @@ html:has(.landing) { scroll-behavior: auto; }
         padding: 29px 22px;
     }
 }
+
+
+/* Quick-start: secondary location setup stays unobtrusive until requested. */
+.onboarding-optional-details {
+    margin-top: 20px;
+    padding: 14px 0;
+    border-top: 1px solid #ededed;
+}
+.onboarding-optional-details > summary {
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #606060;
+}
+.onboarding-optional-details[open] > summary {
+    color: #252525;
+    margin-bottom: 12px;
+}
+.onboarding-optional-details > form {
+    margin-top: 12px;
+}

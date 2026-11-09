@@ -62,9 +62,10 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
                 <h2 id="industry-title">Ваша страница готова!</h2>
                 <p className="muted small">Всё готово. Отправьте клиентам ссылку — они смогут выбрать услугу и время самостоятельно.</p>
                 <ShareProfile url={publicUrl} />
-                <h3>Где вы принимаете клиентов?</h3>
-                <p className="muted small">Необязательно: адрес и ссылку на 2ГИС можно добавить сейчас или позже в разделе «Моя страница».</p>
-                <form onSubmit={e => { e.preventDefault(); location.post("/onboarding/location", {
+                <details className="onboarding-optional-details">
+                    <summary>Дополнительно: адрес приёма и 2ГИС</summary>
+                    <p className="muted small">Добавьте место приёма сейчас или позже в разделе «Моя страница».</p>
+                    <form onSubmit={e => { e.preventDefault(); location.post("/onboarding/location", {
                     preserveScroll: true, preserveState: true, onSuccess: () => setLocationSaved(true),
                 }); }}>
                     <label className="field"><span>Адрес приёма (необязательно)</span>
@@ -76,7 +77,8 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
                     {Object.values(location.errors).map((error, i) => <p className="errors" key={i}>{error}</p>)}
                     {locationSaved && <p className="muted small" role="status">Адрес сохранён.</p>}
                     <button type="submit" className="button wide" disabled={location.processing}>{location.processing ? "Сохранение…" : "Сохранить адрес"}</button>
-                </form>
+                    </form>
+                </details>
                 <button className="primary wide" type="button" onClick={() => setDone(true)}>Перейти в кабинет</button>
             </section>}
             {step === 0 && <>
