@@ -11,6 +11,7 @@ use App\Http\Controllers\PublicBookingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
+Route::get('/demo', fn () => \Inertia\Inertia::render('Demo'))->name('demo');
 Route::get('/legal/{document}', function (string $document) {
     abort_unless(in_array($document, ['terms', 'privacy', 'cookies'], true), 404);
     return \Inertia\Inertia::render('Legal', ['document' => $document]);
