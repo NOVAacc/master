@@ -66,13 +66,36 @@ class AdminTest extends TestCase
             'is_demo' => true,
         ]);
 
+        $future = now('UTC')->addDays(1);
+        foreach ([
+            ['confirmed', $realMaster->id, $future->copy()],
+            ['pending', $realMaster->id, $future->copy()->addHour()],
+            ['cancelled', $realMaster->id, $future->copy()->addHours(2)],
+            ['completed', $realMaster->id, $future->copy()->addHours(3)],
+            ['confirmed', $realMaster->id, now('UTC')->subDay()],
+        ] as [$status, $masterId, $start]) {
+            \App\Models\MasterAppointment::create([
+                'master_profile_id' => $masterId, 'client_name' => 'Test client',
+                'client_phone' => '996700000000', 'starts_at' => $start,
+                'ends_at' => $start->copy()->addMinutes(30), 'price_som' => 100,
+                'service_name_snapshot' => 'Service', 'status' => $status,
+            ]);
+        }
+        \App\Models\MasterAppointment::create([
+            'master_profile_id' => \App\Models\MasterProfile::where('user_id', $oldUser->id)->value('id'),
+            'client_name' => 'Demo client', 'client_phone' => '996700000001',
+            'starts_at' => $future->copy()->addHours(4),
+            'ends_at' => $future->copy()->addHours(5),
+            'price_som' => 100, 'service_name_snapshot' => 'Test service', 'status' => 'confirmed',
+        ]);
+
         $this->signIn($admin)->get('/admin')->assertOk()
             ->assertViewIs('admin.dashboard')
             ->assertViewHas('totalUsers', 2)
             ->assertViewHas('registeredToday', 1)
-            ->assertViewHas('masters', 1)
+            ->assertViewHas('upcomingAppointments', 2)
             ->assertSee('Всего пользователей')
-            ->assertSee('Профилей мастеров');
+            ->assertSee('Актуальные записи клиентов');
     }
 
     public function test_users_are_paginated_searchable_and_passwords_never_rendered(): void
