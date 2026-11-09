@@ -20,12 +20,12 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
     const needSchedule = counts.hoursCount === 0;
     const needServices = counts.servicesCount === 0;
     const firstStep = needCategory ? 0 : needSchedule ? 1 : needServices ? 2 : 3;
-    const [days, setDays] = useRemember<number[]>([1, 2, 3, 4, 5, 6], "bosh-onboarding-days");
-    const [start, setStart] = useRemember("09:00", "bosh-onboarding-start");
-    const [end, setEnd] = useRemember("18:00", "bosh-onboarding-end");
-    const category = useForm("bosh-onboarding-category", { industry: master.industry || "", activity: master.activity || "" });
+    const [days, setDays] = useRemember<number[]>([1, 2, 3, 4, 5, 6], `bosh-onboarding-${master.id}-days`);
+    const [start, setStart] = useRemember("09:00", `bosh-onboarding-${master.id}-start`);
+    const [end, setEnd] = useRemember("18:00", `bosh-onboarding-${master.id}-end`);
+    const category = useForm(`bosh-onboarding-${master.id}-category`, { industry: master.industry || "", activity: master.activity || "" });
     const schedule = useForm<{ hours: { weekday: number; starts_at: string; ends_at: string; break_starts_at: null; break_ends_at: null }[] }>({ hours: [] });
-    const service = useForm("bosh-onboarding-service", { services: [{ name: "", duration_minutes: 60, price_som: 0 }] });
+    const service = useForm(`bosh-onboarding-${master.id}-service`, { services: [{ name: "", duration_minutes: 60, price_som: 0 }] });
     const location = useForm({ address: master.address || "", address_url: master.address_url || "" });
     const [dismissed, setDismissed] = useState(false);
     const [locationSaved, setLocationSaved] = useState(false);
