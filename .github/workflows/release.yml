@@ -153,7 +153,7 @@ jobs:
           set ssl:verify-certificate true
           echo "=== FTP public_html directory ==="
           cls -l /public_html
-          cd /public_html/bosh.kg
+          cd /public_html/BOSH.KG
           pwd
           cls -la
           put /tmp/$PROBE -o $PROBE
@@ -163,7 +163,7 @@ jobs:
           echo "=== Public DNS and HTTP diagnostic ==="
           getent ahostsv4 bosh.kg || true
           curl --silent --show-error --max-time 20 -o /dev/null -w 'HTTPS probe status: %{http_code}; remote IP: %{remote_ip}\\n' "https://bosh.kg/$PROBE" || true
-          trap 'timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostde44.fornex.host:21 -e "set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate true; cd /public_html/bosh.kg; rm -f $PROBE; bye" || true; rm -f "/tmp/$PROBE"' EXIT
+          trap 'timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostde44.fornex.host:21 -e "set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate true; cd /public_html/BOSH.KG; rm -f $PROBE; bye" || true; rm -f "/tmp/$PROBE"' EXIT
           RECEIVED=$(curl --fail --silent --show-error --max-time 30 "https://bosh.kg/$PROBE")
           test "$RECEIVED" = "$VALUE"
           # Must NOT be the old site directory: keep both deployment roots separate.
@@ -179,7 +179,7 @@ jobs:
             --revision '${{ steps.source.outputs.sha }}' \
             --release '${{ steps.source.outputs.sha }}-${{ github.run_id }}-${{ github.run_attempt }}' \
             --url https://bosh.kg \
-            --site-root /home/g143326/public_html/bosh.kg \
+            --site-root /home/g143326/public_html/BOSH.KG \
             --private-root /home/g143326/master-app \
             --db-name g143326_db \
             --db-user g143326_dbuser
@@ -200,7 +200,7 @@ jobs:
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
           set ssl:verify-certificate true
-          cd /public_html/bosh.kg
+          cd /public_html/BOSH.KG
           put /tmp/master-install/$UPLOAD_NAME -o $UPLOAD_NAME
           put /tmp/master-install/$INSTALLER_NAME -o $INSTALLER_NAME
           bye
@@ -257,7 +257,7 @@ jobs:
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
           set ssl:verify-certificate true
-          cd /public_html/bosh.kg
+          cd /public_html/BOSH.KG
           rm -f $INSTALLER_NAME
           rm -f $UPLOAD_NAME
           bye
