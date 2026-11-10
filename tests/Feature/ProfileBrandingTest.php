@@ -29,7 +29,13 @@ class ProfileBrandingTest extends TestCase
 
     private function image(string $name = 'photo.png'): UploadedFile
     {
-        return UploadedFile::fake()->createWithContent($name, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j7F8AAAAASUVORK5CYII='));
+        $image = imagecreatetruecolor(2, 2);
+        ob_start();
+        imagepng($image);
+        $bytes = ob_get_clean();
+        imagedestroy($image);
+
+        return UploadedFile::fake()->createWithContent($name, $bytes);
     }
 
     public function test_avatar_and_cover_are_persisted_and_publicly_served_as_images_without_exposing_paths(): void
@@ -54,32 +60,25 @@ class ProfileBrandingTest extends TestCase
             ->missing('master.avatar_path')->missing('master.cover_path'));
     }
 
-    public function test_three_portfolio_images_are_private_files_with_public_safe_urls_and_can_be_removed(): void
+    public function test_legacy_portfolio_photos_are_not_exposed_and_new_uploads_are_blocked(): void
     {
         Storage::fake('local');
         [$user, $master] = $this->profile();
-        $this->actingAs($user)->post('/profile', [...$this->fields(),
-            'work1' => $this->image('one.png'), 'work2' => $this->image('two.png'), 'work3' => $this->image('three.png')])->assertSessionHasNoErrors();
-        $master->refresh();
-        foreach (['work1', 'work2', 'work3'] as $kind) {
-            Storage::disk('local')->assertExists($master->{$kind.'_path'});
-            $this->assertArrayNotHasKey($kind.'_path', $master->toArray());
-            $this->get($master->{$kind.'_url'})->assertOk()->assertHeader('Content-Type', 'image/png');
-        }
+        $legacyPath = 'profile-images/'.$master->id.'/'.str_repeat('a', 40).'.png';
+        Storage::disk('local')->put($legacyPath, $this->image()->getContent());
+        $master->forceFill(['work1_path' => $legacyPath])->save();
+
         $this->get('/m/profile-photo')->assertInertia(fn (Assert $page) => $page
-            ->where('master.work1_url', $master->work1_url)->where('master.work2_url', $master->work2_url)
-            ->where('master.work3_url', $master->work3_url)->missing('master.work1_path'));
-        $old = $master->work1_path;
-        $oldUrl = $master->work1_url;
-        $this->post('/profile', [...$this->fields(), 'work1' => $this->image('replacement.png')])->assertSessionHasNoErrors();
-        Storage::disk('local')->assertMissing($old);
-        $this->get($oldUrl)->assertNotFound();
-        $this->post('/profile', [...$this->fields(), 'work2' => UploadedFile::fake()->createWithContent('attack.svg', '<svg><script>alert(1)</script></svg>')])->assertSessionHasErrors('work2');
-        $this->post('/profile', [...$this->fields(), 'work4' => $this->image()])->assertSessionHasErrors('avatar');
-        $this->post('/profile', [...$this->fields(), 'remove_work1' => true])->assertSessionHasNoErrors();
-        $this->assertNull($master->fresh()->work1_url);
-        Storage::disk('local')->assertExists($master->fresh()->work2_path);
-        Storage::disk('local')->assertExists($master->fresh()->work3_path);
+            ->missing('master.work1_url')->missing('master.work2_url')->missing('master.work3_url')
+            ->missing('master.work1_path'));
+        $this->get('/m/profile-photo/image/work1/'.str_repeat('a', 40))->assertNotFound();
+
+        $this->actingAs($user)->post('/profile', [...$this->fields(),
+            'work1' => $this->image('new.png')])->assertSessionHasErrors('work1');
+        $this->post('/profile', [...$this->fields(), 'remove_work1' => true])->assertSessionHasErrors('remove_work1');
+        $this->post('/profile', $this->fields())->assertSessionHasNoErrors();
+        Storage::disk('local')->assertExists($legacyPath);
+        $this->assertSame($legacyPath, $master->fresh()->work1_path);
     }
 
     public function test_replacing_and_removing_images_keeps_other_profile_files_intact(): void
