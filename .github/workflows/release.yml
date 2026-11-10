@@ -143,7 +143,7 @@ jobs:
           token = secrets.token_hex(32)
           name = 'bosh-prune-' + secrets.token_hex(16) + '.php'
           script = Path('deploy/prune-releases.php.template').read_text()
-          script = script.replace('__BASE__', '/home/n66843/master-app').replace('__TOKEN_HASH__', hashlib.sha256(token.encode()).hexdigest()).replace('__EXPIRES__', str(int(time.time()) + 1800))
+          script = script.replace('__BASE__', '/home/g143326/master-app').replace('__TOKEN_HASH__', hashlib.sha256(token.encode()).hexdigest()).replace('__EXPIRES__', str(int(time.time()) + 1800))
           Path('/tmp/bosh-prune.php').write_text(script)
           Path('/tmp/bosh-prune-header.txt').write_text('X-Bosh-Cleanup: ' + token)
           Path('/tmp/bosh-prune-header.txt').chmod(0o600)
@@ -152,7 +152,7 @@ jobs:
               env.write('CLEANUP_NAME=' + name + '\n')
           PY
           CLEANUP_NAME=$(cat /tmp/bosh-prune-name.txt)
-          timeout 60s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          timeout 60s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://g143326.hostde44.fornex.host:21 <<EOF
           set cmd:fail-exit true
           set net:timeout 15
           set net:max-retries 1
@@ -161,10 +161,10 @@ jobs:
           set ftp:ssl-protect-data true
           set ssl:verify-certificate true
           cd /
-          rm -f brand/bosh-icon-512.png
           put /tmp/bosh-prune.php -o $CLEANUP_NAME
           bye
           EOF
+          # A newly created domain has no cleanup endpoint; 404 is expected.
           # Housekeeping is not an installation prerequisite. A temporary
           # upstream 502/503/504 must not prevent a fully tested release.
           cleanup_request() {
@@ -175,7 +175,7 @@ jobs:
               --data "{\"action\":\"$action\"}" "https://bosh.kg/$CLEANUP_NAME" -o "$output") || code=000
             case "$code" in
               200) cat "$output"; return 0 ;;
-              000|502|503|504)
+              000|404|502|503|504)
                 echo "::warning::Release cleanup $action is temporarily unavailable (HTTP $code); installation will continue."
                 return 1 ;;
               *)
@@ -189,7 +189,7 @@ jobs:
           else
             test "$?" -eq 1
           fi
-          timeout 60s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          timeout 60s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://g143326.hostde44.fornex.host:21 <<EOF
           set cmd:fail-exit true
           set net:timeout 15
           set net:max-retries 1
@@ -211,7 +211,7 @@ jobs:
           printf '%s' "$VALUE" > "/tmp/$PROBE"
           sudo apt-get update -qq
           sudo apt-get install -y -qq lftp
-          timeout 90s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          timeout 90s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://g143326.hostde44.fornex.host:21 <<EOF
           set cmd:fail-exit true
           set net:timeout 20
           set net:max-retries 1
@@ -223,7 +223,7 @@ jobs:
           put /tmp/$PROBE -o $PROBE
           bye
           EOF
-          trap 'timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 -e "set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate true; rm -f $PROBE; bye" || true; rm -f "/tmp/$PROBE"' EXIT
+          trap 'timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://g143326.hostde44.fornex.host:21 -e "set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate true; rm -f $PROBE; bye" || true; rm -f "/tmp/$PROBE"' EXIT
           RECEIVED=$(curl --fail --silent --show-error --max-time 30 "https://bosh.kg/$PROBE")
           test "$RECEIVED" = "$VALUE"
           # Must NOT be the old site directory: keep both deployment roots separate.
@@ -239,7 +239,10 @@ jobs:
             --revision '${{ steps.source.outputs.sha }}' \
             --release '${{ steps.source.outputs.sha }}-${{ github.run_id }}-${{ github.run_attempt }}' \
             --url https://bosh.kg \
-            --site-root /home/n66843/public_html/bosh.kg
+            --site-root /home/g143326/public_html/bosh.kg \
+            --private-root /home/g143326/master-app \
+            --db-name g143326_db \
+            --db-user g143326_dbuser
           python3 - <<'PY'
           import json, os
           n = json.load(open('/tmp/master-install/names.json'))
@@ -249,7 +252,7 @@ jobs:
       - name: Upload encrypted release and one-time installer
         run: |
           set -euo pipefail
-          timeout 180s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          timeout 180s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://g143326.hostde44.fornex.host:21 <<EOF
           set cmd:fail-exit true
           set net:timeout 30
           set net:max-retries 1
@@ -308,7 +311,7 @@ jobs:
             -o /tmp/bosh-prune-after.json) || CODE=000
           case "$CODE" in
             200) cat /tmp/bosh-prune-after.json ;;
-            000|502|503|504) echo "::warning::Post-release prune deferred (HTTP $CODE)." ;;
+            000|404|502|503|504) echo "::warning::Post-release prune deferred (HTTP $CODE)." ;;
             *) echo "::error::Post-release prune failed (HTTP $CODE)."; exit 1 ;;
           esac
       - name: Roll back application if public verification failed
@@ -322,7 +325,7 @@ jobs:
         if: always() && env.INSTALLER_NAME != ''
         run: |
           set -euo pipefail
-          timeout 90s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          timeout 90s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://g143326.hostde44.fornex.host:21 <<EOF
           set cmd:fail-exit true
           set net:timeout 15
           set net:max-retries 1
@@ -339,7 +342,7 @@ jobs:
         if: always() && env.CLEANUP_NAME != ''
         run: |
           set -euo pipefail
-          timeout 60s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
+          timeout 60s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://g143326.hostde44.fornex.host:21 <<EOF
           set cmd:fail-exit true
           set net:timeout 15
           set net:max-retries 1
