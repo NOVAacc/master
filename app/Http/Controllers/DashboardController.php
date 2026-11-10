@@ -6,6 +6,7 @@ use App\Models\MasterAppointment;
 use App\Models\MasterProfile;
 use App\Models\MasterService;
 use App\Rules\ProfileImage;
+use App\Support\SafeProfileImage;
 use App\Services\EditAppointment;
 use App\Services\WhatsApp;
 use Carbon\CarbonImmutable;
@@ -185,7 +186,7 @@ class DashboardController extends Controller
         try {
             foreach (['avatar', 'cover'] as $kind) {
                 if ($request->hasFile($kind)) {
-                    $path = $request->file($kind)->store('profile-images/'.$master->id, 'local');
+                    $path = SafeProfileImage::store($request->file($kind), $master->id);
                     if (! $path) {
                         throw ValidationException::withMessages([$kind => 'Не удалось сохранить изображение. Попробуйте ещё раз.']);
                     }
