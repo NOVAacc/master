@@ -186,7 +186,7 @@ class DashboardController extends Controller
         try {
             foreach (['avatar', 'cover'] as $kind) {
                 if ($request->hasFile($kind)) {
-                    $path = SafeProfileImage::store($request->file($kind), $master->id);
+                    $path = SafeProfileImage::store($request->file($kind), $master->id, $kind);
                     if (! $path) {
                         throw ValidationException::withMessages([$kind => 'Не удалось сохранить изображение. Попробуйте ещё раз.']);
                     }
