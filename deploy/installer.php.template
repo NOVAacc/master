@@ -119,7 +119,15 @@ try {
     if (is_dir($base) && !is_file($base.'/.master-managed')) {
         $entries = array_values(array_diff(scandir($base) ?: [], ['.', '..', 'shared']));
         if ($entries || !is_file($base.'/shared/.env') ||
-            !is_dir($base.'/shared/storage')) deployFail('unmanaged_application_directory');
+            !is_dir($base.'/shared/storage')) {
+            // Authenticated migration diagnostics: expose names only, never contents.
+            $migrationPreflight = [
+                'unexpected_entries' => array_slice($entries, 0, 20),
+                'env_present' => is_file($base.'/shared/.env'),
+                'storage_present' => is_dir($base.'/shared/storage'),
+            ];
+            deployFail('unmanaged_application_directory');
+        }
         $stagedEnv = file_get_contents($base.'/shared/.env');
         if ($stagedEnv === false ||
             !preg_match('/^APP_KEY=["\\x27]?base64:[A-Za-z0-9+\\/=]{40,}["\\x27]?$/m', $stagedEnv)) {
@@ -288,7 +296,11 @@ try {
     }
     http_response_code(500);
     $safe = $e instanceof RuntimeException && preg_match('/^[a-z_]+$/', $e->getMessage()) ? $e->getMessage() : $phase.'_failed';
-    echo json_encode(['error' => $safe]);
+    $response = ['error' => $safe];
+    if ($safe === 'unmanaged_application_directory' && isset($migrationPreflight)) {
+        $response['preflight'] = $migrationPreflight;
+    }
+    echo json_encode($response);
 } finally {
     if (is_resource($lock)) { flock($lock, LOCK_UN); fclose($lock); }
 }
