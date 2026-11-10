@@ -82,7 +82,7 @@ if __name__ == '__main__':
     p.add_argument('--revision', required=True)
     p.add_argument('--release', required=True)
     p.add_argument('--php', default='php')
-    p.add_argument('--site-root', type=Path, default=Path('/home/g143326/public_html/bosh.kg'))
+    p.add_argument('--site-root', type=Path, default=Path('/home/g143326/public_html/BOSH.KG'))
     p.add_argument('--private-root', type=Path, default=Path('/home/g143326/master-app'))
     p.add_argument('--url', default='https://bosh.kg')
     p.add_argument('--db-host', default='localhost')
