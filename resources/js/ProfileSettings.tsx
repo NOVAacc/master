@@ -425,7 +425,6 @@ export default function ProfileSettings({ master }: { master: Master }) {
                 <p className="eyebrow">ПРЕДПРОСМОТР</p>
                 <div className="profile-preview-card">
                     <ProfileIdentity master={preview} />
-                    <WorkGallery images={[work1, work2, work3]} />
                     {f.data.bio && (
                         <p className="profile-preview-bio">{f.data.bio}</p>
                     )}
