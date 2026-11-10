@@ -145,11 +145,12 @@ class CategoryStoryTemplateController extends Controller
             && !is_link($disk->path('category-stories'))
             && !is_link($disk->path('category-stories/'.$industry))
             && !is_link($disk->path('category-stories/'.$industry.'/'.$activity))
-            && !is_link($disk->path('category-stories/'.$industry.'/'.$activity.'/'.$role)), 404);
+            && !is_link($disk->path('category-stories/'.$industry.'/'.$activity.'/'.$role))
+            && is_file($real), 404);
         $mime = $disk->mimeType($path);
         abort_unless(in_array($mime, ['image/jpeg','image/png','image/webp'], true), 404);
         return response()->file($real, ['Content-Type' => $mime, 'X-Content-Type-Options' => 'nosniff',
-            'Cross-Origin-Resource-Policy' => 'same-origin', 'Cache-Control' => 'private, max-age=3600']);
+            'Cross-Origin-Resource-Policy' => 'same-origin', 'Content-Security-Policy' => "default-src 'none'; sandbox", 'Cache-Control' => 'private, max-age=3600']);
     }
     /**
      * Proxy known, fixed image URLs only; no user-controlled remote URL or host.
@@ -190,6 +191,7 @@ class CategoryStoryTemplateController extends Controller
             'Content-Type' => 'image/jpeg',
             'X-Content-Type-Options' => 'nosniff',
             'Cross-Origin-Resource-Policy' => 'same-origin',
+            'Content-Security-Policy' => "default-src 'none'; sandbox",
             'Cache-Control' => 'private, max-age=86400',
         ]);
     }
