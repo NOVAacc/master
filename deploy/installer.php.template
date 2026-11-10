@@ -266,7 +266,7 @@ try {
         '$app->handleRequest(Illuminate\\Http\\Request::capture());'."\n";
     $originalHtaccess = $state['root_files']['.htaccess'] ? file_get_contents($backup.'/root-.htaccess') : '';
     // The new BOSH directory may lack the PHP 8.3 handler used by the existing domain.
-    if ($allowedCutover && !str_contains($originalHtaccess, 'application/x-httpd-ea-php83___lsphp')) {
+    if (!str_contains($originalHtaccess, 'application/x-httpd-ea-php83___lsphp')) {
         $originalHtaccess .= "\nAddHandler application/x-httpd-ea-php83___lsphp .php .phtml\n";
     }
     $originalHtaccess = preg_replace('/\n?# MASTER MANAGED BEGIN.*?# MASTER MANAGED END\n?/s', '', $originalHtaccess);
