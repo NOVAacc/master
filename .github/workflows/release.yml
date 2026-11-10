@@ -197,6 +197,7 @@ jobs:
           set ftp:ssl-protect-data true
           set ssl:verify-certificate true
           cd /
+          mkdir -p brand
           put public/brand/bosh-icon-512.png -o brand/bosh-icon-512.png
           bye
           EOF
