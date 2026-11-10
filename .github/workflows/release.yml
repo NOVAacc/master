@@ -151,6 +151,8 @@ jobs:
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
           set ssl:verify-certificate true
+          echo "=== FTP public_html directory ==="
+          cls -l /public_html
           cd /public_html/bosh.kg
           pwd
           cls -la
