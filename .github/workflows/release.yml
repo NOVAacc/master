@@ -152,9 +152,15 @@ jobs:
           set ftp:ssl-protect-data true
           set ssl:verify-certificate true
           cd /
+          pwd
+          cls -la
           put /tmp/$PROBE -o $PROBE
+          cls -l $PROBE
           bye
           EOF
+          echo "=== Public DNS and HTTP diagnostic ==="
+          getent ahostsv4 bosh.kg || true
+          curl --silent --show-error --max-time 20 -o /dev/null -w 'HTTPS probe status: %{http_code}; remote IP: %{remote_ip}\\n' "https://bosh.kg/$PROBE" || true
           trap 'timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostde44.fornex.host:21 -e "set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate true; rm -f $PROBE; bye" || true; rm -f "/tmp/$PROBE"' EXIT
           RECEIVED=$(curl --fail --silent --show-error --max-time 30 "https://bosh.kg/$PROBE")
           test "$RECEIVED" = "$VALUE"
