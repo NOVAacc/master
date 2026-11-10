@@ -165,10 +165,30 @@ jobs:
           put /tmp/bosh-prune.php -o $CLEANUP_NAME
           bye
           EOF
-          curl --fail --silent --show-error --max-time 120 -H @/tmp/bosh-prune-header.txt -H 'Content-Type: application/json' --data '{"action":"inspect"}' "https://bosh.kg/$CLEANUP_NAME" -o /tmp/bosh-prune-plan.json
-          cat /tmp/bosh-prune-plan.json
-          curl --fail --silent --show-error --max-time 180 -H @/tmp/bosh-prune-header.txt -H 'Content-Type: application/json' --data '{"action":"prune"}' "https://bosh.kg/$CLEANUP_NAME" -o /tmp/bosh-prune-result.json
-          cat /tmp/bosh-prune-result.json
+          # Housekeeping is not an installation prerequisite. A temporary
+          # upstream 502/503/504 must not prevent a fully tested release.
+          cleanup_request() {
+            local action="$1" output="$2" code
+            code=$(curl --silent --show-error --retry 3 --retry-delay 5 --retry-all-errors \
+              --retry-max-time 110 --max-time 45 -w '%{http_code}' \
+              -H @/tmp/bosh-prune-header.txt -H 'Content-Type: application/json' \
+              --data "{\"action\":\"$action\"}" "https://bosh.kg/$CLEANUP_NAME" -o "$output") || code=000
+            case "$code" in
+              200) cat "$output"; return 0 ;;
+              000|502|503|504)
+                echo "::warning::Release cleanup $action is temporarily unavailable (HTTP $code); installation will continue."
+                return 1 ;;
+              *)
+                echo "::error::Release cleanup $action failed with HTTP $code."
+                test ! -f "$output" || head -c 1500 "$output"
+                return 2 ;;
+            esac
+          }
+          if cleanup_request inspect /tmp/bosh-prune-plan.json; then
+            cleanup_request prune /tmp/bosh-prune-result.json || test "$?" -eq 1
+          else
+            test "$?" -eq 1
+          fi
           timeout 60s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostch01.fornex.org:21 <<EOF
           set cmd:fail-exit true
           set net:timeout 15
@@ -279,8 +299,18 @@ jobs:
       - name: Keep only active and rollback releases after verification
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error --max-time 180 -H @/tmp/bosh-prune-header.txt -H 'Content-Type: application/json' --data '{"action":"prune"}' "https://bosh.kg/$CLEANUP_NAME" -o /tmp/bosh-prune-after.json
-          cat /tmp/bosh-prune-after.json
+          # Cleanup runs only after application verification. Retry transient
+          # hosting errors; deployment success must not depend on disk pruning.
+          CODE=$(curl --silent --show-error --retry 3 --retry-delay 5 --retry-all-errors \
+            --retry-max-time 110 --max-time 45 -w '%{http_code}' \
+            -H @/tmp/bosh-prune-header.txt -H 'Content-Type: application/json' \
+            --data '{"action":"prune"}' "https://bosh.kg/$CLEANUP_NAME" \
+            -o /tmp/bosh-prune-after.json) || CODE=000
+          case "$CODE" in
+            200) cat /tmp/bosh-prune-after.json ;;
+            000|502|503|504) echo "::warning::Post-release prune deferred (HTTP $CODE)." ;;
+            *) echo "::error::Post-release prune failed (HTTP $CODE)."; exit 1 ;;
+          esac
       - name: Roll back application if public verification failed
         if: failure() && env.APP_ACTIVATED == 'true'
         run: |
