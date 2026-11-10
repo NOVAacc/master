@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SiteSetting;
 use App\Rules\ProfileImage;
+use App\Support\SafeProfileImage;
 use App\Support\CategoryStoryPhotoLibrary;
 use Illuminate\Support\Facades\Http;
 use App\Support\CategoryStoryCatalog;
@@ -96,11 +97,11 @@ class CategoryStoryTemplateController extends Controller
         $newPath = null;
         $path = $oldPath;
         if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $path = 'category-stories/'.$industry.'/'.$activity.'/'.$role.'/'.sha1(Str::random(64)).'.'.strtolower($file->extension());
-            if (! Storage::disk('local')->putFileAs(dirname($path), $file, basename($path))) {
-                return back()->withErrors(['image' => 'Не удалось сохранить фотографию.']);
-            }
+            $path = SafeProfileImage::storeIn(
+                $request->file('image'),
+                'category-stories/'.$industry.'/'.$activity.'/'.$role,
+                'image'
+            );
             $newPath = $path;
         } elseif ($data['remove_image'] ?? false) {
             $path = null;
