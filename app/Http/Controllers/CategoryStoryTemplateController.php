@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SiteSetting;
 use App\Rules\ProfileImage;
+use App\Support\SafeProfileImage;
 use App\Support\CategoryStoryPhotoLibrary;
 use Illuminate\Support\Facades\Http;
 use App\Support\CategoryStoryCatalog;
@@ -96,11 +97,11 @@ class CategoryStoryTemplateController extends Controller
         $newPath = null;
         $path = $oldPath;
         if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $path = 'category-stories/'.$industry.'/'.$activity.'/'.$role.'/'.sha1(Str::random(64)).'.'.strtolower($file->extension());
-            if (! Storage::disk('local')->putFileAs(dirname($path), $file, basename($path))) {
-                return back()->withErrors(['image' => 'Не удалось сохранить фотографию.']);
-            }
+            $path = SafeProfileImage::storeIn(
+                $request->file('image'),
+                'category-stories/'.$industry.'/'.$activity.'/'.$role,
+                'image'
+            );
             $newPath = $path;
         } elseif ($data['remove_image'] ?? false) {
             $path = null;
@@ -144,11 +145,12 @@ class CategoryStoryTemplateController extends Controller
             && !is_link($disk->path('category-stories'))
             && !is_link($disk->path('category-stories/'.$industry))
             && !is_link($disk->path('category-stories/'.$industry.'/'.$activity))
-            && !is_link($disk->path('category-stories/'.$industry.'/'.$activity.'/'.$role)), 404);
+            && !is_link($disk->path('category-stories/'.$industry.'/'.$activity.'/'.$role))
+            && is_file($real), 404);
         $mime = $disk->mimeType($path);
         abort_unless(in_array($mime, ['image/jpeg','image/png','image/webp'], true), 404);
         return response()->file($real, ['Content-Type' => $mime, 'X-Content-Type-Options' => 'nosniff',
-            'Cross-Origin-Resource-Policy' => 'same-origin', 'Cache-Control' => 'private, max-age=3600']);
+            'Cross-Origin-Resource-Policy' => 'same-origin', 'Content-Security-Policy' => "default-src 'none'; sandbox", 'Cache-Control' => 'private, max-age=3600']);
     }
     /**
      * Proxy known, fixed image URLs only; no user-controlled remote URL or host.
@@ -189,6 +191,7 @@ class CategoryStoryTemplateController extends Controller
             'Content-Type' => 'image/jpeg',
             'X-Content-Type-Options' => 'nosniff',
             'Cross-Origin-Resource-Policy' => 'same-origin',
+            'Content-Security-Policy' => "default-src 'none'; sandbox",
             'Cache-Control' => 'private, max-age=86400',
         ]);
     }
