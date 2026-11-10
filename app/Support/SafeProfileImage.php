@@ -4,7 +4,6 @@ namespace App\Support;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 final class SafeProfileImage
@@ -14,6 +13,11 @@ final class SafeProfileImage
      * (which can include active polyglot payloads, appended code or metadata).
      */
     public static function store(UploadedFile $file, int $masterId, string $field): string
+    {
+        return self::storeIn($file, 'profile-images/'.$masterId, $field);
+    }
+
+    public static function storeIn(UploadedFile $file, string $directory, string $field): string
     {
         if (! extension_loaded('gd') || ! function_exists('imagecreatefromstring')) {
             throw ValidationException::withMessages([
@@ -54,7 +58,7 @@ final class SafeProfileImage
                 throw ValidationException::withMessages([$field => 'Изображение слишком большое после обработки.']);
             }
             rewind($temp);
-            $path = 'profile-images/'.$masterId.'/'.Str::random(40).'.'.$formats[$info[2]]['extension'];
+            $path = $directory.'/'.bin2hex(random_bytes(20)).'.'.$formats[$info[2]]['extension'];
             if (! Storage::disk('local')->put($path, $temp)) {
                 throw new \RuntimeException('Failed to save sanitized profile image.');
             }
