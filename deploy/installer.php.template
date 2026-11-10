@@ -114,7 +114,18 @@ try {
     $input = json_decode(file_get_contents('php://input'), true, 16, JSON_THROW_ON_ERROR);
     if (!is_array($input)) deployFail('invalid_request');
     $base = DEPLOY['base'];
-    if (is_dir($base) && !is_file($base.'/.master-managed')) deployFail('unmanaged_application_directory');
+    // Allow an explicitly staged migration: only shared/.env and storage may
+    // pre-exist, and never adopt an unknown application or release directory.
+    if (is_dir($base) && !is_file($base.'/.master-managed')) {
+        $entries = array_values(array_diff(scandir($base) ?: [], ['.', '..', 'shared']));
+        if ($entries || !is_file($base.'/shared/.env') ||
+            !is_dir($base.'/shared/storage')) deployFail('unmanaged_application_directory');
+        $stagedEnv = file_get_contents($base.'/shared/.env');
+        if ($stagedEnv === false ||
+            !preg_match('/^APP_KEY=["\\x27]?base64:[A-Za-z0-9+\\/=]{40,}["\\x27]?$/m', $stagedEnv)) {
+            deployFail('staged_app_key_missing');
+        }
+    }
     makeDir($base);
     if (!is_file($base.'/.master-managed')) writeFile($base.'/.master-managed', DEPLOY['root']);
     // BOSH changes the public document root only. Its private application, database,
