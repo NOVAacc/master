@@ -22,4 +22,16 @@ The deployed config uses SMTP over TLS on port 465 with `MAIL_SCHEME=smtps`, `MA
 3. Confirm the email, then use Forgot password; verify reset email arrives, link expires, and the reset updates the login password.
 4. Check headers for SPF/DKIM alignment and ensure mail secrets and reset tokens never appear in public logs.
 
+If registration reports that the mail server rejected the message, the user and
+profile transaction is rolled back and the same address can safely be retried.
+The application log records only the exception class and SMTP status codes (for
+example `550` and `5.7.1`), never the recipient, generated password, SMTP
+password or raw server response.
+
+A `550 5.7.1` rejection from Gmail that says the sending IP is not authorised is
+an infrastructure deliverability failure. Keep using authenticated
+`mail.bosh.kg` SMTP and have the mail provider correct SPF/DKIM and outbound IP
+authorisation. Do not switch the application to PHP `mail()`, `sendmail`, direct
+Gmail delivery, or a `log`/`array` transport as a workaround.
+
 Do **not** set `MAIL_MAILER=log` in production when verification/recovery is expected; account security endpoints explicitly refuse log/array mailers.

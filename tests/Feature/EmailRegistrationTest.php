@@ -9,6 +9,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\Mailer\Exception\TransportException;
 use Tests\TestCase;
 
 class EmailRegistrationTest extends TestCase
@@ -18,6 +20,9 @@ class EmailRegistrationTest extends TestCase
     public function test_registration_emails_password_and_supports_email_login(): void
     {
         config()->set('mail.default', 'smtp');
+        config()->set('mail.mailers.smtp.username', 'no-reply@example.test');
+        config()->set('mail.mailers.smtp.password', 'test-secret');
+        config()->set('mail.from.address', 'no-reply@example.test');
         Mail::fake();
         Http::fake();
         $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'Master@Example.test'])
@@ -48,6 +53,9 @@ class EmailRegistrationTest extends TestCase
     public function test_registration_does_not_replace_existing_credentials(): void
     {
         config()->set('mail.default', 'smtp');
+        config()->set('mail.mailers.smtp.username', 'no-reply@example.test');
+        config()->set('mail.mailers.smtp.password', 'test-secret');
+        config()->set('mail.from.address', 'no-reply@example.test');
         Mail::fake();
         $user = User::factory()->create(['phone' => '996555123456', 'email' => 'existing@example.test', 'password' => Hash::make('original-password')]);
         $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'new@example.test'])->assertSessionHasErrors('phone');
@@ -60,23 +68,64 @@ class EmailRegistrationTest extends TestCase
     public function test_delivery_failure_rolls_back_account_and_profile(): void
     {
         config()->set('mail.default', 'smtp');
-        Mail::shouldReceive('to')->once()->andReturnSelf();
-        Mail::shouldReceive('send')->once()->andThrow(new \RuntimeException('SMTP unavailable'));
-        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test'])->assertSessionHasErrors('email');
+        config()->set('mail.mailers.smtp.username', 'no-reply@example.test');
+        config()->set('mail.mailers.smtp.password', 'test-secret');
+        config()->set('mail.from.address', 'no-reply@example.test');
+        Log::shouldReceive('warning')->once()->withArgs(function (string $event, array $context): bool {
+            return $event === 'registration_email_delivery_failed'
+                && $context['exception'] === TransportException::class
+                && $context['smtp_code'] === 550
+                && $context['enhanced_status'] === '5.7.1'
+                && $context['permanent_rejection'] === true;
+        });
+        Mail::shouldReceive('to')->twice()->andReturnSelf();
+        Mail::shouldReceive('send')->once()->ordered()->andThrow(new TransportException('Expected response code 250 but got code "550", with message "550 5.7.1 rejected".'));
+        Mail::shouldReceive('send')->once()->ordered()->andReturnNull();
+        $response = $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test']);
+        $response->assertSessionHasErrors('email');
+        $this->assertStringContainsString('Аккаунт не создан', session('errors')->first('email'));
         $this->assertDatabaseCount('users', 0);
         $this->assertDatabaseCount('master_profiles', 0);
         $this->assertGuest();
+        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test'])
+            ->assertRedirect('/login')
+            ->assertSessionHasNoErrors();
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('master_profiles', 1);
     }
 
     public function test_unconfigured_mail_and_invalid_fields_never_create_account(): void
     {
         Mail::fake();
         config()->set('mail.default', 'log');
+        Log::spy();
         $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test'])->assertSessionHasErrors('email');
         $this->post('/register', ['name' => 'Айгүл', 'phone' => '123', 'email' => 'master@example.test'])->assertSessionHasErrors('phone');
         $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'invalid'])->assertSessionHasErrors('email');
         $this->assertDatabaseCount('users', 0);
         Mail::assertNothingSent();
+    }
+
+    public function test_incomplete_smtp_configuration_never_creates_account_or_logs_secrets(): void
+    {
+        config()->set('mail.default', 'smtp');
+        config()->set('mail.mailers.smtp.username', 'no-reply@example.test');
+        config()->set('mail.mailers.smtp.password', null);
+        Log::spy();
+        Mail::fake();
+
+        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test'])
+            ->assertSessionHasErrors('email');
+
+        $this->assertDatabaseCount('users', 0);
+        Mail::assertNothingSent();
+        Log::shouldHaveReceived('warning')->with('registration_email_configuration_invalid', [
+            'mailer' => 'smtp',
+            'host_configured' => true,
+            'username_configured' => true,
+            'password_configured' => false,
+            'from_configured' => true,
+        ])->once();
     }
 
     public function test_sms_registration_cannot_bypass_email_registration(): void
