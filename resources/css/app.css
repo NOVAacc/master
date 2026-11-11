@@ -3075,7 +3075,7 @@ h2 {
 .landing-header-actions{display:flex;align-items:center;gap:20px;font-size:13px}.landing .primary{min-height:46px;gap:12px;padding-inline:22px}.landing .primary:hover{text-decoration:none}
 .landing-hero{display:grid;grid-template-columns:1.15fr 1fr;align-items:center;gap:64px;padding:76px 0 62px}
 .landing-kicker{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:1.5px;font-weight:700;color:#777;line-height:1.6;margin:0 0 22px}
-.landing-kicker>span,.landing-live-dot{width:6px;height:6px;display:inline-block;flex-shrink:0;border-radius:50%;background:#bd3e45}
+
 .landing h1{font-size:clamp(38px,4.2cqw,54px);line-height:1.12;letter-spacing:-2.4px;margin:0 0 24px;font-weight:650}
 .landing h1>span{color:#868686}.landing-lead{font-size:16px;line-height:1.8;color:#777;max-width:440px;margin:0}
 .landing-hero-actions{display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin:30px 0 20px}.landing-text-link{font-size:13px;font-weight:600;display:inline-flex;gap:10px}
@@ -3109,7 +3109,7 @@ h2 {
 .landing-day-row{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;margin-top:10px;align-items:start}.landing-day-row time{font-size:9px;color:#999;padding-top:10px;font-variant-numeric:tabular-nums}
 .landing-day-booking{background:#f1f3f1;border-radius:7px;padding:10px}.landing-day-booking strong{font-size:11px;font-weight:600;display:block}.landing-day-booking small{display:flex;justify-content:space-between;gap:6px;font-size:8px;margin-top:5px;flex-wrap:wrap}.landing-day-booking small span{color:#657465}
 .landing-day-booking.pending-example{background:#f8f3ed}.landing-day-booking.pending-example small span{color:#9e8461}
-.landing-day-free{height:35px;display:flex;align-items:center;gap:7px;color:#aaa;font-size:10px;border:1px dashed #ddd;border-radius:7px;padding:8px 10px}.landing-day-free>span{width:4px;height:4px;border-radius:50%;background:#aaa}
+.landing-day-free{height:35px;display:flex;align-items:center;gap:7px;color:#aaa;font-size:10px;border:1px dashed #ddd;border-radius:7px;padding:8px 10px}
 .landing-day-break{height:35px;display:flex;align-items:center;gap:7px;color:#aaa;font-size:10px;background:repeating-linear-gradient(-45deg,#f8f8f8,#f8f8f8 4px,#f2f2f2 4px,#f2f2f2 5px);border-radius:7px;padding:8px 10px}.landing-day-break .icon{width:12px;height:12px}
 .landing-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;margin-bottom:30px}.landing-step-number{display:block;font-size:36px;line-height:1;font-weight:500;letter-spacing:-1px;color:#ccc;margin-bottom:24px}.landing-steps article{border-top:1px solid #ddd;padding-top:24px}.landing-steps h3{font-size:16px;margin:0 0 10px}.landing-steps p{font-size:13px;color:#818181;line-height:1.8;margin:0}
 .landing-client{display:grid;grid-template-columns:1fr 1fr;gap:96px;align-items:center;padding:60px 0;margin-top:80px;border-top:1px solid #e8e8e8;border-bottom:1px solid #e8e8e8}.landing-client>div>p:last-child{font-size:13px;line-height:1.8;color:#818181;margin:20px 0 0;max-width:420px}
