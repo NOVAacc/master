@@ -71,7 +71,13 @@ class EmailRegistrationTest extends TestCase
         config()->set('mail.mailers.smtp.username', 'no-reply@example.test');
         config()->set('mail.mailers.smtp.password', 'test-secret');
         config()->set('mail.from.address', 'no-reply@example.test');
-        Log::spy();
+        Log::shouldReceive('warning')->once()->withArgs(function (string $event, array $context): bool {
+            return $event === 'registration_email_delivery_failed'
+                && $context['exception'] === TransportException::class
+                && $context['smtp_code'] === 550
+                && $context['enhanced_status'] === '5.7.1'
+                && $context['permanent_rejection'] === true;
+        });
         Mail::shouldReceive('to')->once()->andReturnSelf();
         Mail::shouldReceive('send')->once()->andThrow(new TransportException('Expected response code 250 but got code "550", with message "550 5.7.1 rejected".'));
         $response = $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test']);
@@ -80,13 +86,6 @@ class EmailRegistrationTest extends TestCase
         $this->assertDatabaseCount('users', 0);
         $this->assertDatabaseCount('master_profiles', 0);
         $this->assertGuest();
-        Log::shouldHaveReceived('warning')->with('registration_email_delivery_failed', [
-            'exception' => TransportException::class,
-            'smtp_code' => 550,
-            'enhanced_status' => '5.7.1',
-            'permanent_rejection' => true,
-        ])->once();
-
         Mail::fake();
         $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test'])
             ->assertRedirect('/login')
