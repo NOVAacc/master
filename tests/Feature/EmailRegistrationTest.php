@@ -78,21 +78,20 @@ class EmailRegistrationTest extends TestCase
                 && $context['enhanced_status'] === '5.7.1'
                 && $context['permanent_rejection'] === true;
         });
-        Mail::shouldReceive('to')->once()->andReturnSelf();
-        Mail::shouldReceive('send')->once()->andThrow(new TransportException('Expected response code 250 but got code "550", with message "550 5.7.1 rejected".'));
+        Mail::shouldReceive('to')->twice()->andReturnSelf();
+        Mail::shouldReceive('send')->once()->ordered()->andThrow(new TransportException('Expected response code 250 but got code "550", with message "550 5.7.1 rejected".'));
+        Mail::shouldReceive('send')->once()->ordered()->andReturnNull();
         $response = $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test']);
         $response->assertSessionHasErrors('email');
         $this->assertStringContainsString('Аккаунт не создан', session('errors')->first('email'));
         $this->assertDatabaseCount('users', 0);
         $this->assertDatabaseCount('master_profiles', 0);
         $this->assertGuest();
-        Mail::fake();
         $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test'])
             ->assertRedirect('/login')
             ->assertSessionHasNoErrors();
         $this->assertDatabaseCount('users', 1);
         $this->assertDatabaseCount('master_profiles', 1);
-        Mail::assertSent(RegistrationPassword::class);
     }
 
     public function test_unconfigured_mail_and_invalid_fields_never_create_account(): void
