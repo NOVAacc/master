@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class AuthController extends Controller
 {
@@ -38,7 +40,14 @@ class AuthController extends Controller
             'phone.unique' => 'Этот номер уже зарегистрирован. Войдите в аккаунт.',
             'email.unique' => 'Эта почта уже зарегистрирована. Войдите или восстановите пароль.',
         ]);
-        if (in_array(config('mail.default'), ['log', 'array'], true)) {
+        if (! $this->registrationMailIsConfigured()) {
+            Log::warning('registration_email_configuration_invalid', [
+                'mailer' => (string) config('mail.default'),
+                'host_configured' => filled(config('mail.mailers.smtp.host')),
+                'username_configured' => filled(config('mail.mailers.smtp.username')),
+                'password_configured' => filled(config('mail.mailers.smtp.password')),
+                'from_configured' => filled(config('mail.from.address')),
+            ]);
             throw ValidationException::withMessages(['email' => 'Отправка писем временно недоступна. Попробуйте позже.']);
         }
         try {
@@ -64,10 +73,45 @@ class AuthController extends Controller
                 throw ValidationException::withMessages(['email' => 'Телефон или почта уже зарегистрированы. Войдите в аккаунт.']);
             }
             throw $e;
-        } catch (\Throwable $e) {
-            throw ValidationException::withMessages(['email' => 'Не удалось отправить пароль на почту. Проверьте адрес и попробуйте ещё раз.']);
+        } catch (TransportExceptionInterface $e) {
+            $diagnostic = $this->safeMailDiagnostic($e);
+            Log::warning('registration_email_delivery_failed', $diagnostic);
+
+            throw ValidationException::withMessages([
+                'email' => $diagnostic['permanent_rejection']
+                    ? 'Почтовый сервер временно отклонил письмо. Аккаунт не создан — попробуйте регистрацию позже.'
+                    : 'Не удалось связаться с почтовым сервером. Аккаунт не создан — попробуйте регистрацию позже.',
+            ]);
         }
         return redirect()->route('login')->with('success', 'Письмо отправлено. Сначала подтвердите почту по ссылке в письме, затем войдите с временным паролем.');
+    }
+
+    private function registrationMailIsConfigured(): bool
+    {
+        if (config('mail.default') !== 'smtp') {
+            return false;
+        }
+
+        return filled(config('mail.mailers.smtp.host'))
+            && filled(config('mail.mailers.smtp.username'))
+            && filled(config('mail.mailers.smtp.password'))
+            && filled(config('mail.from.address'));
+    }
+
+    /** @return array{exception: string, smtp_code: int|null, enhanced_status: string|null, permanent_rejection: bool} */
+    private function safeMailDiagnostic(TransportExceptionInterface $exception): array
+    {
+        $message = $exception->getMessage();
+        preg_match('/(?<!\\d)([245]\\d{2})(?!\\d)/', $message, $smtpCode);
+        preg_match('/(?<!\\d)([245]\\.\\d\\.\\d)(?!\\d)/', $message, $enhancedStatus);
+        $code = isset($smtpCode[1]) ? (int) $smtpCode[1] : null;
+
+        return [
+            'exception' => $exception::class,
+            'smtp_code' => $code,
+            'enhanced_status' => $enhancedStatus[1] ?? null,
+            'permanent_rejection' => $code !== null && $code >= 500,
+        ];
     }
 
     // Exactly six characters: one uppercase, four lowercase and one digit.
