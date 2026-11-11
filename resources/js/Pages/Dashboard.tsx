@@ -33,6 +33,7 @@ const statuses: Record<string, string> = {
     completed: "Завершена",
     no_show: "Не пришёл",
 };
+type HotOffer = {id:number;service_id:number;service_name:string;base_price_som:number|null;special_price_som:number|null;story_template:"white"|"black"|"red";clicks:number;bookings:number;active:boolean;cancelled:boolean;url:string;slots:{starts_at:string;booked:boolean}[]};
 function Schedule({ hours }: { hours: Hour[] }) {
     const f = useForm({
         hours: hours.map((h) => ({
@@ -136,6 +137,7 @@ export default function Dashboard({
     calendarDate,
     calendarAppointments,
     calendarBlocks,
+    hotOffers,
 }: {
     master: Master;
     security: SecurityStatus;
@@ -155,6 +157,7 @@ export default function Dashboard({
         ends_at: string;
         reason: string | null;
     }[];
+    hotOffers: HotOffer[];
 }) {
     const [tab, setTab] = useState("appointments");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -178,7 +181,15 @@ export default function Dashboard({
         }
     };
     const [quickBooking, setQuickBooking] = useState(false);
-    const [storySeed, setStorySeed] = useState<{date?: string; time?: string; service?: number} | null>(null);
+    const [storySeed, setStorySeed] = useState<{date?: string; time?: string; service?: number; offer?: {url:string;special_price_som:number|null;story_template:"white"|"black"|"red";slots:{date:string;time:string}[]}} | null>(null);
+    const editOfferStory=(offer:HotOffer)=>{
+        const slots=offer.slots.map(slot=>{
+            const parts=new Intl.DateTimeFormat("en-CA",{timeZone:master.timezone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(slot.starts_at));
+            const part=(type:string)=>parts.find(p=>p.type===type)?.value||"";
+            return {date:`${part("year")}-${part("month")}-${part("day")}`,time:`${part("hour")}:${part("minute")}`};
+        });
+        setStorySeed({date:slots[0]?.date,time:slots[0]?.time,service:offer.service_id,offer:{url:offer.url,special_price_som:offer.special_price_som,story_template:offer.story_template,slots}});
+    };
     const openStoryFromAppointment = (a: Appointment) => {
         const local = new Intl.DateTimeFormat("en-CA", {timeZone: master.timezone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23"}).formatToParts(new Date(a.starts_at));
         const part = (type: string) => local.find(p => p.type === type)?.value || "";
@@ -709,6 +720,22 @@ export default function Dashboard({
                             )}
                         </>
                     )}
+                    {tab === "appointments" && hotOffers.length > 0 && (
+                        <section className="hot-offers-panel" aria-label="Горящие окошки">
+                            <div className="row between wrap"><div><p className="eyebrow">ГОРЯЩИЕ ОКОШКИ</p><h3>Ваши предложения</h3></div><span className="muted small">Переходы и записи обновляются при открытии кабинета</span></div>
+                            <div className="hot-offers-list">
+                                {hotOffers.map(offer=><article className="hot-offer-card" key={offer.id}>
+                                    <div><strong>{offer.service_name}</strong><p className="muted small">{offer.slots.length} {offer.slots.length===1?"интервал":"интервала"} · {offer.clicks} переходов · {offer.bookings} записей</p></div>
+                                    <span className={`badge ${offer.active?"confirmed":"cancelled"}`}>{offer.active?"Активно":offer.cancelled?"Отменено":"Завершено"}</span>
+                                    <div className="row wrap">
+                                        <button type="button" className="ghost" onClick={()=>navigator.clipboard.writeText(offer.url)}>Копировать ссылку</button>
+                                        <button type="button" className="ghost" onClick={()=>editOfferStory(offer)}>Скачать сторис</button>
+                                        {offer.active&&<button type="button" className="ghost danger" onClick={()=>router.delete(`/hot-slots/${offer.id}`,{preserveScroll:true})}>Отменить</button>}
+                                    </div>
+                                </article>)}
+                            </div>
+                        </section>
+                    )}
                     {tab === "clients" && (
                         <div className="clients-section">
                             <div className="clients-toolbar">
@@ -862,7 +889,7 @@ export default function Dashboard({
                 onSaved={updated => setClientOverrides(old => ({ ...old, [updated.id]: updated }))}
                 onChanged={() => { setSelectedClient(null); setClientSearchRevision(n => n + 1); router.reload({ only: ["clients", "appointments", "calendarAppointments"] }); }}
                 onBook={target => { setBookingClient(target); setSelectedClient(null); setQuickBooking(true); }} />}
-            {storySeed && <StoryCreator master={master} services={services} initialDate={storySeed.date} initialTime={storySeed.time} initialService={storySeed.service} onClose={() => setStorySeed(null)} />}
+            {storySeed && <StoryCreator master={master} services={services} initialDate={storySeed.date} initialTime={storySeed.time} initialService={storySeed.service} initialOffer={storySeed.offer} onClose={() => setStorySeed(null)} />}
             {quickBooking && <QuickBooking services={services} timezone={master.timezone} date={calendarDate}
                 initialClient={bookingClient} onClose={() => { setQuickBooking(false); setBookingClient(null); }} />}
         </div>

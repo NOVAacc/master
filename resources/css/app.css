@@ -3514,3 +3514,5 @@ html:has(.landing) { scroll-behavior: auto; }
     .demo-footer .primary { width: 100%; }
     .booking-retry button { width: 100%; }
 }
+.hot-offer-banner{display:flex;flex-direction:column;gap:.25rem;margin:1rem 0;padding:1rem 1.1rem;border-radius:18px;background:#fff0f1;border:1px solid #efc5c9;color:#8f1824}.hot-offers-panel{margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--line,#e7e3df)}.hot-offers-list{display:grid;gap:.75rem}.hot-offer-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.65rem 1rem;align-items:start;padding:1rem;border:1px solid var(--line,#e7e3df);border-radius:18px;background:var(--panel,#fff)}.hot-offer-card .row{grid-column:1/-1}.hot-offer-card .danger{color:#a51f2b}.booking-total del{display:block;font-weight:400}.story-input-row>button{align-self:end}
+@media(max-width:620px){.hot-offer-card{grid-template-columns:1fr}.hot-offer-card>.badge{justify-self:start}.hot-offer-card .row{grid-column:1}.hot-offer-card .row button{flex:1 1 auto}}

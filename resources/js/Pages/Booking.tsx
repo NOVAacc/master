@@ -18,6 +18,7 @@ type Props = {
     slots: { value: string; label: string; available: boolean }[];
     whatsappAutomatic: boolean;
     storyTime?: string | null;
+    hotOffer: { token: string; special_price_som: number | null; slots: { id: number; starts_at: string }[] } | null;
     bookingReceipt: {
         status: string;
         text: string;
@@ -35,6 +36,7 @@ export default function Booking(p: Props) {
         client_comment: "",
         consent: false,
         whatsapp_consent: false,
+        offer: p.hotOffer?.token ?? null,
     });
     const [chosenDate, setChosenDate] = useState(p.date);
     const [loading, setLoading] = useState(false);
@@ -44,7 +46,8 @@ export default function Booking(p: Props) {
         f.data.service_ids.includes(s.id),
     );
     const duration = selected.reduce((sum, s) => sum + s.duration_minutes, 0);
-    const price = selected.reduce((sum, s) => sum + s.price_som, 0);
+    const basePrice = selected.reduce((sum, s) => sum + s.price_som, 0);
+    const price = p.hotOffer?.special_price_som ?? basePrice;
     const ready =
         !loading &&
         chosenDate === p.date &&
@@ -56,7 +59,7 @@ export default function Booking(p: Props) {
         f.setData((d) => ({ ...d, starts_at: "", service_ids: ids }));
         router.get(
             `/m/${p.master.slug}`,
-            { date, services: ids, selection: 1 },
+            { date, services: ids, selection: 1, offer: p.hotOffer?.token },
             {
                 preserveScroll: true,
                 preserveState: true,
@@ -100,6 +103,12 @@ export default function Booking(p: Props) {
                     <p className="eyebrow">ОНЛАЙН-ЗАПИСЬ</p>
                     <h1>Выберите удобное время</h1>
                     <Notice />
+                    {p.hotOffer && (
+                        <div className="hot-offer-banner">
+                            <strong>Горящее окошко</strong>
+                            <span>Выберите одно из предложенных свободных времён.</span>
+                        </div>
+                    )}
                     {p.bookingReceipt && (
                         <section
                             className="booking-receipt"
@@ -282,7 +291,9 @@ export default function Booking(p: Props) {
                                                 s.id,
                                             )}
                                             disabled={f.processing}
+                                            readOnly={!!p.hotOffer}
                                             onChange={(e) =>
+                                                !p.hotOffer &&
                                                 change(
                                                     chosenDate,
                                                     e.target.checked
@@ -327,6 +338,9 @@ export default function Booking(p: Props) {
                                 </span>
                                 <strong>
                                     {price.toLocaleString("ru-RU")} сом
+                                    {p.hotOffer?.special_price_som != null && p.hotOffer.special_price_som !== basePrice && (
+                                        <del className="muted small"> {basePrice.toLocaleString("ru-RU")} сом</del>
+                                    )}
                                 </strong>
                             </div>
                             <p className="field-title">Дата</p>

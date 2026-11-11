@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\MasterAppointment;
+use App\Models\HotSlotOfferSlot;
 use App\Models\MasterProfile;
 use App\Models\MasterService;
 use Carbon\CarbonImmutable;
@@ -23,7 +24,9 @@ final class BookAppointment
         string $clientPhone,
         ?string $comment = null,
         bool $whatsappConsent = false,
-        bool $manual = false
+        bool $manual = false,
+        ?HotSlotOfferSlot $offerSlot = null,
+        ?int $specialPriceSom = null
     ): MasterAppointment {
         $selected = is_array($service) ? $service : [$service];
         if (count($selected) < 1 || count($selected) > 20 ||
@@ -39,8 +42,20 @@ final class BookAppointment
             throw ValidationException::withMessages(['starts_at' => 'Выберите будущее время.']);
         }
 
-        $appointment = DB::transaction(function () use ($master, $ids, $startsAtUtc, $clientName, $clientPhone, $comment, $whatsappConsent, $manual) {
+        $appointment = DB::transaction(function () use ($master, $ids, $startsAtUtc, $clientName, $clientPhone, $comment, $whatsappConsent, $manual, $offerSlot, $specialPriceSom) {
             $lockedMaster = MasterProfile::query()->whereKey($master->id)->lockForUpdate()->firstOrFail();
+
+            $lockedOfferSlot = null;
+            if ($offerSlot) {
+                $lockedOfferSlot = HotSlotOfferSlot::query()->with('offer')->whereKey($offerSlot->id)->lockForUpdate()->firstOrFail();
+                $offer = $lockedOfferSlot->offer;
+                if ($offer->master_profile_id !== $lockedMaster->id || $offer->cancelled_at ||
+                    ! $ids->contains($offer->master_service_id) || $ids->count() !== 1 ||
+                    $lockedOfferSlot->master_appointment_id || ! $lockedOfferSlot->starts_at->equalTo($startsAtUtc) ||
+                    $lockedOfferSlot->starts_at->lessThanOrEqualTo(CarbonImmutable::now('UTC'))) {
+                    throw ValidationException::withMessages(['starts_at' => 'Это время уже занято.']);
+                }
+            }
 
             $services = MasterService::query()
                 ->whereIn('id', $ids)
@@ -121,23 +136,31 @@ final class BookAppointment
                 ]);
             }
 
-            return MasterAppointment::query()->create([
+            $appointment = MasterAppointment::query()->create([
                 'master_profile_id' => $lockedMaster->id,
                 'master_client_id' => $clientId,
                 'master_service_id' => $services->count() === 1 ? $services->first()->id : null,
-                'services_snapshot' => $services->map->only(['id', 'name', 'duration_minutes', 'price_som'])->all(),
+                'services_snapshot' => $services->map(function ($item) use ($specialPriceSom) {
+                    $snapshot = $item->only(['id', 'name', 'duration_minutes', 'price_som']);
+                    if ($specialPriceSom !== null) $snapshot['price_som'] = $specialPriceSom;
+                    return $snapshot;
+                })->all(),
                 'client_name' => $clientName,
                 'client_phone' => $clientPhone,
                 'client_comment' => $comment,
                 'whatsapp_consent' => $whatsappConsent,
                 'starts_at' => $startsAtUtc->format('Y-m-d H:i:s'),
                 'ends_at' => $endsAtUtc->format('Y-m-d H:i:s'),
-                'price_som' => $services->sum('price_som'),
+                'price_som' => $specialPriceSom ?? $services->sum('price_som'),
                 'service_name_snapshot' => mb_substr($services->pluck('name')->implode(' + '), 0, 255),
                 'status' => ($manual || $lockedMaster->auto_confirm) ? 'confirmed' : 'pending',
                 'attendance_status' => 'expected',
                 'payment_status' => null,
             ]);
+            if ($lockedOfferSlot) {
+                $lockedOfferSlot->update(['master_appointment_id' => $appointment->id]);
+            }
+            return $appointment;
         }, 3);
         if (! $manual) {
             app(WhatsApp::class)->confirmed($appointment);

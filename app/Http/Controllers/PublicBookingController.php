@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MasterProfile;
+use App\Models\HotSlotOffer;
 use App\Services\BookAppointment;
 use App\Services\WhatsApp;
 use App\Services\WorkingHours;
@@ -18,6 +19,7 @@ class PublicBookingController extends Controller
     {
         $today = CarbonImmutable::now($master->timezone)->startOfDay();
         $data = $request->validate([
+            'offer' => ['nullable', 'string', 'size:40', 'regex:/^[A-Za-z0-9]+$/'],
             'date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:'.$today->toDateString(),
                 'before_or_equal:'.$today->addDays(90)->toDateString()],
             'service' => ['nullable', 'integer'],
@@ -26,9 +28,13 @@ class PublicBookingController extends Controller
             'selection' => ['sometimes', 'boolean'],
             'services.*' => ['required', 'integer', 'distinct'],
         ]);
-        $date = $data['date'] ?? $today->toDateString();
+        $offer = isset($data['offer']) ? HotSlotOffer::query()->with(['service', 'slots'])
+            ->where('token', $data['offer'])->where('master_profile_id', $master->id)->whereNull('cancelled_at')->first() : null;
+        $offerSlots = $offer?->slots->filter(fn ($slot) => ! $slot->master_appointment_id && $slot->starts_at->isFuture())->values();
+        if ($offer && $offerSlots->isEmpty()) $offer = null;
+        $date = $data['date'] ?? ($offer ? $offerSlots->first()->starts_at->setTimezone($master->timezone)->toDateString() : $today->toDateString());
         $services = $master->services()->where('is_active', true)->orderBy('sort_order')->get();
-        $ids = isset($data['selection']) ? ($data['services'] ?? []) : ($data['services'] ?? (isset($data['service']) ? [(int) $data['service']] : [$services->first()?->id]));
+        $ids = $offer ? [$offer->master_service_id] : (isset($data['selection']) ? ($data['services'] ?? []) : ($data['services'] ?? (isset($data['service']) ? [(int) $data['service']] : [$services->first()?->id])));
         $selected = $services->whereIn('id', $ids)->values();
         abort_if(count(array_filter($ids)) !== $selected->count(), 404);
         $duration = $selected->sum('duration_minutes');
@@ -55,6 +61,9 @@ class PublicBookingController extends Controller
                 $groupOverlap = $groupBlocks->contains(fn ($g) => CarbonImmutable::parse($g->starts_at, 'UTC')->lt($end)
                     && CarbonImmutable::parse($g->ends_at, 'UTC')->gt($start));
                 $available = ! $overlap && ! $groupOverlap;
+                if ($offer) {
+                    $available = $available && $offerSlots->contains(fn ($slot) => $slot->starts_at->equalTo($start));
+                }
                 if ($available || $master->show_busy_slots) {
                     $slots[] = ['value' => $start->toIso8601String(), 'label' => $cursor->format('H:i'), 'available' => $available];
                 }
@@ -77,6 +86,14 @@ class PublicBookingController extends Controller
             'selectedServices' => $selected->pluck('id')->all(),
             'workingDays' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->pluck('weekday')->map(fn ($day) => (int) $day)->all(),
             'storyTime' => $data['time'] ?? null,
+            'hotOffer' => $offer ? [
+                'token' => $offer->token,
+                'special_price_som' => $offer->special_price_som,
+                'slots' => $offerSlots->map(fn ($slot) => [
+                    'id' => $slot->id,
+                    'starts_at' => $slot->starts_at->toIso8601String(),
+                ])->all(),
+            ] : null,
             'date' => $date, 'minDate' => $today->toDateString(),
             'maxDate' => $today->addDays(90)->toDateString(), 'slots' => $slots,
             'whatsappAutomatic' => app(WhatsApp::class)->configured(),
@@ -87,6 +104,7 @@ class PublicBookingController extends Controller
     public function book(Request $request, MasterProfile $master, BookAppointment $booking)
     {
         $data = $request->validate([
+            'offer' => ['nullable', 'string', 'size:40', 'regex:/^[A-Za-z0-9]+$/'],
             'service_id' => ['required_without:service_ids', 'integer'],
             'service_ids' => ['required_without:service_id', 'array', 'min:1', 'max:20'],
             'service_ids.*' => ['required', 'integer', 'distinct'],
@@ -106,8 +124,24 @@ class PublicBookingController extends Controller
         $ids = $data['service_ids'] ?? [$data['service_id']];
         $services = $master->services()->where('is_active', true)->whereIn('id', $ids)->get();
         abort_if($services->count() !== count($ids), 404);
+        $offerSlot = null;
+        $specialPrice = null;
+        if (! empty($data['offer'])) {
+            $offer = HotSlotOffer::query()->where('token', $data['offer'])
+                ->where('master_profile_id', $master->id)->whereNull('cancelled_at')->first();
+            if (! $offer || count($ids) !== 1 || (int) $ids[0] !== $offer->master_service_id) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['starts_at' => 'Предложение больше недоступно.']);
+            }
+            $offerSlot = $offer->slots()->where('starts_at', CarbonImmutable::parse($data['starts_at'])->utc()->toDateTimeString())
+                ->whereNull('master_appointment_id')->first();
+            if (! $offerSlot) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['starts_at' => 'Это время уже занято.']);
+            }
+            $specialPrice = $offer->special_price_som;
+        }
         $appointment = $booking->create($master, $services->all(), CarbonImmutable::parse($data['starts_at'])->utc(),
-            $data['client_name'], $data['client_phone'], $data['client_comment'] ?? null, (bool) ($data['whatsapp_consent'] ?? false));
+            $data['client_name'], $data['client_phone'], $data['client_comment'] ?? null, (bool) ($data['whatsapp_consent'] ?? false),
+            false, $offerSlot, $specialPrice);
 
         return redirect()->route('public.master', $master->slug)->with('booking_receipt', [
             'master_slug' => $master->slug,
