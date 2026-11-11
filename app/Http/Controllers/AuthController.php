@@ -102,14 +102,15 @@ class AuthController extends Controller
     private function safeMailDiagnostic(TransportExceptionInterface $exception): array
     {
         $message = $exception->getMessage();
-        preg_match('/(?<!\\d)([245]\\d{2})(?!\\d)/', $message, $smtpCode);
-        preg_match('/(?<!\\d)([245]\\.\\d\\.\\d)(?!\\d)/', $message, $enhancedStatus);
-        $code = isset($smtpCode[1]) ? (int) $smtpCode[1] : null;
+        preg_match_all('/(?<!\\d)([245]\\d{2})(?!\\d)/', $message, $smtpCodes);
+        preg_match_all('/(?<!\\d)([245]\\.\\d\\.\\d)(?!\\d)/', $message, $enhancedStatuses);
+        $code = $smtpCodes[1] === [] ? null : (int) end($smtpCodes[1]);
+        $enhancedStatus = $enhancedStatuses[1] === [] ? null : end($enhancedStatuses[1]);
 
         return [
             'exception' => $exception::class,
             'smtp_code' => $code,
-            'enhanced_status' => $enhancedStatus[1] ?? null,
+            'enhanced_status' => $enhancedStatus,
             'permanent_rejection' => $code !== null && $code >= 500,
         ];
     }
