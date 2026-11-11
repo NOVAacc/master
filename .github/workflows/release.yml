@@ -25,7 +25,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     services:
       mysql:
@@ -98,7 +98,7 @@ jobs:
   publish:
     needs: release
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       FTP_USER: ${{ secrets.BOSH_FTP_USER }}
@@ -141,45 +141,11 @@ jobs:
           PROBE="bosh-deploy-probe-$(openssl rand -hex 16).txt"
           VALUE=$(openssl rand -hex 32)
           printf '%s' "$VALUE" > "/tmp/$PROBE"
-          # GitHub runners have package indexes already. Avoid a full apt update on
-          # every publish (and multi-minute stalls when Ubuntu mirrors have DNS issues).
-          if ! command -v lftp >/dev/null 2>&1; then
-            timeout 35s sudo apt-get install -y -qq \
-              -o Acquire::Retries=0 \
-              -o Acquire::http::Timeout=8 \
-              -o Acquire::https::Timeout=8 lftp || {
-                echo "Cached apt indexes unavailable; trying one bounded refresh"
-                timeout 25s sudo apt-get update -qq \
-                  -o Acquire::Retries=0 \
-                  -o Acquire::http::Timeout=8 \
-                  -o Acquire::https::Timeout=8
-                timeout 35s sudo apt-get install -y -qq \
-                  -o Acquire::Retries=0 \
-                  -o Acquire::http::Timeout=8 \
-                  -o Acquire::https::Timeout=8 lftp
-              }
-          fi
-          timeout 90s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostde44.fornex.host:21 <<EOF
-          set cmd:fail-exit true
-          set net:timeout 20
-          set net:max-retries 1
-          set ftp:ssl-auth TLS
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          set ssl:verify-certificate true
-          echo "=== FTP public_html directory ==="
-          cls -l /public_html
-          cd /public_html/BOSH.KG
-          pwd
-          cls -la
-          put /tmp/$PROBE -o $PROBE
-          cls -l $PROBE
-          bye
-          EOF
-          echo "=== Public DNS and HTTP diagnostic ==="
-          getent ahostsv4 bosh.kg || true
-          curl --silent --show-error --max-time 20 -o /dev/null -w 'HTTPS probe status: %{http_code}; remote IP: %{remote_ip}\\n' "https://bosh.kg/$PROBE" || true
-          trap 'timeout 45s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostde44.fornex.host:21 -e "set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate true; cd /public_html/BOSH.KG; rm -f $PROBE; bye" || true; rm -f "/tmp/$PROBE"' EXIT
+          # curl is preinstalled: publishing must not depend on apt mirrors or DNS.
+          FTP_URL='ftp://hostde44.fornex.host:21/public_html/BOSH.KG'
+          trap 'curl --fail --silent --show-error --ssl-reqd --connect-timeout 10 --max-time 30 --user "$FTP_USER:$FTP_PASSWORD" --quote "DELE /public_html/BOSH.KG/$PROBE" "ftp://hostde44.fornex.host:21/" -o /dev/null || true; rm -f "/tmp/$PROBE"' EXIT
+          curl --fail --silent --show-error --ssl-reqd --connect-timeout 10 --max-time 60 \
+            --user "$FTP_USER:$FTP_PASSWORD" --upload-file "/tmp/$PROBE" "$FTP_URL/$PROBE"
           RECEIVED=$(curl --fail --silent --show-error --max-time 30 "https://bosh.kg/$PROBE")
           test "$RECEIVED" = "$VALUE"
           # Must NOT be the old site directory: keep both deployment roots separate.
@@ -208,19 +174,11 @@ jobs:
       - name: Upload encrypted release and one-time installer
         run: |
           set -euo pipefail
-          timeout 180s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostde44.fornex.host:21 <<EOF
-          set cmd:fail-exit true
-          set net:timeout 30
-          set net:max-retries 1
-          set ftp:ssl-auth TLS
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          set ssl:verify-certificate true
-          cd /public_html/BOSH.KG
-          put /tmp/master-install/$UPLOAD_NAME -o $UPLOAD_NAME
-          put /tmp/master-install/$INSTALLER_NAME -o $INSTALLER_NAME
-          bye
-          EOF
+          for FILE in "$UPLOAD_NAME" "$INSTALLER_NAME"; do
+            curl --fail --silent --show-error --ssl-reqd --connect-timeout 10 --max-time 180 \
+              --user "$FTP_USER:$FTP_PASSWORD" --upload-file "/tmp/master-install/$FILE" \
+              "ftp://hostde44.fornex.host:21/public_html/BOSH.KG/$FILE"
+          done
       - name: Install privately, back up database, migrate and activate
         run: |
           set -euo pipefail
@@ -266,16 +224,11 @@ jobs:
         if: always() && env.INSTALLER_NAME != ''
         run: |
           set -euo pipefail
-          timeout 90s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostde44.fornex.host:21 <<EOF
-          set cmd:fail-exit true
-          set net:timeout 15
-          set net:max-retries 1
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          set ssl:verify-certificate true
-          cd /public_html/BOSH.KG
-          rm -f $INSTALLER_NAME
-          rm -f $UPLOAD_NAME
-          bye
-          EOF
-          rm -rf /tmp/master-install
+          trap 'rm -rf /tmp/master-install' EXIT
+          failed=0
+          for FILE in "$INSTALLER_NAME" "$UPLOAD_NAME"; do
+            curl --fail --silent --show-error --ssl-reqd --connect-timeout 10 --max-time 30 \
+              --user "$FTP_USER:$FTP_PASSWORD" --quote "DELE /public_html/BOSH.KG/$FILE" \
+              'ftp://hostde44.fornex.host:21/' -o /dev/null || failed=1
+          done
+          exit "$failed"
