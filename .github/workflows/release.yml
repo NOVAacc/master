@@ -141,8 +141,24 @@ jobs:
           PROBE="bosh-deploy-probe-$(openssl rand -hex 16).txt"
           VALUE=$(openssl rand -hex 32)
           printf '%s' "$VALUE" > "/tmp/$PROBE"
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq lftp
+          # GitHub runners have package indexes already. Avoid a full apt update on
+          # every publish (and multi-minute stalls when Ubuntu mirrors have DNS issues).
+          if ! command -v lftp >/dev/null 2>&1; then
+            timeout 35s sudo apt-get install -y -qq \
+              -o Acquire::Retries=0 \
+              -o Acquire::http::Timeout=8 \
+              -o Acquire::https::Timeout=8 lftp || {
+                echo "Cached apt indexes unavailable; trying one bounded refresh"
+                timeout 25s sudo apt-get update -qq \
+                  -o Acquire::Retries=0 \
+                  -o Acquire::http::Timeout=8 \
+                  -o Acquire::https::Timeout=8
+                timeout 35s sudo apt-get install -y -qq \
+                  -o Acquire::Retries=0 \
+                  -o Acquire::http::Timeout=8 \
+                  -o Acquire::https::Timeout=8 lftp
+              }
+          fi
           timeout 90s lftp -u "$FTP_USER","$FTP_PASSWORD" ftp://hostde44.fornex.host:21 <<EOF
           set cmd:fail-exit true
           set net:timeout 20
