@@ -34,7 +34,7 @@ function BookingExample() {
     const [complete, setComplete] = useState(false);
     return (
         <div className="landing-example">
-            <div className="landing-example-top"><span className="landing-live-dot" />Ваша страница записи<span className="landing-example-tag">ПРИМЕР</span></div>
+            <div className="landing-example-top">Ваша страница записи<span className="landing-example-tag">ПРИМЕР</span></div>
             <div className="landing-example-body">
                 <div className="landing-example-heading"><span className="landing-demo-symbol"><Icon name="calendar" /></span><div><h2>Ваше дело. Ваши правила.</h2><p>Выберите услугу и удобное время</p></div></div>
                 {complete ? (
@@ -86,7 +86,7 @@ export default function Home() {
             <main>
                 <section className="landing-hero">
                     <div className="landing-hero-copy">
-                        <p className="landing-kicker"><span />ОНЛАЙН-ЗАПИСЬ ДЛЯ ВАШЕГО ДЕЛА</p>
+                        <p className="landing-kicker">ОНЛАЙН-ЗАПИСЬ ДЛЯ ВАШЕГО ДЕЛА</p>
                         <h1>Вы занимаетесь делом.<br /><span>Клиенты записываются сами.</span></h1>
                         <p className="landing-lead">Ваша страница с услугами, свободное время и записи — в одном месте. Меньше переписок о времени. Больше внимания клиентам.</p>
                         <div className="landing-hero-actions"><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link><Link className="landing-text-link" href="/demo">Посмотреть демо <Icon name="arrow" /></Link></div>
@@ -102,7 +102,7 @@ export default function Home() {
                         <div className="landing-workspace-copy"><p className="landing-kicker">ДЕНЬ ПОД КОНТРОЛЕМ</p><h3>Посмотрите на день.<br />И сразу всё понятно.</h3><p>Предстоящие записи, свободные окна и перерывы видны в календаре. Клиента, который записался по телефону или лично, можно добавить самостоятельно.</p><ul><li><Icon name="check" /> Быстрая запись новых и постоянных клиентов</li><li><Icon name="check" /> Подтверждение автоматически или вручную</li><li><Icon name="check" /> Рабочие часы и обеденный перерыв</li></ul></div>
                         <div className="landing-day" aria-label="Иллюстрация расписания"><div className="landing-day-heading"><span><Icon name="calendar" />Ваш день</span><span className="landing-example-tag">ПРИМЕР</span></div>
                             <div className="landing-day-row"><time>09:00</time><div className="landing-day-booking"><strong>Консультация</strong><small>09:00 – 10:00 <span>Подтверждена</span></small></div></div>
-                            <div className="landing-day-row"><time>10:00</time><div className="landing-day-free"><span />Свободное время</div></div>
+                            <div className="landing-day-row"><time>10:00</time><div className="landing-day-free">Свободное время</div></div>
                             <div className="landing-day-row"><time>11:00</time><div className="landing-day-booking pending-example"><strong>Индивидуальное занятие</strong><small>11:00 – 12:00 <span>Ожидает подтверждения</span></small></div></div>
                             <div className="landing-day-row"><time>12:00</time><div className="landing-day-break"><Icon name="clock" />Обеденный перерыв</div></div>
                         </div>
