@@ -36,6 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'show'])->name('dashboard');
     Route::get('/stories/availability', \App\Http\Controllers\StoryAvailabilityController::class)->middleware('throttle:60,1');
     Route::post('/stories/style', \App\Http\Controllers\StoryStyleController::class)->middleware('throttle:30,1');
+    Route::post('/hot-slots', [\App\Http\Controllers\HotSlotOfferController::class, 'store'])->middleware('throttle:20,1');
+    Route::delete('/hot-slots/{offer}', [\App\Http\Controllers\HotSlotOfferController::class, 'cancel'])->whereNumber('offer')->middleware('throttle:20,1');
     Route::get('/stories/category/catalog', [\App\Http\Controllers\MasterCategoryStoryController::class, 'catalog'])->middleware('throttle:60,1')->name('stories.category.catalog');
     Route::get('/stories/category/{industry}/{activity}/{role}/image/{version}', [\App\Http\Controllers\MasterCategoryStoryController::class, 'image'])->where('version', '[a-f0-9]{40}')->middleware('throttle:120,1')->name('stories.category.image');
     Route::post('/group-sessions', [GroupSessionController::class, 'create'])->middleware('throttle:20,1');
@@ -116,6 +118,7 @@ Route::get('/stories/templates/{theme}/{template}/{version}', [\App\Http\Control
 Route::get('/security/email/verify/{user}/{hash}', [AccountSecurityController::class, 'verify'])->middleware('signed')->name('security.email.verify');
 Route::get('/m/{master:slug}', [PublicBookingController::class, 'show'])->name('public.master');
 Route::post('/m/{master:slug}/book', [PublicBookingController::class, 'book'])->middleware('throttle:10,1');
+Route::get('/o/{offer:token}', [\App\Http\Controllers\HotSlotOfferController::class, 'visit'])->middleware('throttle:120,1')->name('hot-slots.visit');
 Route::get('/m/{master:slug}/image/{kind}/{version}', MasterImageController::class)->whereIn('kind', ['avatar', 'cover'])->where('version', '[A-Za-z0-9]{40}')->name('master.image');
 
 // Signed, short-lived capability: no account required; mutation still uses CSRF.

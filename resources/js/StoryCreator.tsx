@@ -373,9 +373,10 @@ export async function drawStory(canvas: HTMLCanvasElement, master: Master, servi
 function toBlob(canvas: HTMLCanvasElement): Promise<Blob> {
     return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Не удалось сохранить PNG.")), "image/png"));
 }
-export default function StoryCreator({ master, services, onClose, initialDate, initialTime, initialService }: {
+export default function StoryCreator({ master, services, onClose, initialDate, initialTime, initialService, initialOffer }: {
     master: Master; services: Service[]; onClose: () => void;
     initialDate?: string; initialTime?: string; initialService?: number;
+    initialOffer?: {url:string;special_price_som:number|null;story_template:"white"|"black"|"red";slots:{date:string;time:string}[]};
 }) {
     const activeServices = services.filter(s => s.is_active);
 
@@ -388,6 +389,10 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const [mobileStoryView, setMobileStoryView] = useState<"edit" | "preview">("edit");
     const [catalog] = useState<StoryCatalog>({});
     const [showPrice,setShowPrice]=useState(true);
+    const [specialPrice,setSpecialPrice]=useState<string>(initialOffer?.special_price_som==null?"":String(initialOffer.special_price_som));
+    const [storyTemplate,setStoryTemplate]=useState<"white"|"black"|"red">(initialOffer?.story_template??"white");
+    const [extraSlots,setExtraSlots]=useState<{date:string;time:string}[]>(initialOffer?.slots.slice(1)??[]);
+    const [offerUrl,setOfferUrl]=useState<string|null>(initialOffer?.url??null);
     const [headlineOverride,setHeadlineOverride]=useState<string|null>(null);
     const [categoryCatalog,setCategoryCatalog]=useState<CategoryResponse>({category:null,templates:[]});
     const [categoryPair,setCategoryPair]=useState(()=>{
@@ -416,6 +421,10 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const [templateEdits,setTemplateEdits]=useState<Record<string,Partial<TemplateSetting>>>({});
     const templateKey=categoryPair.join(":")+":"+baseCategoryTemplate?.id;
     const categoryTemplate=useMemo(()=>baseCategoryTemplate?{...baseCategoryTemplate,...templateEdits[templateKey]}:undefined,[baseCategoryTemplate,templateEdits,templateKey]);
+    const hotCategoryTemplate=useMemo(()=>categoryTemplate?{...categoryTemplate,id:storyTemplate==="white"?"editorial":storyTemplate==="black"?"premium":"promo"}:undefined,[categoryTemplate,storyTemplate]);
+    const storyService=useMemo(()=>service&&specialPrice!==""?{...service,price_som:Number(specialPrice)}:service,[service,specialPrice]);
+    const storyTimeLabel=extraSlots.length===0?time:extraSlots.length<=2&&extraSlots.every(slot=>slot.date===date)
+        ?[time,...extraSlots.map(slot=>slot.time)].join(" · "):`${time} +${extraSlots.length}`;
     const editorOptions=categoryCatalog.editor_options;
     const editTemplate=(changes:Partial<TemplateSetting>)=>setTemplateEdits(current=>({...current,[templateKey]:{...current[templateKey],...changes}}));
     const extraId="";
@@ -425,15 +434,15 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         const sequence=++renderSequence.current;
         setPrepared(null);
         setError("");
-        if ((theme!=="category" || hasCategory) && service && canvas.current && /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{2}:\d{2}$/.test(time)) {
+        if ((theme!=="category" || hasCategory) && storyService && canvas.current && /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{2}:\d{2}$/.test(time)) {
             const preview=canvas.current;
             // A temporary canvas prevents late image loads from overwriting a newer template.
             const offscreen=document.createElement("canvas");
-            void drawStory(offscreen,master,service,date,time,style,link,theme,nailTemplate,hairTemplate,browTemplate,extraId,catalog,categoryTemplate,headline,showPrice)
+            void drawStory(offscreen,master,storyService,date,storyTimeLabel,style,link,theme,nailTemplate,hairTemplate,browTemplate,extraId,catalog,hotCategoryTemplate,headline,showPrice)
                 .then(()=>{if(sequence!==renderSequence.current)return;const c=preview.getContext("2d");if(c){preview.width=offscreen.width;preview.height=offscreen.height;c.drawImage(offscreen,0,0);}})
                 .catch(()=>{if(sequence===renderSequence.current)setError("Не удалось отобразить сторис.");});
         }
-    }, [master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, headline, hasCategory, showPrice]);
+    }, [master, storyService, date, time, storyTimeLabel, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, hotCategoryTemplate, headline, hasCategory, showPrice, storyTemplate, specialPrice]);
     useEffect(() => {
         const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
         window.addEventListener("keydown", handleKey);
@@ -456,11 +465,26 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         setError("");
         setPrepared(null);
         try {
-            const response = await axios.get<{available: boolean; reason?: string}>("/stories/availability", {params: {service: service.id, date, time}});
-            if (!response.data.available) throw new Error(response.data.reason || "Это время сейчас недоступно.");
-            await drawStory(canvas.current, master, service, date, time, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, categoryTemplate, headline, showPrice);
+            const allSlots=[{date,time},...extraSlots];
+            let publishedUrl=initialOffer?.url;
+            if(!publishedUrl){
+                for(const slot of allSlots){
+                    const response = await axios.get<{available: boolean; reason?: string}>("/stories/availability", {params: {service: service.id, date:slot.date, time:slot.time}});
+                    if (!response.data.available) throw new Error(response.data.reason || `Время ${slot.date} ${slot.time} недоступно.`);
+                }
+                const created=await axios.post<{id:number;url:string}>("/hot-slots",{
+                    service_id:service.id,
+                    special_price_som:specialPrice===""?null:Number(specialPrice),
+                    story_template:storyTemplate,
+                    slots:allSlots.map(slot=>`${slot.date}T${slot.time}`),
+                });
+                publishedUrl=created.data.url;
+            }
+            const pricedService=specialPrice===""?service:{...service,price_som:Number(specialPrice)};
+            await drawStory(canvas.current, master, pricedService, date, storyTimeLabel, style, publishedUrl!, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, hotCategoryTemplate, headline, showPrice);
             const blob = await toBlob(canvas.current);
             if(blob.size===0) throw new Error("PNG пустой.");
+            setOfferUrl(publishedUrl!);
             setPrepared(new File([blob], `bosh-${date}-${time.replace(":", "-")}.png`, { type: "image/png" }));
         } catch (e) {
             setError(e instanceof Error ? e.message : "Не удалось создать сторис. Попробуйте снова.");
@@ -499,9 +523,19 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                     <label>Услуга<select value={serviceId} onChange={e => setServiceId(Number(e.target.value))}>{activeServices.map(s => <option key={s.id} value={s.id}>{s.name} · {s.price_som.toLocaleString("ru-RU")} сом</option>)}</select></label>
                     <label className="story-checkbox"><input type="checkbox" checked={showPrice} onChange={e=>setShowPrice(e.target.checked)} />Показывать цену услуги</label>
                     <div className="story-input-row">
+                        <label>Спеццена, сом<input type="number" min="0" max="10000000" inputMode="numeric" value={specialPrice} onChange={e=>setSpecialPrice(e.target.value)} placeholder="Необязательно" /></label>
+                        <label>Цвет<select value={storyTemplate} onChange={e=>setStoryTemplate(e.target.value as "white"|"black"|"red")}><option value="white">Белый</option><option value="black">Чёрный</option><option value="red">Красный</option></select></label>
+                    </div>
+                    <div className="story-input-row">
                         <label>Дата<input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
                         <label>Время<input type="time" step="1800" value={time} onChange={e => setTime(e.target.value)} /></label>
                     </div>
+                    {extraSlots.map((slot,index)=><div className="story-input-row" key={`${slot.date}-${slot.time}-${index}`}>
+                        <label>Ещё дата<input type="date" value={slot.date} onChange={e=>setExtraSlots(items=>items.map((item,i)=>i===index?{...item,date:e.target.value}:item))}/></label>
+                        <label>Ещё время<input type="time" step="1800" value={slot.time} onChange={e=>setExtraSlots(items=>items.map((item,i)=>i===index?{...item,time:e.target.value}:item))}/></label>
+                        <button type="button" className="ghost" aria-label="Удалить интервал" onClick={()=>setExtraSlots(items=>items.filter((_,i)=>i!==index))}>Удалить</button>
+                    </div>)}
+                    {extraSlots.length<9&&<button type="button" className="ghost" onClick={()=>setExtraSlots(items=>[...items,{date,time}])}>+ Добавить время</button>}
                     <label>Категория шаблонов<select value={categoryPair[0]} onChange={e=>{const group=categoryCatalog.groups?.find(g=>g.id===e.target.value);if(group){setCategoryPair([group.id,Object.keys(group.activities)[0]]);setHeadlineOverride(null);setCategorySelection("editorial");}}}>
                         <option value="" disabled>Выберите категорию</option>
                         {categoryCatalog.groups?.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}
@@ -546,7 +580,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                         <button type="button" className="primary" disabled={busy || !service || !hasCategory || !headline.trim()} onClick={() => void prepare()}>{busy ? "Проверяем время…" : "Создать сторис"}</button>
                         {prepared && <button type="button" className="ghost" onClick={download}>Скачать PNG</button>}
                         {prepared && <button type="button" className="ghost" onClick={() => void share()}>Поделиться</button>}
-                        {prepared && <button type="button" className="ghost" onClick={() => navigator.clipboard.writeText(link).then(() => setError("Ссылка скопирована.")).catch(() => setError("Не удалось скопировать ссылку."))}>Копировать ссылку</button>}
+                        {prepared && offerUrl && <button type="button" className="ghost" onClick={() => navigator.clipboard.writeText(offerUrl).then(() => setError("Ссылка скопирована.")).catch(() => setError("Не удалось скопировать ссылку."))}>Копировать ссылку</button>}
                     </div>
                     {error && <p role="status" className="muted small">{error}</p>}
             </div>

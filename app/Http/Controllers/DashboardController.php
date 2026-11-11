@@ -109,6 +109,27 @@ class DashboardController extends Controller
                 ->with(['notifications:id,master_appointment_id,recipient,status,error_code,revision', 'changes'])->orderBy('starts_at')->limit(200)->get()->map($presentAppointment),
             'whatsappAutomatic' => app(WhatsApp::class)->configured(),
             'publicUrl' => route('public.master', $master->slug),
+            'hotOffers' => fn () => $master->hotSlotOffers()->with(['service:id,name,price_som', 'slots:id,hot_slot_offer_id,starts_at,master_appointment_id'])
+                ->latest()->limit(50)->get()->map(function ($offer) use ($master) {
+                    $futureOpen = $offer->slots->filter(fn ($slot) => ! $slot->master_appointment_id && $slot->starts_at->isFuture());
+                    return [
+                        'id' => $offer->id,
+                        'service_id' => $offer->master_service_id,
+                        'service_name' => $offer->service?->name ?? 'Услуга',
+                        'base_price_som' => $offer->service?->price_som,
+                        'special_price_som' => $offer->special_price_som,
+                        'story_template' => $offer->story_template,
+                        'clicks' => $offer->clicks,
+                        'bookings' => $offer->slots->whereNotNull('master_appointment_id')->count(),
+                        'active' => ! $offer->cancelled_at && $futureOpen->isNotEmpty(),
+                        'cancelled' => (bool) $offer->cancelled_at,
+                        'url' => route('hot-slots.visit', $offer->token),
+                        'slots' => $offer->slots->map(fn ($slot) => [
+                            'starts_at' => $slot->starts_at->toIso8601String(),
+                            'booked' => (bool) $slot->master_appointment_id,
+                        ])->all(),
+                    ];
+                }),
         ]);
     }
 

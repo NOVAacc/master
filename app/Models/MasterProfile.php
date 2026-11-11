@@ -45,4 +45,9 @@ class MasterProfile extends Model
     {
         return $this->hasMany(MasterAppointment::class);
     }
+
+    public function hotSlotOffers(): HasMany
+    {
+        return $this->hasMany(HotSlotOffer::class);
+    }
 }
