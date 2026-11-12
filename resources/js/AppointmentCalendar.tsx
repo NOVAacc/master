@@ -312,7 +312,7 @@ export default function AppointmentCalendar({
                                         });
                                         const occupied = items.some(item => item.start <= minute && item.end > minute &&
                                             (item.block || (item.appointment && ["pending", "confirmed"].includes(item.appointment.status))));
-                                        if (availableWork && !occupied && (day > today || (day === today && minute > new Date(now).getHours() * 60 + new Date(now).getMinutes()))) onCreateBooking(day, minuteLabel(minute));
+                                        if (availableWork && !occupied) onCreateBooking(day, minuteLabel(minute));
                                     }}
                                 >
                                     {work.map((h, i) => (
