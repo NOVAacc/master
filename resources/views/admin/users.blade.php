@@ -54,6 +54,13 @@
 @else
 <span class="badge">Профиль не заполнен</span>
 @endif
+@if($user->slug)
+<form method="post" action="{{ route('admin.users.restart-onboarding', $user->id) }}" onsubmit="return confirm('Начать стартовую настройку заново для этого мастера? Его клиенты, записи и существующие услуги сохранятся. Новое расписание заменит прежнее, а услуги из мастера настройки добавятся к действующим.')">
+@csrf
+<button type="submit" class="button small">Очистить стартовую настройку</button>
+</form>
+@if($user->onboarding_restart_step !== null)<p class="muted small" role="status">Повторная настройка ожидается · шаг {{ $user->onboarding_restart_step + 1 }} из 3</p>@endif
+@endif
 @if($user->slug && \Illuminate\Support\Str::startsWith($user->slug, 'test-onboarding-') && \Illuminate\Support\Str::endsWith((string) $user->email, '@example.invalid'))
 <form method="post" action="{{ route('admin.users.onboarding-reset', $user->id) }}">
 @csrf
