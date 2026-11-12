@@ -39,8 +39,10 @@ class RegistrationPasswordFlowTest extends TestCase
         $this->assertTrue(Hash::check('abc!12', $user->password));
         $this->assertNull($user->email_verified_at);
 
-        Mail::assertSent(RegistrationPassword::class, function ($mail) {
+        $verificationUrl = null;
+        Mail::assertSent(RegistrationPassword::class, function ($mail) use (&$verificationUrl) {
             $this->assertFalse(property_exists($mail, 'temporaryPassword'));
+            $verificationUrl = $mail->verifyUrl;
             return str_contains($mail->verifyUrl, '/security/email/verify/');
         });
 
@@ -48,8 +50,8 @@ class RegistrationPasswordFlowTest extends TestCase
             ->assertSessionHasErrors('identifier');
         $this->assertGuest();
 
-        $mail = Mail::assertSent(RegistrationPassword::class)->first();
-        $this->get($mail->verifyUrl)->assertRedirect('/login');
+        $this->assertNotNull($verificationUrl);
+        $this->get($verificationUrl)->assertRedirect('/login');
         $this->assertNotNull($user->fresh()->email_verified_at);
 
         $this->post('/login', ['identifier' => $user->email, 'password' => 'abc!12'])
