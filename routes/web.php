@@ -20,6 +20,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'loginPage'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1');
     Route::get('/register', [AuthController::class, 'registerPage'])->name('register');
+    Route::post('/email/verification/resend', [AccountSecurityController::class, 'resendRegistration'])->middleware('throttle:3,10')->name('registration.verify.resend');
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,10');
     Route::get('/forgot-password', [AccountSecurityController::class, 'forgotPage'])->name('password.request');
     Route::post('/forgot-password', [AccountSecurityController::class, 'forgot'])->middleware('throttle:3,10')->name('password.email');
