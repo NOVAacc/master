@@ -27,13 +27,12 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
     const schedule = useForm<{ hours: { weekday: number; starts_at: string; ends_at: string; break_starts_at: null; break_ends_at: null }[] }>({ hours: [] });
     const service = useForm(`bosh-onboarding-${master.id}-service`, { services: [{ name: "", duration_minutes: 60, price_som: 0 }] });
     const location = useForm({ address: master.address || "", address_url: master.address_url || "" });
-    const [dismissed, setDismissed] = useState(false);
     const [locationSaved, setLocationSaved] = useState(false);
     const [drafted, setDrafted] = useState(false);
     const [done, setDone] = useState(false);
     const [step, setStep] = useState(firstStep);
     useEffect(() => { setStep(firstStep); }, [firstStep]);
-    if (dismissed || done || (step === 3 && !completed)) return null;
+    if (done || (step === 3 && !completed)) return null;
     const active = catalog[category.data.industry]?.activities ?? {};
     const suggested = starters[master.activity ?? ""] ?? ["Первая услуга"];
     const submitSchedule = () => {
@@ -57,8 +56,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
             {step < 3 && <p className="muted small">Шаг {step + 1} из 3</p>}
             {step < 3 && <div className="onboarding-progress">{[0, 1, 2].map(i => <span key={i} className={i <= step ? "active" : ""} />)}</div>}
             <Notice />
-            {step < 3 && <button type="button" className="button small" onClick={() => setDismissed(true)}>Продолжить позже</button>}
-            {step === 3 && <section>
+            {step === 3 && <section className="onboarding-finish">
                 <h2 id="industry-title">Ваша страница готова!</h2>
                 <p className="muted small">Всё готово. Отправьте клиентам ссылку — они смогут выбрать услугу и время самостоятельно.</p>
                 <ShareProfile url={publicUrl} />
@@ -79,7 +77,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
                     <button type="submit" className="button wide" disabled={location.processing}>{location.processing ? "Сохранение…" : "Сохранить адрес"}</button>
                     </form>
                 </details>
-                <button className="primary wide" type="button" onClick={() => setDone(true)}>Перейти в кабинет</button>
+                <div className="onboarding-finish-footer"><button className="primary wide" type="button" onClick={() => setDone(true)}>Перейти в кабинет</button></div>
             </section>}
             {step === 0 && <>
                 <h2 id="industry-title">Чем вы занимаетесь?</h2>
