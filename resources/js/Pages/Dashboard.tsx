@@ -181,6 +181,7 @@ export default function Dashboard({
         }
     };
     const [quickBooking, setQuickBooking] = useState(false);
+    const [bookingSlot, setBookingSlot] = useState<{date: string; time: string} | null>(null);
     const [storySeed, setStorySeed] = useState<{date?: string; time?: string; service?: number; offer?: {url:string;special_price_som:number|null;story_template:"white"|"black"|"red";slots:{date:string;time:string}[]}} | null>(null);
     const editOfferStory=(offer:HotOffer)=>{
         const slots=offer.slots.map(slot=>{
@@ -637,7 +638,7 @@ export default function Dashboard({
                         </h2>
                         {tab === "appointments" && (
                             <div className="row wrap appointment-view-controls">
-                                <button type="button" className="primary" onClick={() => setQuickBooking(true)} disabled={!services.some(s => s.is_active)}>+ Записать клиента</button>
+                                <button type="button" className="primary" onClick={() => { setBookingSlot(null); setQuickBooking(true); }} disabled={!services.some(s => s.is_active)}>+ Записать клиента</button>
                                 <button type="button" className="ghost" onClick={() => setStorySeed({})} disabled={!services.some(s => s.is_active)}>Создать сторис</button>
                                 <div
                                     className="display-switch text-switch"
@@ -684,7 +685,7 @@ export default function Dashboard({
                                     loading={calendarLoading}
                                     onNavigate={navigateCalendar}
                                     renderDetails={renderAppointment}
-                                    onCreateStory={(date, time, service) => setStorySeed({date, time, service})}
+                                    onCreateBooking={(date, time) => { setBookingClient(null); setBookingSlot({date, time}); setQuickBooking(true); }}
                                 />
                             ) : (
                                 <>
@@ -891,10 +892,10 @@ export default function Dashboard({
                 onClose={() => setSelectedClient(null)}
                 onSaved={updated => setClientOverrides(old => ({ ...old, [updated.id]: updated }))}
                 onChanged={() => { setSelectedClient(null); setClientSearchRevision(n => n + 1); router.reload({ only: ["clients", "appointments", "calendarAppointments"] }); }}
-                onBook={target => { setBookingClient(target); setSelectedClient(null); setQuickBooking(true); }} />}
+                onBook={target => { setBookingClient(target); setBookingSlot(null); setSelectedClient(null); setQuickBooking(true); }} />}
             {storySeed && <StoryCreator master={master} services={services} initialDate={storySeed.date} initialTime={storySeed.time} initialService={storySeed.service} initialOffer={storySeed.offer} onClose={() => setStorySeed(null)} />}
-            {quickBooking && <QuickBooking services={services} timezone={master.timezone} date={calendarDate}
-                initialClient={bookingClient} onClose={() => { setQuickBooking(false); setBookingClient(null); }} />}
+            {quickBooking && <QuickBooking services={services} timezone={master.timezone} date={bookingSlot?.date ?? calendarDate}
+                initialTime={bookingSlot?.time} initialClient={bookingClient} onClose={() => { setQuickBooking(false); setBookingClient(null); setBookingSlot(null); }} />}
         </div>
     );
 }
