@@ -1,6 +1,7 @@
 import { useForm, router } from "@inertiajs/react";
 import { useState } from "react";
 import { Errors, Field } from "./Shared";
+import PasswordHints from "./PasswordHints";
 
 export type SecurityStatus = {
     email: string | null;
@@ -63,7 +64,7 @@ export default function AccountSecurity({ status }: { status: SecurityStatus }) 
                                 onChange={e => passForm.setData("current_password", e.target.value)} />
                         </Field>
                     )}
-                    <Field label="Новый пароль (от 6 символов)">
+                    <Field label="Новый пароль">
                         <input type="password" required minLength={6} maxLength={128}
                             autoComplete="new-password"
                             value={passForm.data.password}
@@ -75,6 +76,7 @@ export default function AccountSecurity({ status }: { status: SecurityStatus }) 
                             value={passForm.data.password_confirmation}
                             onChange={e => passForm.setData("password_confirmation", e.target.value)} />
                     </Field>
+                    <PasswordHints password={passForm.data.password} confirmation={passForm.data.password_confirmation} />
                     <p className="muted small">После 5 неверных попыток вход будет заблокирован на 1 час.</p>
                     <button className="primary" disabled={passForm.processing}>
                         {status.passwordSet ? "Изменить пароль" : "Установить пароль"}
