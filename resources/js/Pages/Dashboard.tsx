@@ -499,8 +499,11 @@ export default function Dashboard({
             <FirstIndustryChoice master={master} publicUrl={publicUrl} completed={onboardingCompleted} />
             <aside className={`sidebar${mobileMenuOpen ? " mobile-menu-open" : ""}`}>
                 <div className="sidebar-mobile-header">
-                    <Brand />
-                    <span className="mobile-header-title">Кабинет</span>
+                    <div className="sidebar-brand-nav">
+                        <Brand />
+                        <Link href="/dashboard" className="sidebar-dashboard-home" aria-label="Главная кабинета мастера">Кабинет</Link>
+                    </div>
+                    <Link href="/dashboard" className="mobile-header-title" aria-label="Главная кабинета мастера">Кабинет</Link>
                     <button
                         type="button"
                         className="sidebar-menu-toggle"
