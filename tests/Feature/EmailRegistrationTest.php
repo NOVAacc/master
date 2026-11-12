@@ -17,7 +17,7 @@ class EmailRegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_registration_emails_password_and_supports_email_login(): void
+    public function test_registration_emails_verification_link_and_supports_chosen_password_login(): void
     {
         config()->set('mail.default', 'smtp');
         config()->set('mail.mailers.smtp.username', 'no-reply@example.test');
@@ -25,7 +25,7 @@ class EmailRegistrationTest extends TestCase
         config()->set('mail.from.address', 'no-reply@example.test');
         Mail::fake();
         Http::fake();
-        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'Master@Example.test'])
+        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'Master@Example.test', 'password' => 'my!pass7', 'password_confirmation' => 'my!pass7'])
             ->assertRedirect('/login')->assertSessionHasNoErrors()->assertSessionHas('success');
         $this->assertGuest();
         $user = User::where('phone', '996555123456')->firstOrFail();
@@ -36,17 +36,16 @@ class EmailRegistrationTest extends TestCase
         $this->assertNull($user->email_verified_at);
         $this->assertNotNull($user->password_initialized_at);
         $this->assertSame($user->id, MasterProfile::firstOrFail()->user_id);
-        $password = '';
         $verifyUrl = '';
-        Mail::assertSent(RegistrationPassword::class, function ($mail) use ($user, &$password, &$verifyUrl) {
-            $password = $mail->temporaryPassword;
+        $this->assertTrue(Hash::check('my!pass7', $user->password));
+        Mail::assertSent(RegistrationPassword::class, function ($mail) use ($user, &$verifyUrl) {
             $verifyUrl = $mail->verifyUrl;
-            return $mail->hasTo($user->email) && $mail->name === 'Айгүл' && preg_match('/^(?=[A-Za-z0-9]{6}$)(?=[^0-9]*[0-9][^0-9]*$)(?=.*[a-z])(?=.*[A-Z])[A-Za-z0-9]+$/', $password) === 1 && Hash::check($password, $user->password);
+            return $mail->hasTo($user->email) && $mail->name === 'Айгүл' && ! property_exists($mail, 'temporaryPassword');
         });
         Http::assertNothingSent();
         $this->get($verifyUrl)->assertRedirect('/login');
         $this->assertNotNull($user->fresh()->email_verified_at);
-        $this->post('/login', ['identifier' => $user->email, 'password' => $password])->assertRedirect('/dashboard');
+        $this->post('/login', ['identifier' => $user->email, 'password' => 'my!pass7'])->assertRedirect('/dashboard');
         $this->assertAuthenticatedAs($user);
     }
 
@@ -58,8 +57,8 @@ class EmailRegistrationTest extends TestCase
         config()->set('mail.from.address', 'no-reply@example.test');
         Mail::fake();
         $user = User::factory()->create(['phone' => '996555123456', 'email' => 'existing@example.test', 'password' => Hash::make('original-password')]);
-        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'new@example.test'])->assertSessionHasErrors('phone');
-        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555987654', 'email' => 'EXISTING@example.test'])->assertSessionHasErrors('email');
+        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'new@example.test', 'password' => 'abc!123', 'password_confirmation' => 'abc!123'])->assertSessionHasErrors('phone');
+        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555987654', 'email' => 'EXISTING@example.test', 'password' => 'abc!123', 'password_confirmation' => 'abc!123'])->assertSessionHasErrors('email');
         $this->assertTrue(Hash::check('original-password', $user->fresh()->password));
         $this->assertDatabaseCount('users', 1);
         Mail::assertNothingSent();
@@ -81,13 +80,13 @@ class EmailRegistrationTest extends TestCase
         Mail::shouldReceive('to')->twice()->andReturnSelf();
         Mail::shouldReceive('send')->once()->ordered()->andThrow(new TransportException('Expected response code 250 but got code "550", with message "550 5.7.1 rejected".'));
         Mail::shouldReceive('send')->once()->ordered()->andReturnNull();
-        $response = $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test']);
+        $response = $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test', 'password' => 'abc!123', 'password_confirmation' => 'abc!123']);
         $response->assertSessionHasErrors('email');
         $this->assertStringContainsString('Аккаунт не создан', session('errors')->first('email'));
         $this->assertDatabaseCount('users', 0);
         $this->assertDatabaseCount('master_profiles', 0);
         $this->assertGuest();
-        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test'])
+        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test', 'password' => 'abc!123', 'password_confirmation' => 'abc!123'])
             ->assertRedirect('/login')
             ->assertSessionHasNoErrors();
         $this->assertDatabaseCount('users', 1);
@@ -99,9 +98,9 @@ class EmailRegistrationTest extends TestCase
         Mail::fake();
         config()->set('mail.default', 'log');
         Log::spy();
-        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test'])->assertSessionHasErrors('email');
-        $this->post('/register', ['name' => 'Айгүл', 'phone' => '123', 'email' => 'master@example.test'])->assertSessionHasErrors('phone');
-        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'invalid'])->assertSessionHasErrors('email');
+        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test', 'password' => 'abc!123', 'password_confirmation' => 'abc!123'])->assertSessionHasErrors('email');
+        $this->post('/register', ['name' => 'Айгүл', 'phone' => '123', 'email' => 'master@example.test', 'password' => 'abc!123', 'password_confirmation' => 'abc!123'])->assertSessionHasErrors('phone');
+        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'invalid', 'password' => 'abc!123', 'password_confirmation' => 'abc!123'])->assertSessionHasErrors('email');
         $this->assertDatabaseCount('users', 0);
         Mail::assertNothingSent();
     }
@@ -114,7 +113,7 @@ class EmailRegistrationTest extends TestCase
         Log::spy();
         Mail::fake();
 
-        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test'])
+        $this->post('/register', ['name' => 'Айгүл', 'phone' => '0555123456', 'email' => 'master@example.test', 'password' => 'abc!123', 'password_confirmation' => 'abc!123'])
             ->assertSessionHasErrors('email');
 
         $this->assertDatabaseCount('users', 0);
@@ -140,13 +139,12 @@ class EmailRegistrationTest extends TestCase
     public function test_welcome_email_contains_usable_unescaped_verification_url(): void
     {
         $url = 'https://bosh.kg/security/email/verify/1/hash?expires=123&signature=abc';
-        $body = (new RegistrationPassword('Айгүл', '996555123456', 'test-password', $url))->render();
+        $body = (new RegistrationPassword('Айгүл', $url))->render();
         $this->assertStringContainsString('Здравствуйте, Айгүл!', $body);
         $this->assertStringContainsString('Подтвердить почту', $body);
         $this->assertStringContainsString('expires=123&amp;signature=abc', $body);
         $textBody = view('mail.registration-password-text', [
-            'name' => 'Айгүл', 'phone' => '996555123456',
-            'temporaryPassword' => 'test-password', 'verifyUrl' => $url,
+            'name' => 'Айгүл', 'verifyUrl' => $url,
         ])->render();
         $this->assertStringContainsString($url, $textBody);
         $this->assertStringNotContainsString('&amp;signature', $textBody);
