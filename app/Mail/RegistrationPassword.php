@@ -8,8 +8,6 @@ class RegistrationPassword extends Mailable
 {
     public function __construct(
         public string $name,
-        public string $phone,
-        public string $temporaryPassword,
         public string $verifyUrl,
     ) {}
 
