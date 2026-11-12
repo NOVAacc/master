@@ -685,7 +685,7 @@ export default function Dashboard({
                                     loading={calendarLoading}
                                     onNavigate={navigateCalendar}
                                     renderDetails={renderAppointment}
-                                    onCreateBooking={(date, time) => { setBookingClient(null); setBookingSlot({date, time}); setQuickBooking(true); }}
+                                    onCreateBooking={services.some(service => service.is_active) ? (date, time) => { setBookingClient(null); setBookingSlot({date, time}); setQuickBooking(true); } : undefined}
                                 />
                             ) : (
                                 <>
