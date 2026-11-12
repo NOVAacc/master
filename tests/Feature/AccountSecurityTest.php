@@ -35,15 +35,15 @@ class AccountSecurityTest extends TestCase
         $this->assertEquals(0, $user->fresh()->failed_login_attempts);
     }
 
-    public function test_new_master_can_set_five_character_password_without_old_random_password(): void
+    public function test_new_master_can_set_six_character_password_without_old_random_password(): void
     {
         $user = User::factory()->create(['phone' => '996555123456', 'password' => Hash::make('unavailable-random-password'),
             'password_initialized_at' => null]);
         $this->actingAs($user)->post('/security/password',
-            ['password' => '12345', 'password_confirmation' => '12345'])->assertSessionHasNoErrors();
+            ['password' => '123456', 'password_confirmation' => '123456'])->assertSessionHasNoErrors();
         $this->assertNotNull($user->fresh()->password_initialized_at);
         $this->post('/logout');
-        $this->post('/login', ['identifier' => $user->email, 'password' => '12345'])
+        $this->post('/login', ['identifier' => $user->email, 'password' => '123456'])
             ->assertRedirect('/dashboard');
     }
 
