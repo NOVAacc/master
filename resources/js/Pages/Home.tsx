@@ -10,14 +10,14 @@ const services = [
 ];
 const slots = ["10:00", "11:30", "14:00", "15:30"];
 const advantages = [
-    { icon: "link", title: "Одна ссылка для записи", text: "Услуги, цены и свободное время — на вашей странице. Отправьте ссылку клиенту или добавьте её в Instagram." },
-    { icon: "calendar", title: "Расписание под ваш день", text: "Настройте рабочие часы и перерыв. Занятое время не предлагается другим клиентам." },
-    { icon: "user", title: "Клиенты всегда под рукой", text: "Контакты, история посещений и заметки собраны в карточке клиента." },
+    { icon: "link", title: "Одна ссылка для записи", text: "Клиент видит ваши услуги, цены и свободные часы — без переписки." },
+    { icon: "calendar", title: "Календарь без накладок", text: "Рабочие часы, перерывы и записи в одном календаре. Занятое время недоступно для бронирования." },
+    { icon: "user", title: "История клиентов", text: "Контакты, прошлые записи и заметки доступны в карточке клиента." },
 ];
 const steps = [
-    { title: "Зарегистрируйтесь", text: "Укажите имя, телефон и почту. Подтвердите email и войдите с паролем из письма." },
-    { title: "Настройте свою страницу", text: "Добавьте услуги, цены, продолжительность и рабочие часы. Оформление можно дополнить позже." },
-    { title: "Поделитесь ссылкой", text: "Разместите её в соцсетях или отправьте клиентам. Записи появятся в вашем календаре." },
+    { title: "Создайте аккаунт", text: "Укажите контакты и подтвердите регистрацию." },
+    { title: "Добавьте услуги и график", text: "Укажите цены, длительность услуг и удобные часы работы." },
+    { title: "Отправьте ссылку клиентам", text: "Они выберут время сами, а запись появится в календаре." },
 ];
 const questions = [
     { title: "Сколько стоит BOSH?", text: "BOSH — бесплатный сервис для мастеров и клиентов." },
@@ -36,13 +36,13 @@ function BookingExample() {
         <div className="landing-example">
             <div className="landing-example-top">Ваша страница записи<span className="landing-example-tag">ПРИМЕР</span></div>
             <div className="landing-example-body">
-                <div className="landing-example-heading"><span className="landing-demo-symbol"><Icon name="calendar" /></span><div><h2>Ваше дело. Ваши правила.</h2><p>Выберите услугу и удобное время</p></div></div>
+                <div className="landing-example-heading"><span className="landing-demo-symbol"><Icon name="calendar" /></span><div><h2>Запись к вам онлайн</h2><p>Выберите услугу и удобное время</p></div></div>
                 {complete ? (
                     <div className="landing-example-success" role="status">
                         <span><Icon name="check" /></span>
-                        <h3>Вот так просто.</h3>
+                        <h3>Время выбрано</h3>
                         <p>{services[service].name} · {slot}</p>
-                        <p className="muted">В настоящей записи клиент дальше укажет имя и телефон.</p>
+                        <p className="muted">Это демо. Для настоящей записи клиент ещё указывает имя и телефон.</p>
                         <button type="button" className="ghost" onClick={() => setComplete(false)}>Попробовать ещё раз</button>
                     </div>
                 ) : (
@@ -86,20 +86,20 @@ export default function Home() {
             <main>
                 <section className="landing-hero">
                     <div className="landing-hero-copy">
-                        <p className="landing-kicker">ОНЛАЙН-ЗАПИСЬ ДЛЯ ВАШЕГО ДЕЛА</p>
+                        
                         <h1>Вы занимаетесь делом.<br /><span>Клиенты записываются сами.</span></h1>
-                        <p className="landing-lead">Ваша страница с услугами, свободное время и записи — в одном месте. Меньше переписок о времени. Больше внимания клиентам.</p>
+                        <p className="landing-lead">Создайте страницу с услугами и свободным временем. Клиенты выберут удобный час, а вы увидите запись в календаре.</p>
                         <div className="landing-hero-actions"><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link><Link className="landing-text-link" href="/demo">Посмотреть демо <Icon name="arrow" /></Link></div>
-                        <p className="landing-hero-note"><Icon name="check" /> Бесплатно. На телефоне и компьютере.</p>
+                        <p className="landing-hero-note">Бесплатно · Работает в браузере</p>
                     </div>
                     <BookingExample />
                 </section>
                 <section className="landing-audience" aria-label="Для кого BOSH"><p>Для тех, к кому приходят по записи</p><div>{["Красота и уход", "Здоровье", "Спорт", "Обучение", "Консультации", "Услуги"].map(item => <span key={item}>{item}</span>)}</div></section>
                 <section id="features" className="landing-section">
-                    <div className="landing-section-heading"><p className="landing-kicker">ПРОСТОЙ ПОРЯДОК В ДЕЛАХ</p><h2>Всё нужное.<br /><span>В одном рабочем пространстве.</span></h2></div>
+                    <div className="landing-section-heading"><h2>Всё для записи клиентов</h2></div>
                     <div className="landing-benefits">{advantages.map(item => <article key={item.title}><span className="landing-feature-icon"><Icon name={item.icon} /></span><h3>{item.title}</h3><p>{item.text}</p></article>)}</div>
                     <div className="landing-workspace">
-                        <div className="landing-workspace-copy"><p className="landing-kicker">ДЕНЬ ПОД КОНТРОЛЕМ</p><h3>Посмотрите на день.<br />И сразу всё понятно.</h3><p>Предстоящие записи, свободные окна и перерывы видны в календаре. Клиента, который записался по телефону или лично, можно добавить самостоятельно.</p><ul><li><Icon name="check" /> Быстрая запись новых и постоянных клиентов</li><li><Icon name="check" /> Подтверждение автоматически или вручную</li><li><Icon name="check" /> Рабочие часы и обеденный перерыв</li></ul></div>
+                        <div className="landing-workspace-copy"><h3>Рабочий день в календаре</h3><p>Предстоящие записи, свободные окна и перерывы видны в календаре. Клиента, который записался по телефону или лично, можно добавить самостоятельно.</p><ul><li><Icon name="check" /> Быстрая запись новых и постоянных клиентов</li><li><Icon name="check" /> Подтверждение автоматически или вручную</li><li><Icon name="check" /> Рабочие часы и обеденный перерыв</li></ul></div>
                         <div className="landing-day" aria-label="Иллюстрация расписания"><div className="landing-day-heading"><span><Icon name="calendar" />Ваш день</span><span className="landing-example-tag">ПРИМЕР</span></div>
                             <div className="landing-day-row"><time>09:00</time><div className="landing-day-booking"><strong>Консультация</strong><small>09:00 – 10:00 <span>Подтверждена</span></small></div></div>
                             <div className="landing-day-row"><time>10:00</time><div className="landing-day-free">Свободное время</div></div>
@@ -109,16 +109,12 @@ export default function Home() {
                     </div>
                 </section>
                 <section id="start" className="landing-section landing-start">
-                    <div className="landing-section-heading"><p className="landing-kicker">ОТ ИДЕИ К ПЕРВОЙ ЗАПИСИ</p><h2>Начните с трёх<br /><span>простых шагов.</span></h2></div>
+                    <div className="landing-section-heading"><h2>Как начать</h2></div>
                     <div className="landing-steps">{steps.map((item, i) => <article key={item.title}><span className="landing-step-number">0{i + 1}</span><h3>{item.title}</h3><p>{item.text}</p></article>)}</div>
                     <Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link>
                 </section>
-                <section className="landing-client">
-                    <div><p className="landing-kicker">УДОБНО И ВАШИМ КЛИЕНТАМ</p><h2>Выбрать. Записаться.<br /><span>Прийти к вам.</span></h2><p>Клиент открывает вашу ссылку, видит стоимость и продолжительность услуги, выбирает свободное время и оставляет контакты. Без регистрации и установки приложения.</p></div>
-                    <ol><li><span>1</span><div><strong>Открывает вашу страницу</strong><p>По ссылке из соцсетей или сообщения</p></div></li><li><span>2</span><div><strong>Выбирает услугу и время</strong><p>Только доступные для записи часы</p></div></li><li><span>3</span><div><strong>Оставляет имя и телефон</strong><p>А вы видите новую запись в кабинете</p></div></li></ol>
-                </section>
-                <section id="questions" className="landing-section landing-faq"><div className="landing-section-heading"><p className="landing-kicker">ПЕРЕД НАЧАЛОМ</p><h2>Есть вопросы?</h2></div><div>{questions.map(item => <details key={item.title}><summary>{item.title}<span aria-hidden="true">+</span></summary><p>{item.text}</p></details>)}</div></section>
-                <section className="landing-final"><p className="landing-kicker">ВАШ СЛЕДУЮЩИЙ ШАГ</p><h2>Пусть запись<br /><span>работает на вас.</span></h2><p>Создайте страницу бесплатно и поделитесь ею с клиентами.</p><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link></section>
+                <section id="questions" className="landing-section landing-faq"><div className="landing-section-heading"><h2>Частые вопросы</h2></div><div>{questions.map(item => <details key={item.title}><summary>{item.title}<span aria-hidden="true">+</span></summary><p>{item.text}</p></details>)}</div></section>
+                <section className="landing-final"><h2>Создайте свою страницу записи</h2><p>Добавьте услуги и поделитесь ссылкой с клиентами. Бесплатно.</p><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link></section>
             </main>
         </div>
     );
