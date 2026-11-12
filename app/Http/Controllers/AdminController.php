@@ -62,7 +62,7 @@ class AdminController extends Controller
         $search = trim($data['q'] ?? '');
         $query = User::query()->leftJoin('master_profiles as m', 'm.user_id', '=', 'users.id')
             ->select('users.id', 'users.name', 'users.phone', 'users.email', 'users.created_at',
-                'users.email_verified_at', 'users.phone_verified_at', 'users.failed_login_attempts', 'users.login_locked_until', 'm.slug', 'm.display_name', 'm.booking_enabled');
+                'users.email_verified_at', 'users.phone_verified_at', 'users.failed_login_attempts', 'users.login_locked_until', 'm.slug', 'm.display_name', 'm.booking_enabled', 'm.onboarding_restart_step');
         if ($search !== '') {
             // Literal substring search; % and _ are not SQL wildcards.
             $query->where(function ($q) use ($search) {
@@ -113,6 +113,20 @@ class AdminController extends Controller
             'industry' => null, 'activity' => null, 'onboarding_industry_done' => false,
         ]);
         return redirect()->route('admin.users')->with('success', 'Тестовый профиль сброшен. При следующем входе снова появится окно выбора.');
+    }
+
+    public function restartOnboarding(Request $request, User $user)
+    {
+        DB::transaction(function () use ($user) {
+            $profile = MasterProfile::where('user_id', $user->id)->lockForUpdate()->firstOrFail();
+            $profile->update([
+                'industry' => null,
+                'activity' => null,
+                'onboarding_industry_done' => false,
+                'onboarding_restart_step' => 0,
+            ]);
+        }, 3);
+        return back()->with('success', 'Стартовая настройка сброшена. Мастер повторно увидит три шага при входе в кабинет. Клиенты, записи и действующие услуги сохранены.');
     }
 
     public function unlockUser(Request $request, User $user)
