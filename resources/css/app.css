@@ -3516,3 +3516,29 @@ html:has(.landing) { scroll-behavior: auto; }
 }
 .hot-offer-banner{display:flex;flex-direction:column;gap:.25rem;margin:1rem 0;padding:1rem 1.1rem;border-radius:18px;background:#fff0f1;border:1px solid #efc5c9;color:#8f1824}.hot-offers-panel{margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--line,#e7e3df)}.hot-offers-list{display:grid;gap:.75rem}.hot-offer-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.65rem 1rem;align-items:start;padding:1rem;border:1px solid var(--line,#e7e3df);border-radius:18px;background:var(--panel,#fff)}.hot-offer-card .row{grid-column:1/-1}.hot-offer-card .danger{color:#a51f2b}.booking-total del{display:block;font-weight:400}.story-input-row>button{align-self:end}
 @media(max-width:620px){.hot-offer-card{grid-template-columns:1fr}.hot-offer-card>.badge{justify-self:start}.hot-offer-card .row{grid-column:1}.hot-offer-card .row button{flex:1 1 auto}}
+
+
+/* Live password guidance shared by registration, reset, and account settings. */
+.password-hints {
+    display: grid;
+    gap: 7px;
+    margin: 2px 0 16px;
+    font-size: 12px;
+    line-height: 1.45;
+}
+.password-hint {
+    display: flex;
+    gap: 9px;
+    align-items: baseline;
+    transition: color .15s ease;
+}
+.password-hint-indicator {
+    display: inline-block;
+    width: 14px;
+    flex: 0 0 14px;
+    font-weight: 700;
+    text-align: center;
+}
+.password-hint--idle { color: #777; }
+.password-hint--valid { color: #21734c; }
+.password-hint--invalid { color: #b44343; }
