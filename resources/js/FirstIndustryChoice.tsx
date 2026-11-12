@@ -4,7 +4,7 @@ import { Notice } from "./Shared";
 import ShareProfile from "./ShareProfile";
 import type { Industries, Master } from "./types";
 
-type Counts = { hoursCount: number; servicesCount: number };
+type Counts = { hoursCount: number; servicesCount: number; restartStep?: number | null };
 const weekdays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const starters: Record<string, string[]> = {
     nails: ["Маникюр", "Маникюр с покрытием"], barber: ["Мужская стрижка", "Оформление бороды"],
@@ -19,7 +19,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
     const needCategory = !validCategory;
     const needSchedule = counts.hoursCount === 0;
     const needServices = counts.servicesCount === 0;
-    const firstStep = needCategory ? 0 : needSchedule ? 1 : needServices ? 2 : 3;
+    const firstStep = counts.restartStep != null ? counts.restartStep : needCategory ? 0 : needSchedule ? 1 : needServices ? 2 : 3;
     const [days, setDays] = useRemember<number[]>([1, 2, 3, 4, 5, 6], `bosh-onboarding-${master.id}-days`);
     const [start, setStart] = useRemember("09:00", `bosh-onboarding-${master.id}-start`);
     const [end, setEnd] = useRemember("18:00", `bosh-onboarding-${master.id}-end`);
