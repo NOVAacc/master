@@ -36,9 +36,12 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'min:2', 'max:100'],
             'phone' => ['required', 'unique:users,phone'],
             'email' => ['required', 'email:rfc', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:6', 'max:128', 'regex:/\A[\x21-\x7E]+\z/D', 'confirmed'],
         ], [
             'phone.unique' => 'Этот номер уже зарегистрирован. Войдите в аккаунт.',
             'email.unique' => 'Эта почта уже зарегистрирована. Войдите или восстановите пароль.',
+            'password.regex' => 'Используйте только латинские буквы, цифры и знаки без пробелов.',
+            'password.min' => 'Пароль должен содержать минимум 6 символов.',
         ]);
         if (! $this->registrationMailIsConfigured()) {
             Log::warning('registration_email_configuration_invalid', [
@@ -52,10 +55,9 @@ class AuthController extends Controller
         }
         try {
             DB::transaction(function () use ($data) {
-                $password = $this->generatedPassword();
                 $user = User::create([
                     'name' => $data['name'], 'phone' => $data['phone'], 'email' => $data['email'],
-                    'password' => Hash::make($password), 'password_initialized_at' => now(),
+                    'password' => Hash::make($data['password']), 'password_initialized_at' => now(),
                 ]);
                 do { $slug = strtolower(Str::random(7)); }
                 while (MasterProfile::where('slug', $slug)->exists());
@@ -66,7 +68,7 @@ class AuthController extends Controller
                 $verifyUrl = URL::temporarySignedRoute('security.email.verify', now()->addMinutes(60), [
                     'user' => $user->id, 'hash' => sha1($user->email),
                 ]);
-                Mail::to($user->email)->send(new RegistrationPassword($data['name'], $data['phone'], $password, $verifyUrl));
+                Mail::to($user->email)->send(new RegistrationPassword($data['name'], $verifyUrl));
             });
         } catch (\Illuminate\Database\QueryException $e) {
             if (in_array((string) $e->getCode(), ['23000', '23505'], true)) {
@@ -83,7 +85,7 @@ class AuthController extends Controller
                     : 'Не удалось связаться с почтовым сервером. Аккаунт не создан — попробуйте регистрацию позже.',
             ]);
         }
-        return redirect()->route('login')->with('success', 'Письмо отправлено. Сначала подтвердите почту по ссылке в письме, затем войдите с временным паролем.');
+        return redirect()->route('login')->with('success', 'Письмо отправлено. Подтвердите почту по ссылке из письма, затем войдите с выбранным паролем.');
     }
 
     private function registrationMailIsConfigured(): bool
@@ -113,24 +115,6 @@ class AuthController extends Controller
             'enhanced_status' => $enhancedStatus,
             'permanent_rejection' => $code !== null && $code >= 500,
         ];
-    }
-
-    // Exactly six characters: one uppercase, four lowercase and one digit.
-    // Draw from a cryptographically secure random source and shuffle without bias.
-    private function generatedPassword(): string
-    {
-        $characters = [
-            chr(random_int(65, 90)),
-            chr(random_int(48, 57)),
-        ];
-        for ($i = 0; $i < 4; $i++) {
-            $characters[] = chr(random_int(97, 122));
-        }
-        for ($i = count($characters) - 1; $i > 0; $i--) {
-            $j = random_int(0, $i);
-            [$characters[$i], $characters[$j]] = [$characters[$j], $characters[$i]];
-        }
-        return implode('', $characters);
     }
 
     private function phone(string $raw): string
@@ -269,8 +253,12 @@ class AuthController extends Controller
                 return [$attempts >= 5 ? 'locked' : 'invalid', null];
             }
             $user->forceFill(['failed_login_attempts' => 0, 'login_locked_until' => null])->save();
+            if (! $user->email_verified_at) return ['unverified', null];
             return ['success', $user];
         });
+        if ($outcome[0] === 'unverified') {
+            throw ValidationException::withMessages(['identifier' => 'Сначала подтвердите почту по ссылке из письма. Если ссылка устарела, запросите новое письмо ниже.']);
+        }
         if ($outcome[0] === 'invalid') SuspiciousLoginCaptcha::failure($request, 'master', $identifier);
         if ($outcome[0] === 'success') SuspiciousLoginCaptcha::success($request, 'master', $identifier);
         if ($outcome[0] === 'locked') {
