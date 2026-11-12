@@ -1,5 +1,6 @@
 import { Head, Link, useForm } from "@inertiajs/react";
 import { Brand, Errors, Field } from "../Shared";
+import PasswordHints from "../PasswordHints";
 
 export default function PasswordRecovery({ reset, token = "", email = "" }: {
     reset: boolean; token?: string; email?: string;
@@ -31,7 +32,7 @@ export default function PasswordRecovery({ reset, token = "", email = "" }: {
                             value={f.data.email} onChange={e => f.setData("email", e.target.value)} />
                     </Field>
                     {reset && <>
-                        <Field label="Новый пароль (от 6 символов: латиница, цифры или знаки)">
+                        <Field label="Новый пароль">
                             <input type="password" required minLength={6} maxLength={128}
                                 autoComplete="new-password" value={f.data.password}
                                 onChange={e => f.setData("password", e.target.value)} />
@@ -41,6 +42,7 @@ export default function PasswordRecovery({ reset, token = "", email = "" }: {
                                 autoComplete="new-password" value={f.data.password_confirmation}
                                 onChange={e => f.setData("password_confirmation", e.target.value)} />
                         </Field>
+                        <PasswordHints password={f.data.password} confirmation={f.data.password_confirmation} />
                     </>}
                     <button className="primary wide" disabled={f.processing}>
                         {f.processing ? "Подождите…" : reset ? "Сохранить новый пароль" : "Получить ссылку на почту"}
