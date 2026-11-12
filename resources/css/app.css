@@ -3542,3 +3542,42 @@ html:has(.landing) { scroll-behavior: auto; }
 .password-hint--idle { color: #777; }
 .password-hint--valid { color: #21734c; }
 .password-hint--invalid { color: #b44343; }
+
+
+/* Distinct navigation: BOSH opens the public site; Кабинет opens the master dashboard. */
+.sidebar-brand-nav {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0 8px 32px;
+    min-width: 0;
+}
+.sidebar .sidebar-brand-nav .brand {
+    margin: 0;
+    flex-shrink: 0;
+}
+.sidebar-dashboard-home {
+    color: #555;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.sidebar-dashboard-home:hover,
+.sidebar-dashboard-home:focus-visible {
+    color: #151515;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+@media (max-width: 700px) {
+    .shell .sidebar-brand-nav { display: none; }
+    .shell .sidebar-mobile-header .mobile-header-title {
+        text-decoration: none;
+    }
+    .shell .sidebar-mobile-header .mobile-header-title:hover,
+    .shell .sidebar-mobile-header .mobile-header-title:focus-visible {
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+}
