@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Mail\RegistrationPassword;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +20,7 @@ class AccountSecurityController extends Controller
     public function password(Request $request)
     {
         $user = $request->user();
-        $rules = ['password' => ['required', 'string', 'min:5', 'max:128', 'confirmed']];
+        $rules = ['password' => ['required', 'string', 'min:6', 'max:128', 'regex:/\A[\x21-\x7E]+\z/D', 'confirmed']];
         if ($user->password_initialized_at) {
             $rules['current_password'] = ['required', 'current_password'];
         }
@@ -53,6 +54,21 @@ class AccountSecurityController extends Controller
         });
     }
 
+    public function resendRegistration(Request $request)
+    {
+        $data = $request->validate(['email' => ['required', 'email:rfc', 'max:255']]);
+        $user = User::where('email', strtolower(trim($data['email'])))
+            ->whereNull('email_verified_at')->first();
+        if ($user) {
+            $this->ensureMailer();
+            $url = URL::temporarySignedRoute('security.email.verify', now()->addMinutes(60), [
+                'user' => $user->id, 'hash' => sha1((string) $user->email),
+            ]);
+            Mail::to($user->email)->send(new RegistrationPassword($user->name, $url));
+        }
+        return back()->with('success', 'Если адрес зарегистрирован и ещё не подтверждён, мы отправили новую ссылку активации.');
+    }
+
     public function email(Request $request)
     {
         $data = $request->validate([
@@ -82,7 +98,7 @@ class AccountSecurityController extends Controller
     {
         abort_unless(hash_equals(sha1((string) $user->email), $hash), 403);
         $user->forceFill(['email_verified_at' => now()])->save();
-        return redirect()->route('login')->with('success', 'Почта подтверждена. Войдите с временным паролем из приветственного письма BOSH.');
+        return redirect()->route('login')->with('success', 'Почта подтверждена. Войдите с паролем, который вы выбрали при регистрации.');
     }
 
     public function forgotPage() { return Inertia::render('PasswordRecovery', ['reset' => false]); }
@@ -106,7 +122,7 @@ class AccountSecurityController extends Controller
         $data = $request->validate([
             'token' => ['required', 'string'],
             'email' => ['required', 'email:rfc'],
-            'password' => ['required', 'string', 'min:5', 'max:128', 'confirmed'],
+            'password' => ['required', 'string', 'min:6', 'max:128', 'regex:/\A[\x21-\x7E]+\z/D', 'confirmed'],
         ]);
         $data['email'] = strtolower(trim($data['email']));
         if (!User::where('email', $data['email'])->whereNotNull('email_verified_at')->exists()) {
