@@ -11,8 +11,8 @@ import type { Service } from "./types";
 type Client = { id: number; name: string; phone_digits: string };
 type Slot = { value: string; label: string };
 
-export default function QuickBooking({ services, timezone, date, initialClient, onClose }: {
-    services: Service[]; timezone: string; date: string; initialClient?: Client | null; onClose: () => void;
+export default function QuickBooking({ services, timezone, date, initialTime, initialClient, onClose }: {
+    services: Service[]; timezone: string; date: string; initialTime?: string; initialClient?: Client | null; onClose: () => void;
 }) {
     const dialog = useRef<HTMLDialogElement>(null);
     const submitting = useRef(false);
@@ -62,7 +62,11 @@ export default function QuickBooking({ services, timezone, date, initialClient, 
         if (!service) { setSlotsLoading(false); return; }
         axios.get<Slot[]>("/appointments/slots", {
             params: { date: day, service_id: service.id }, signal: abort.signal,
-        }).then(r => setSlots(r.data))
+        }).then(r => {
+            setSlots(r.data);
+            const matching = initialTime && day === date ? r.data.find(slot => slot.label === initialTime) : undefined;
+            if (matching) f.setData("starts_at", matching.value);
+        })
             .catch(e => { if (!axios.isCancel(e)) setSlotError("Не удалось загрузить время. Проверьте дату и повторите."); })
             .finally(() => { if (!abort.signal.aborted) setSlotsLoading(false); });
         return () => abort.abort();
