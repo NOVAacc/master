@@ -31,13 +31,13 @@ export default function PasswordRecovery({ reset, token = "", email = "" }: {
                             value={f.data.email} onChange={e => f.setData("email", e.target.value)} />
                     </Field>
                     {reset && <>
-                        <Field label="Новый пароль (от 5 символов)">
-                            <input type="password" required minLength={5} maxLength={128}
+                        <Field label="Новый пароль (от 6 символов: латиница, цифры или знаки)">
+                            <input type="password" required minLength={6} maxLength={128}
                                 autoComplete="new-password" value={f.data.password}
                                 onChange={e => f.setData("password", e.target.value)} />
                         </Field>
                         <Field label="Подтвердите пароль">
-                            <input type="password" required minLength={5} maxLength={128}
+                            <input type="password" required minLength={6} maxLength={128}
                                 autoComplete="new-password" value={f.data.password_confirmation}
                                 onChange={e => f.setData("password_confirmation", e.target.value)} />
                         </Field>
