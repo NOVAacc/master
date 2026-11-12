@@ -41,7 +41,7 @@ export default function AppointmentCalendar({
     loading,
     onNavigate,
     renderDetails,
-    onCreateStory,
+    onCreateBooking,
 }: {
     appointments: Appointment[];
     blocks: TimeBlock[];
@@ -51,7 +51,7 @@ export default function AppointmentCalendar({
     loading: boolean;
     onNavigate: (date: string) => void;
     renderDetails: (appointment: Appointment) => ReactNode;
-    onCreateStory?: (date: string, time?: string, serviceId?: number) => void;
+    onCreateBooking?: (date: string, time: string) => void;
 }) {
     const root = useRef<HTMLDivElement>(null);
     const detail = useRef<HTMLDivElement>(null);
@@ -299,7 +299,7 @@ export default function AppointmentCalendar({
                                         month: "long",
                                     })}
                                     onClick={event => {
-                                        if (!onCreateStory || loading ||
+                                        if (!onCreateBooking || loading ||
                                             (event.target as HTMLElement).closest(".calendar-appointment, .calendar-time-block")) return;
                                         const y = event.clientY - event.currentTarget.getBoundingClientRect().top;
                                         const minute = Math.floor((start + y / 1.4) / 30) * 30;
@@ -312,7 +312,7 @@ export default function AppointmentCalendar({
                                         });
                                         const occupied = items.some(item => item.start <= minute && item.end > minute &&
                                             (item.block || (item.appointment && ["pending", "confirmed"].includes(item.appointment.status))));
-                                        if (availableWork && !occupied) onCreateStory(day, minuteLabel(minute));
+                                        if (availableWork && !occupied && (day > today || (day === today && minute > new Date(now).getHours() * 60 + new Date(now).getMinutes()))) onCreateBooking(day, minuteLabel(minute));
                                     }}
                                 >
                                     {work.map((h, i) => (
