@@ -25,7 +25,7 @@ export default function AccountSecurity({ status }: { status: SecurityStatus }) 
             {!status.passwordSet && !dismissPassword && (
                 <div className="notice">
                     <strong>Настройте постоянный пароль</strong>
-                    <p>При следующих входах SMS не понадобится. Пароль может состоять из 5 символов, но более длинный безопаснее.</p>
+                    <p>При следующих входах SMS не понадобится. Минимум 6 символов: латиница, цифры или знаки без пробелов.</p>
                     <button type="button" className="ghost" onClick={() => setDismissPassword(true)}>Напомнить позже</button>
                 </div>
             )}
@@ -63,14 +63,14 @@ export default function AccountSecurity({ status }: { status: SecurityStatus }) 
                                 onChange={e => passForm.setData("current_password", e.target.value)} />
                         </Field>
                     )}
-                    <Field label="Новый пароль (от 5 символов)">
-                        <input type="password" required minLength={5} maxLength={128}
+                    <Field label="Новый пароль (от 6 символов)">
+                        <input type="password" required minLength={6} maxLength={128}
                             autoComplete="new-password"
                             value={passForm.data.password}
                             onChange={e => passForm.setData("password", e.target.value)} />
                     </Field>
                     <Field label="Повторите пароль">
-                        <input type="password" required minLength={5} maxLength={128}
+                        <input type="password" required minLength={6} maxLength={128}
                             autoComplete="new-password"
                             value={passForm.data.password_confirmation}
                             onChange={e => passForm.setData("password_confirmation", e.target.value)} />
