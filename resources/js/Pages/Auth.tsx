@@ -2,6 +2,7 @@ import { Head, Link, router, useForm } from "@inertiajs/react";
 import { useEffect, useRef, useState } from "react";
 import { Brand, Errors, Field, Notice } from "../Shared";
 import PhoneInput from "../PhoneInput";
+import PasswordHints from "../PasswordHints";
 
 function Turnstile({ siteKey, onToken }: { siteKey: string; onToken: (token: string) => void }) {
     const container = useRef<HTMLDivElement>(null);
@@ -96,7 +97,7 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
                     <Field label="Электронная почта"><input required type="email" maxLength={255} autoComplete="email" placeholder="mail@example.com" value={f.data.email} onChange={e => f.setData("email", e.target.value)} /></Field>
                     <Field label="Пароль"><input required type="password" minLength={6} maxLength={128} autoComplete="new-password" pattern="[!-~]{6,128}" title="Минимум 6 символов: латинские буквы, цифры или знаки без пробелов" value={f.data.password} onChange={e => f.setData("password", e.target.value)} /></Field>
                     <Field label="Повторите пароль"><input required type="password" minLength={6} maxLength={128} autoComplete="new-password" value={f.data.password_confirmation} onChange={e => f.setData("password_confirmation", e.target.value)} /></Field>
-                    <p className="muted small">Минимум 6 символов: латиница, цифры или знаки. Пробелы не допускаются.</p>
+                    <PasswordHints password={f.data.password} confirmation={f.data.password_confirmation} />
                 </> : <>
                     <div className="auth-login-fields">
                         <Field label="Электронная почта"><input required type="email" autoComplete="username" autoCapitalize="none" spellCheck={false} maxLength={255} placeholder="mail@example.com" value={f.data.identifier} onChange={e => f.setData("identifier", e.target.value)} /></Field>
