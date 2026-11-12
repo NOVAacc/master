@@ -91,13 +91,16 @@ Route::post('/onboarding/services', function (\Illuminate\Http\Request $request)
     ]);
     \Illuminate\Support\Facades\DB::transaction(function () use ($request, $data) {
         $profile = \App\Models\MasterProfile::where('user_id', $request->user()->id)->lockForUpdate()->firstOrFail();
-        if ($profile->services()->exists()) return;
+        if ($profile->services()->exists() && $profile->onboarding_restart_step === null) return;
         foreach ($data['services'] as $i => $service) {
             $profile->services()->create([
                 'name' => trim($service['name']), 'duration_minutes' => $service['duration_minutes'],
                 'price_som' => $service['price_som'], 'description' => null,
                 'is_active' => true, 'sort_order' => $i + 1,
             ]);
+        }
+        if ($profile->onboarding_restart_step === 2) {
+            $profile->update(['onboarding_restart_step' => null]);
         }
     });
     return redirect()->route('dashboard')->with('onboarding_completed', true);
@@ -110,7 +113,8 @@ Route::post('/onboarding/industry', function (\Illuminate\Http\Request $request)
     ]);
     abort_unless(isset($industries[$data['industry']]['activities'][$data['activity']]), 422);
     $profile = \App\Models\MasterProfile::where('user_id', $request->user()->id)->firstOrFail();
-    $profile->update(['industry' => $data['industry'], 'activity' => $data['activity'], 'onboarding_industry_done' => true]);
+    $profile->update(['industry' => $data['industry'], 'activity' => $data['activity'], 'onboarding_industry_done' => true,
+        'onboarding_restart_step' => $profile->onboarding_restart_step === 0 ? 1 : $profile->onboarding_restart_step]);
     return redirect()->route('dashboard');
 })->middleware(['auth', 'throttle:15,1'])->name('onboarding.industry');
 Route::get('/stories/templates/catalog', fn () => response()->json(\App\Http\Controllers\StoryTemplateAdminController::catalog()))->middleware(['auth', 'throttle:60,1'])->name('stories.template.catalog');
@@ -137,6 +141,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [\App\Http\Controllers\AdminController::class, 'dashboard'])->name('home');
         Route::get('/users', [\App\Http\Controllers\AdminController::class, 'users'])->name('users');
         Route::post('/users/onboarding-test', [\App\Http\Controllers\AdminController::class, 'createOnboardingTestUser'])->middleware('throttle:5,10')->name('users.onboarding-test');
+        Route::post('/users/{user}/restart-onboarding', [\App\Http\Controllers\AdminController::class, 'restartOnboarding'])->whereNumber('user')->middleware('throttle:10,1')->name('users.restart-onboarding');
         Route::post('/users/{user}/onboarding-reset', [\App\Http\Controllers\AdminController::class, 'resetOnboardingTestUser'])->whereNumber('user')->middleware('throttle:10,1')->name('users.onboarding-reset');
         Route::post('/users/{user}/unlock', [\App\Http\Controllers\AdminController::class, 'unlockUser'])->whereNumber('user')->middleware('throttle:10,1')->name('users.unlock');
         Route::get('/users/{user}/delete', [\App\Http\Controllers\AdminController::class, 'confirmDeletion'])->whereNumber('user')->name('users.delete');
