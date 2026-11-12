@@ -1,6 +1,6 @@
 # Master — платформа онлайн-записи
 
-Рабочее приложение: https://edu.china.kg. Страница регистрации: https://edu.china.kg/register. Серверная версия опубликована 16 октября 2026 через GitHub Actions.
+Рабочее приложение: https://bosh.kg. Страница регистрации: https://bosh.kg/register. Публикация выполняется через GitHub Actions.
 
 ## Рабочий первый этап
 
