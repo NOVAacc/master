@@ -1,4 +1,4 @@
-import { Head, Link, useForm } from "@inertiajs/react";
+import { Head, Link, router, useForm } from "@inertiajs/react";
 import { useEffect, useRef, useState } from "react";
 import { Brand, Errors, Field, Notice } from "../Shared";
 import PhoneInput from "../PhoneInput";
@@ -55,12 +55,12 @@ function Turnstile({ siteKey, onToken }: { siteKey: string; onToken: (token: str
 export default function Auth({ register, turnstileSiteKey }: { register: boolean; turnstileSiteKey?: string | null }) {
     const [captchaRequired, setCaptchaRequired] = useState(false);
     const [captchaRevision, setCaptchaRevision] = useState(0);
-    const f = useForm({ name: "", phone: "", email: "", identifier: "", password: "", "cf-turnstile-response": "" });
+    const f = useForm({ name: "", phone: "", email: "", identifier: "", password: "", password_confirmation: "", "cf-turnstile-response": "" });
     function submit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (register) {
-            f.transform(d => ({ name: d.name, phone: d.phone, email: d.email }));
-            f.post("/register");
+            f.transform(d => ({ name: d.name, phone: d.phone, email: d.email, password: d.password, password_confirmation: d.password_confirmation }));
+            f.post("/register", { onFinish: () => { f.setData("password", ""); f.setData("password_confirmation", ""); } });
         } else {
             f.transform(d => ({ identifier: d.identifier, password: d.password, "cf-turnstile-response": d["cf-turnstile-response"] }));
             f.post("/login", { onError: errors => { if (errors.captcha) setCaptchaRequired(true); setCaptchaRevision(value => value + 1); f.setData("cf-turnstile-response", ""); }, onFinish: () => f.setData("password", "") });
@@ -82,7 +82,7 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
             {register ? <>
                 <p className="eyebrow">BOSH · КАБИНЕТ МАСТЕРА</p>
                 <h1>Начать работу</h1>
-                <p className="muted">Укажите имя, телефон и почту. В письме будет кнопка подтверждения и временный пароль.</p>
+                <p className="muted">Укажите контакты и придумайте пароль. Для активации профиля подтвердите почту по ссылке из письма.</p>
             </> : <>
                 <div className="auth-login-brand">BOSH</div>
                 <h1>Вход</h1>
@@ -94,15 +94,19 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
                     <Field label="Ваше имя"><input required minLength={2} maxLength={100} autoComplete="given-name" value={f.data.name} onChange={e => f.setData("name", e.target.value)} placeholder="Как к вам обращаться" /></Field>
                     <Field label="Номер телефона"><PhoneInput required fixedPrefix showHint={false} value={f.data.phone} onChange={value => f.setData("phone", value)} /></Field>
                     <Field label="Электронная почта"><input required type="email" maxLength={255} autoComplete="email" placeholder="mail@example.com" value={f.data.email} onChange={e => f.setData("email", e.target.value)} /></Field>
+                    <Field label="Пароль"><input required type="password" minLength={6} maxLength={128} autoComplete="new-password" pattern="[!-~]{6,128}" title="Минимум 6 символов: латинские буквы, цифры или знаки без пробелов" value={f.data.password} onChange={e => f.setData("password", e.target.value)} /></Field>
+                    <Field label="Повторите пароль"><input required type="password" minLength={6} maxLength={128} autoComplete="new-password" value={f.data.password_confirmation} onChange={e => f.setData("password_confirmation", e.target.value)} /></Field>
+                    <p className="muted small">Минимум 6 символов: латиница, цифры или знаки. Пробелы не допускаются.</p>
                 </> : <>
                     <div className="auth-login-fields">
                         <Field label="Электронная почта"><input required type="email" autoComplete="username" autoCapitalize="none" spellCheck={false} maxLength={255} placeholder="mail@example.com" value={f.data.identifier} onChange={e => f.setData("identifier", e.target.value)} /></Field>
                         <Field label="Пароль"><input required type="password" autoComplete="current-password" value={f.data.password} onChange={e => f.setData("password", e.target.value)} /></Field>
                     </div>
                     <div className="auth-login-recovery"><Link href="/forgot-password">Забыли пароль?</Link></div>
+                    <button type="button" className="text-button" disabled={f.processing || !f.data.identifier.trim()} onClick={() => router.post("/email/verification/resend", { email: f.data.identifier.trim() }, { preserveScroll: true })}>Отправить ссылку подтверждения повторно</button>
                     {(captchaRequired || !!(f.errors as Record<string, string | undefined>).captcha) && (turnstileSiteKey ? <Turnstile key={captchaRevision} siteKey={turnstileSiteKey} onToken={token => f.setData("cf-turnstile-response", token)} /> : <p className="muted" role="alert">Проверка Cloudflare недоступна: сайт не получил публичный ключ Turnstile. Обновите страницу; если ошибка повторится, необходимо проверить конфигурацию Laravel на сервере.</p>)}
                 </>}
-                <button className="primary wide" disabled={f.processing}>{f.processing ? "Подождите…" : register ? "Получить пароль на почту" : "Войти"}</button>
+                <button className="primary wide" disabled={f.processing}>{f.processing ? "Подождите…" : register ? "Создать аккаунт" : "Войти"}</button>
             </form>
             {register
                 ? <p className="muted">Уже есть аккаунт? <Link href="/login">Войти</Link></p>
