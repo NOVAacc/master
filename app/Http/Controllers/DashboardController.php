@@ -48,6 +48,7 @@ class DashboardController extends Controller
             'industries' => config('industries'),
             'onboardingCompleted' => (bool) $request->session()->get('onboarding_completed', false),
             'onboarding' => [
+                'restartStep' => $master->onboarding_restart_step,
                 'hoursCount' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->count(),
                 'servicesCount' => $master->services()->count(),
             ],
@@ -300,7 +301,10 @@ class DashboardController extends Controller
         }
         $master = $this->master($request);
         DB::transaction(function () use ($master, $data) {
-            MasterProfile::whereKey($master->id)->lockForUpdate()->firstOrFail();
+            $lockedProfile = MasterProfile::whereKey($master->id)->lockForUpdate()->firstOrFail();
+            if ($lockedProfile->onboarding_restart_step === 1) {
+                $lockedProfile->update(['onboarding_restart_step' => 2]);
+            }
             DB::table('master_working_hours')->where('master_profile_id', $master->id)->delete();
             foreach ($data['hours'] as $hour) {
                 DB::table('master_working_hours')->insert([
