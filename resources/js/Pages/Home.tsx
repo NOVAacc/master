@@ -4,15 +4,6 @@ import { Brand } from "../Shared";
 import Icon from "../Icon";
 import useSectionScroll from "../useSectionScroll";
 
-const audiences = [
-    { title: "Красота и уход", icon: "user", examples: "Барберы, парикмахеры, бровисты и мастера маникюра", detail: "Покажите услуги и цены — клиент сам выберет время для визита." },
-    { title: "Здоровье", icon: "calendar", examples: "Массажисты и специалисты по восстановлению", detail: "Планируйте сеансы и оставляйте нужные перерывы между приёмами." },
-    { title: "Спорт", icon: "clock", examples: "Тренеры и инструкторы", detail: "Соберите тренировки и контакты клиентов в одном календаре." },
-    { title: "Обучение", icon: "pencil", examples: "Репетиторы и преподаватели", detail: "Делитесь свободными часами для индивидуальных занятий." },
-    { title: "Консультации", icon: "devices", examples: "Консультанты и частные специалисты", detail: "Принимайте запись на консультации по персональной ссылке." },
-    { title: "Услуги", icon: "grid", examples: "Все, кто работает по предварительной записи", detail: "Добавьте свои услуги, настройте график и отправьте ссылку клиентам." },
-];
-
 const services = [
     { name: "Стрижка", duration: "45 мин", price: "500 сом" },
     { name: "Укладка", duration: "30 мин", price: "400 сом" },
@@ -104,7 +95,7 @@ export default function Home() {
                     </div>
                     <BookingExample />
                 </section>
-                <section className="landing-audience landing-audience-cards" aria-labelledby="audience-title"><p className="landing-audience-kicker">ДЛЯ КОГО BOSH</p><h2 id="audience-title">Для тех, к кому приходят по записи</h2><div className="landing-audience-grid">{audiences.map((item, index) => <details className="landing-audience-card" key={item.title} style={{ animationDelay: `${index * 65}ms` }}><summary><span className="landing-audience-icon"><Icon name={item.icon} /></span><strong>{item.title}</strong><span className="landing-audience-examples">{item.examples}</span><span className="landing-audience-more">Как поможет BOSH <span aria-hidden="true">+</span></span></summary><p>{item.detail}</p></details>)}</div></section>
+                <section className="landing-audience" aria-label="Для кого BOSH"><p>Для тех, к кому приходят по записи</p><div>{["Красота и уход", "Здоровье", "Спорт", "Обучение", "Консультации", "Услуги"].map(item => <span key={item}>{item}</span>)}</div></section>
                 <section id="features" className="landing-section">
                     <div className="landing-section-heading"><h2>Всё для записи клиентов</h2></div>
                     <div className="landing-benefits">{advantages.map(item => <article key={item.title}><span className="landing-feature-icon"><Icon name={item.icon} /></span><h3>{item.title}</h3><p>{item.text}</p></article>)}</div>
