@@ -132,7 +132,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
                             }));
                             // Refresh the authoritative profile after the server commits the change.
                             // This also refreshes the dashboard title, public URL and preview.
-                            router.reload({ only: ["master", "publicUrl"], preserveScroll: true });
+                            router.reload({ only: ["master", "publicUrl"] });
                         },
                     });
                 }}
