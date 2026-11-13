@@ -36,8 +36,16 @@ export function MasterAvatar({
 }
 export default function ProfileIdentity({
     master,
+    imageEditing,
 }: {
     master: ProfileIdentityData;
+    imageEditing?: {
+        disabled?: boolean;
+        editAvatar: () => void;
+        editCover: () => void;
+        removeAvatar: () => void;
+        removeCover: () => void;
+    };
 }) {
     const phone = (master.phone || "").replace(/\D/g, "");
     const whatsappUrl = /^[1-9][0-9]{6,14}$/.test(phone)
@@ -51,9 +59,17 @@ export default function ProfileIdentity({
                 {master.cover_url && (
                     <img src={master.cover_url} alt="Обложка профиля" />
                 )}
+                {imageEditing && <div className="profile-cover-edit-actions">
+                    <button type="button" className="profile-image-edit-button" disabled={imageEditing.disabled} onClick={imageEditing.editCover} aria-label="Загрузить или заменить обложку">Изменить обложку</button>
+                    {master.cover_url && <button type="button" className="profile-image-remove-button" disabled={imageEditing.disabled} onClick={imageEditing.removeCover} aria-label="Удалить обложку">Убрать</button>}
+                </div>}
             </div>
             <div className="profile-identity-content">
-                <MasterAvatar master={master} large />
+                {imageEditing ? <div className="profile-avatar-edit-wrap">
+                    <MasterAvatar master={master} large />
+                    <button type="button" className="profile-avatar-edit-button" disabled={imageEditing.disabled} onClick={imageEditing.editAvatar} aria-label="Загрузить или заменить аватар" title="Изменить аватар">✎</button>
+                    {master.avatar_url && <button type="button" className="profile-avatar-remove-button" disabled={imageEditing.disabled} onClick={imageEditing.removeAvatar} aria-label="Удалить аватар" title="Удалить аватар">×</button>}
+                </div> : <MasterAvatar master={master} large />}
                 <h1>{master.display_name || "Ваше имя"}</h1>
                 <p className="profile-specialty">
                     {master.specialty || "Специализация"}
