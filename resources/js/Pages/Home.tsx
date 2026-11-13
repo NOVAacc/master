@@ -90,7 +90,7 @@ export default function Home() {
                         <h1>Вы занимаетесь делом.<br /><span>Клиенты записываются сами.</span></h1>
                         <p className="landing-lead">Создайте страницу с услугами и свободным временем. Клиенты выберут удобный час, а вы увидите запись в календаре.</p>
                         <div className="landing-hero-actions"><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link><Link className="landing-text-link" href="/demo">Посмотреть демо <Icon name="arrow" /></Link></div>
-                        <p className="landing-hero-note">Бесплатно · Работает в браузере</p>
+                        <p className="landing-hero-note">Бесплатно · Работает в браузере · <span lang="ru">🇰🇬 Сделано в Кыргызстане</span></p>
                     </div>
                     <BookingExample />
                 </section>
