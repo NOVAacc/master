@@ -366,9 +366,9 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
                                             <button
                                                 key={item.id}
                                                 type="button"
-                                                className={`calendar-appointment ${a.status}${past ? " past" : ""}${selectedId === a.id ? " selected" : ""}${size < 48 ? " short" : ""}`}
+                                                className={`calendar-appointment ${a.status}${a.payment_status === "paid" ? " is-paid" : ""}${past ? " past" : ""}${selectedId === a.id ? " selected" : ""}${size < 48 ? " short" : ""}`}
                                                 style={style}
-                                                aria-label={text}
+                                                aria-label={a.payment_status === "paid" ? `${text} · ${tr("Оплачено")}` : text}
                                                 aria-pressed={
                                                     selectedId === a.id
                                                 }
@@ -386,7 +386,6 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
                                                     {minuteLabel(item.start)}–
                                                     {minuteLabel(item.end)}
                                                 </span>
-                                                {a.payment_status === "paid" && <span className="calendar-paid-marker" title={tr("Оплачено")} aria-label={tr("Оплачено")}>✓</span>}
                                                 <strong>{a.client_name}</strong>
                                                 <span className="calendar-appt-phone">{a.client_phone}</span>
                                                 {size >= 88 && (
