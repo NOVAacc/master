@@ -1,3 +1,4 @@
+import MasterModeSwitch from "../MasterModeSwitch";
 import PhoneInput from "../PhoneInput";
 import Icon from "../Icon";
 import { Head, router, useForm } from "@inertiajs/react";
@@ -7,6 +8,7 @@ import BookingCalendar from "../BookingCalendar";
 import { Brand, Errors, Field, Notice } from "../Shared";
 import type { Master, Service } from "../types";
 type Props = {
+    isOwner?: boolean;
     master: Master;
     services: Service[];
     groupSessions: { id: number; name: string; starts_at: string; price_som: number; capacity: number; reserved_seats: number }[];
@@ -78,6 +80,7 @@ export default function Booking(p: Props) {
         <main className="booking-wrap">
             <Head title={p.master.display_name} />
             <Brand />
+            {p.isOwner && <MasterModeSwitch mode="page" publicUrl={`/m/${p.master.slug}`} />}
             <div className="booking-grid">
                 <aside className="panel profile-card">
                     <ProfileIdentity master={p.master} />

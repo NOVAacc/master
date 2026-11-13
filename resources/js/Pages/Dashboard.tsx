@@ -1,3 +1,4 @@
+import MasterModeSwitch from "../MasterModeSwitch";
 import FeedbackDrawer from "../FeedbackDrawer";
 import { timezoneLabel } from "../timezone";
 import { Head, Link, router, useForm } from "@inertiajs/react";
@@ -503,7 +504,6 @@ export default function Dashboard({
                 <div className="sidebar-mobile-header">
                     <div className="sidebar-brand-nav">
                         <Brand />
-                        <Link href="/dashboard" className="sidebar-dashboard-home" aria-label="Главная кабинета мастера">Кабинет</Link>
                     </div>
                     <Link href="/dashboard" className="mobile-header-title" aria-label="Главная кабинета мастера">Кабинет</Link>
                     <button
@@ -578,6 +578,7 @@ export default function Dashboard({
                 </div>
             </aside>
             <main className="main">
+                <MasterModeSwitch mode="dashboard" publicUrl={publicUrl} />
                 <header className="row between dashboard-header">
                     <div>
                         <p className="eyebrow">

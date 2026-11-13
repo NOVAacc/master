@@ -71,6 +71,7 @@ class PublicBookingController extends Controller
         }
 
         return Inertia::render('Booking', [
+            'isOwner' => $request->user() !== null && (int) $request->user()->id === (int) $master->user_id,
             'master' => $master->only('slug', 'display_name', 'specialty', 'bio', 'phone', 'address', 'address_url', 'timezone', 'booking_enabled', 'show_busy_slots', 'is_demo', 'auto_confirm', 'instagram_username', 'instagram_url', 'avatar_url', 'cover_url', 'profile_theme'),
             'services' => $services->map->only(['id', 'name', 'description', 'duration_minutes', 'price_som']),
             'groupSessions' => DB::table('master_group_sessions')
