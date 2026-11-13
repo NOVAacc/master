@@ -1,3 +1,4 @@
+import { localizedDateTimeFormat } from "../localized-date";
 import LanguageSwitch from "../i18n";
 import { useI18n } from "../i18n";
 import { timezoneLabel } from "../timezone";
@@ -16,7 +17,7 @@ export default function ManageBooking({
 }: { appointment: Appointment; master: Master; canChange: boolean; actionUrl: string }) {
     const { t: tr, locale } = useI18n();
     const form = useForm({ action: "reschedule", starts_at_local: "" });
-    const date = new Intl.DateTimeFormat((locale === "ky" ? "ky-KG" : "ru-RU"), {
+    const date = localizedDateTimeFormat(locale, {
         dateStyle: "medium", timeStyle: "short", timeZone: master.timezone,
     }).format(new Date(appointment.starts_at));
     function submit(event: FormEvent<HTMLFormElement>) {
@@ -38,7 +39,7 @@ export default function ManageBooking({
                 <Notice />
                 <h2>{master.display_name}</h2>
                 <p>{appointment.service_name_snapshot}</p>
-                <p><strong>{date}</strong> · {appointment.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</p>
+                <p><strong>{date}</strong> · {appointment.price_som.toLocaleString("ru-RU")} {tr("сом")}</p>
                 <p className="muted">{tr("Статус:")}{" "}{{
                     pending: tr("ожидает подтверждения"),
                     confirmed: tr("подтверждена"),

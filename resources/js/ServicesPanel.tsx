@@ -300,7 +300,7 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                                         {service.duration_minutes} {tr("мин")}{" "}</td>
                                     <td className="service-price-cell">
                                         {service.price_som.toLocaleString(
-                                            (locale === "ky" ? "ky-KG" : "ru-RU"),
+                                            "ru-RU",
                                         )}{" "}
                                         {tr("сом")}{" "}</td>
                                     <td className="service-status-cell">

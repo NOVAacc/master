@@ -1,3 +1,4 @@
+import { localizedDateTimeFormat } from "../localized-date";
 import LanguageSwitch from "../i18n";
 import { useI18n } from "../i18n";
 import MasterModeSwitch from "../MasterModeSwitch";
@@ -138,8 +139,8 @@ export default function Booking(p: Props) {
                                 <p>{tr("Мастер:")} {p.master.display_name}</p>
                                 <p>{tr("Клиент:")} {p.bookingReceipt.details.client_name}</p>
                                 <p>{tr("Услуги:")} {p.bookingReceipt.details.services}</p>
-                                <p>{tr("Дата и время:")} {new Intl.DateTimeFormat(locale === "ky" ? "ky-KG" : "ru-RU", {timeZone: p.master.timezone, dateStyle: "medium", timeStyle: "short"}).format(new Date(p.bookingReceipt.details.starts_at))}–{new Intl.DateTimeFormat(locale === "ky" ? "ky-KG" : "ru-RU", {timeZone: p.master.timezone, hour: "2-digit", minute: "2-digit"}).format(new Date(p.bookingReceipt.details.ends_at))} ({p.master.timezone})</p>
-                                <p>{tr("Стоимость:")} {Number(p.bookingReceipt.details.price_som).toLocaleString(locale === "ky" ? "ky-KG" : "ru-RU")} {tr("сом")}</p>
+                                <p>{tr("Дата и время:")} {localizedDateTimeFormat(locale, {timeZone: p.master.timezone, dateStyle: "medium", timeStyle: "short"}).format(new Date(p.bookingReceipt.details.starts_at))}–{localizedDateTimeFormat(locale, {timeZone: p.master.timezone, hour: "2-digit", minute: "2-digit"}).format(new Date(p.bookingReceipt.details.ends_at))} ({p.master.timezone})</p>
+                                <p>{tr("Стоимость:")} {Number(p.bookingReceipt.details.price_som).toLocaleString("ru-RU")} {tr("сом")}</p>
                                 {p.master.address && <p>{tr("Адрес:")} {p.master.address}</p>}
                                 {p.master.phone && <p>{tr("Телефон мастера:")} {p.master.phone}</p>}
                             </div> : <p className="receipt-text">{p.bookingReceipt.text}</p>}
@@ -184,10 +185,10 @@ export default function Booking(p: Props) {
                                 <div key={group.id} className="appointment">
                                     <div>
                                         <strong>{group.name}</strong>
-                                        <p>{new Intl.DateTimeFormat((locale === "ky" ? "ky-KG" : "ru-RU"), {
+                                        <p>{localizedDateTimeFormat(locale, {
                                             dateStyle: "medium", timeStyle: "short", timeZone: p.master.timezone,
                                         }).format(new Date(group.starts_at))}</p>
-                                        <p className="muted small">{tr("Свободно")}{" "}{group.capacity - group.reserved_seats} {tr("из")}{" "}{group.capacity} {tr("мест ·")}{" "}{group.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</p>
+                                        <p className="muted small">{tr("Свободно")}{" "}{group.capacity - group.reserved_seats} {tr("из")}{" "}{group.capacity} {tr("мест ·")}{" "}{group.price_som.toLocaleString("ru-RU")} {tr("сом")}</p>
                                         {group.reserved_seats < group.capacity && (
                                             <form onSubmit={event => {
                                                 event.preventDefault();
@@ -216,7 +217,7 @@ export default function Booking(p: Props) {
                                 <div className="appointment" key={service.id}>
                                     <div><h3>{service.name}</h3><p className="muted small">{service.description}</p></div>
                                     <div style={{ textAlign: "right", flexShrink: 0 }}>
-                                        <strong>{service.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</strong>
+                                        <strong>{service.price_som.toLocaleString("ru-RU")} {tr("сом")}</strong>
                                         <p className="booking-service-duration">{service.duration_minutes} {tr("мин")}</p>
                                     </div>
                                 </div>
@@ -319,7 +320,7 @@ export default function Booking(p: Props) {
                                         </span>
                                         <span className="booking-service-price">
                                             {s.price_som.toLocaleString(
-                                                (locale === "ky" ? "ky-KG" : "ru-RU"),
+                                                "ru-RU",
                                             )}{" "}
                                             {tr("сом")}{" "}<span className="booking-service-duration">
                                                 {s.duration_minutes} {tr("мин")}{" "}</span>
@@ -334,8 +335,8 @@ export default function Booking(p: Props) {
                                         : tr("Выберите хотя бы одну услугу")}
                                 </span>
                                 <strong>
-                                    {price.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}{" "}{p.hotOffer?.special_price_som != null && p.hotOffer.special_price_som !== basePrice && (
-                                        <del className="muted small"> {basePrice.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</del>
+                                    {price.toLocaleString("ru-RU")} {tr("сом")}{" "}{p.hotOffer?.special_price_som != null && p.hotOffer.special_price_som !== basePrice && (
+                                        <del className="muted small"> {basePrice.toLocaleString("ru-RU")} {tr("сом")}</del>
                                     )}
                                 </strong>
                             </div>

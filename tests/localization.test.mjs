@@ -35,3 +35,14 @@ test('Kyrgyz dictionary covers system industry and category labels', () => {
         for (const label of labels) assert.ok(dictionary[label], file + ': ' + label);
     }
 });
+
+test('Kyrgyz calendar dates never fall back to English and preserve the master timezone', async () => {
+    const { localizedDateTimeFormat } = await import('../resources/js/localized-date.ts');
+    const instant = new Date('2026-11-13T20:30:00Z');
+    const options = { timeZone: 'Asia/Bishkek', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+    const kyrgyz = localizedDateTimeFormat('ky', options).format(instant);
+    assert.match(kyrgyz, /ишемби/);
+    assert.match(kyrgyz, /14 ноябрь 2026-ж\./);
+    assert.doesNotMatch(kyrgyz, /November|Saturday/);
+    assert.equal(localizedDateTimeFormat('ru', options).format(instant), new Intl.DateTimeFormat('ru-RU', options).format(instant));
+});

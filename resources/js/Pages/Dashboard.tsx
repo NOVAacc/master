@@ -1,3 +1,4 @@
+import { localizedDateTimeFormat } from "../localized-date";
 import LanguageSwitch from "../i18n";
 import { useI18n } from "../i18n";
 import MasterModeSwitch from "../MasterModeSwitch";
@@ -259,7 +260,7 @@ export default function Dashboard({
     const [editingId, setEditingId] = useState<number | null>(null);
     const [pending, setPending] = useState<number | null>(null);
     const date = (s: string) =>
-        new Intl.DateTimeFormat((locale === "ky" ? "ky-KG" : "ru-RU"), {
+        localizedDateTimeFormat(locale, {
             timeZone: master.timezone,
             dateStyle: "medium",
             timeStyle: "short",
@@ -448,11 +449,11 @@ export default function Dashboard({
                                 {date(change.before.starts_at)} ·{" "}
                                 {change.before.duration_minutes} {tr("мин ·")}{" "}
                                 {change.before.price_som.toLocaleString(
-                                    (locale === "ky" ? "ky-KG" : "ru-RU"),
+                                    "ru-RU",
                                 )}{" "}
                                 {tr("сом")}{" "}<br />→ {date(change.after.starts_at)} ·{" "}
                                 {change.after.duration_minutes} {tr("мин ·")}{" "}
-                                {change.after.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))}{" "}
+                                {change.after.price_som.toLocaleString("ru-RU")}{" "}
                                 {tr("сом")}{" "}</p>
                             {change.before.service_name !==
                                 change.after.service_name && (
@@ -813,7 +814,7 @@ export default function Dashboard({
                                 <article className="appointment" key={session.id}>
                                     <div>
                                         <strong>{session.service_name_snapshot}</strong>
-                                        <p>{date(session.starts_at)} · {session.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</p>
+                                        <p>{date(session.starts_at)} · {session.price_som.toLocaleString("ru-RU")} {tr("сом")}</p>
                                         <p className="muted">{tr("Занято")}{" "}{session.reserved_seats} {tr("из")}{" "}{session.capacity} {tr("мест")}</p>
                                         {session.participants.length > 0 && (
                                             <details>

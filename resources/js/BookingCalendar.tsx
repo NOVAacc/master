@@ -1,3 +1,4 @@
+import { localizedDateTimeFormat } from "./localized-date";
 import { useI18n } from "./i18n";
 import { useEffect, useState } from "react";
 
@@ -19,11 +20,11 @@ export default function BookingCalendar({
 }) {
     const { t: tr, locale } = useI18n();
 const longDate = (value: Date) =>
-    value.toLocaleDateString((locale === "ky" ? "ky-KG" : "ru-RU"), {
+    localizedDateTimeFormat(locale, {
         day: "numeric",
         month: "long",
         year: "numeric",
-    });
+    }).format(value);
 
 
     const [month, setMonth] = useState(value.slice(0, 7));
@@ -35,10 +36,10 @@ const longDate = (value: Date) =>
         first.getMonth() + 1,
         0,
     ).getDate();
-    const title = first.toLocaleDateString((locale === "ky" ? "ky-KG" : "ru-RU"), {
+    const title = localizedDateTimeFormat(locale, {
         month: "long",
         year: "numeric",
-    });
+    }).format(first);
     const move = (delta: number) =>
         setMonth(
             iso(

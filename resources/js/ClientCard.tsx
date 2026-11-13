@@ -1,3 +1,4 @@
+import { localizedDateTimeFormat } from "./localized-date";
 import { useI18n } from "./i18n";
 import axios from "axios";
 import CloseButton from "./CloseButton";
@@ -112,7 +113,7 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved,
         .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at))[0];
     const daysSince = latest ? Math.floor((Date.now() - Date.parse(latest.starts_at)) / 86400000) : null;
     const status = !detail?.visitCount ? tr("Новый клиент") : daysSince !== null && daysSince >= 60 ? tr("Давно не посещал") : tr("Постоянный клиент");
-    const format = (value: string) => new Intl.DateTimeFormat((locale === "ky" ? "ky-KG" : "ru-RU"), {
+    const format = (value: string) => localizedDateTimeFormat(locale, {
         timeZone: detail?.timezone || "Asia/Bishkek", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
     }).format(new Date(value));
     const contact = detail?.client ?? client;
@@ -149,7 +150,7 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved,
                 {upcoming && <section className="client-card-section">
                     <h3>{tr("Ближайшая запись")}</h3>
                     <div className="client-card-visit"><strong>{upcoming.service_name_snapshot}</strong>
-                        <span>{format(upcoming.starts_at)} · {Number(upcoming.price_som).toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</span></div>
+                        <span>{format(upcoming.starts_at)} · {Number(upcoming.price_som).toLocaleString("ru-RU")} {tr("сом")}</span></div>
                 </section>}
                 <section className="client-card-section">
                     <label htmlFor="client-card-notes">{tr("Заметка мастера")}</label>
@@ -167,7 +168,7 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved,
                         {visits.length === 0 ? <p className="muted">{tr("Записей пока нет.")}</p> :
                             visits.map(v => <div key={v.id} className="client-card-visit">
                                 <strong>{v.service_name_snapshot}</strong>
-                                <span>{format(v.starts_at)} · {Number(v.price_som).toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом ·")}{" "}{tr(labels[v.status] ?? v.status)}</span>
+                                <span>{format(v.starts_at)} · {Number(v.price_som).toLocaleString("ru-RU")} {tr("сом ·")}{" "}{tr(labels[v.status] ?? v.status)}</span>
                             </div>)}
                     </div>}
                 </section>

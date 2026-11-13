@@ -143,7 +143,7 @@ export default function QuickBooking({ services, timezone, date, initialTime, in
                             f.setData(d => ({ ...d, service_id: Number(e.target.value), starts_at: "" }));
                             setSlots([]);
                         }}>
-                            {active.map(s => <option key={s.id} value={s.id}>{s.name} · {s.duration_minutes} {tr("мин ·")}{" "}{s.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</option>)}
+                            {active.map(s => <option key={s.id} value={s.id}>{s.name} · {s.duration_minutes} {tr("мин ·")}{" "}{s.price_som.toLocaleString("ru-RU")} {tr("сом")}</option>)}
                         </select>
                     </Field>
                     <Field label={tr("Дата")}>

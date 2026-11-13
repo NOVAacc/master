@@ -1,3 +1,4 @@
+import { localizedDateTimeFormat } from "../localized-date";
 import LanguageSwitch from "../i18n";
 import { useI18n } from "../i18n";
 import { Head, Link, useForm } from "@inertiajs/react";
@@ -24,7 +25,7 @@ export default function ClientDetails({
         form.put(`/clients/${client.id}`, { preserveScroll: true });
     }
     function formatDate(value: string) {
-        return new Intl.DateTimeFormat((locale === "ky" ? "ky-KG" : "ru-RU"), {
+        return localizedDateTimeFormat(locale, {
             timeZone: timezone, dateStyle: "medium", timeStyle: "short",
         }).format(new Date(value));
     }
@@ -60,7 +61,7 @@ export default function ClientDetails({
                         <article key={visit.id} className="appointment">
                             <div>
                                 <strong>{formatDate(visit.starts_at)}</strong>
-                                <p>{visit.service_name_snapshot} · {visit.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</p>
+                                <p>{visit.service_name_snapshot} · {visit.price_som.toLocaleString("ru-RU")} {tr("сом")}</p>
                                 <p className="muted">{tr(statusLabels[visit.status] ?? visit.status)}</p>
                             </div>
                         </article>

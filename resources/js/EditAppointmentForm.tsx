@@ -1,3 +1,4 @@
+import { localizedDateTimeFormat } from "./localized-date";
 import { useI18n } from "./i18n";
 import { timezoneLabel } from "./timezone";
 import PhoneInput from "./PhoneInput";
@@ -70,13 +71,13 @@ export default function EditAppointmentForm({
         date.setUTCMinutes(
             date.getUTCMinutes() + Number(f.data.duration_minutes),
         );
-        return date.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"), {
+        return localizedDateTimeFormat(locale, {
             timeZone: "UTC",
             day: "numeric",
             month: "short",
             hour: "2-digit",
             minute: "2-digit",
-        });
+        }).format(date);
     })();
     function toggle(id: number, checked: boolean) {
         const ids = checked
@@ -149,7 +150,7 @@ export default function EditAppointmentForm({
                             onChange={(e) => toggle(s.id, e.target.checked)}
                         />
                         {s.name} · {s.duration_minutes} {tr("мин ·")}{" "}
-                        {s.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}{" "}</label>
+                        {s.price_som.toLocaleString("ru-RU")} {tr("сом")}{" "}</label>
                 ))}
             </fieldset>
             <p className="muted small">

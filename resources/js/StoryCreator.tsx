@@ -1,3 +1,4 @@
+import { localizedDateTimeFormat } from "./localized-date";
 import { useI18n, translate, type Locale, type Translator } from "./i18n";
 import axios from "axios";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -288,9 +289,9 @@ async function drawCategoryStory(canvas:HTMLCanvasElement,master:Master,service:
  wrappedText(ctx,service.name,850,2).forEach((line,i)=>ctx.fillText(line,108,1210+i*60,864));
  ctx.font=`bold 96px ${font}`;
  ctx.fillText(time,108,1360,864);
- const niceDate=new Date(date+"T12:00:00Z").toLocaleDateString((locale === "ky" ? "ky-KG" : "ru-RU"),{timeZone:"UTC",day:"numeric",month:"long"});
+ const niceDate=localizedDateTimeFormat(locale, {timeZone:"UTC",day:"numeric",month:"long"}).format(new Date(date+"T12:00:00Z"));
  ctx.font=`500 46px ${font}`;
- ctx.fillText(niceDate+(showPrice?" · "+service.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))+tr(" сом"):""),108,1495,864);
+ ctx.fillText(niceDate+(showPrice?" · "+service.price_som.toLocaleString("ru-RU")+tr(" сом"):""),108,1495,864);
  ctx.fillStyle=design.action;
  ctx.beginPath();ctx.roundRect(108,1560,864,112,55);ctx.fill();
  ctx.fillStyle=design.actionText;ctx.font=`bold 46px ${font}`;
@@ -355,11 +356,11 @@ export async function drawStory(canvas: HTMLCanvasElement, master: Master, servi
     wrappedText(ctx, theme==="nails" ? tr("Маникюр") : theme==="hair" ? tr("Волосы") : theme==="brows" ? tr("Брови") : extraTheme ? tr(themes[extraTheme]) : tr("Освободилось окно"), 870, 3).forEach((line, i) => ctx.fillText(line, margin, 690 + i * 112, WIDTH-margin*2));
     ctx.font = `600 54px ${family}`;
     wrappedText(ctx, service.name, 860, 2).forEach((line, i) => ctx.fillText(line, margin, 1030 + i * 68, WIDTH-margin*2));
-    const niceDate = new Date(date + "T12:00:00Z").toLocaleDateString((locale === "ky" ? "ky-KG" : "ru-RU"), { timeZone: "UTC", day: "numeric", month: "long" });
+    const niceDate = localizedDateTimeFormat(locale, { timeZone: "UTC", day: "numeric", month: "long" }).format(new Date(date + "T12:00:00Z"));
     ctx.font = `bold 138px ${family}`;
     ctx.fillText(time, margin, 1230, WIDTH-margin*2);
     ctx.font = `500 49px ${family}`;
-    ctx.fillText(niceDate + (showPrice ? " · " + service.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU")) + tr(" сом") : ""), margin, 1400, WIDTH-margin*2);
+    ctx.fillText(niceDate + (showPrice ? " · " + service.price_som.toLocaleString("ru-RU") + tr(" сом") : ""), margin, 1400, WIDTH-margin*2);
     ctx.fillStyle = p.action;
     ctx.beginPath();
     ctx.roundRect(margin, 1570, WIDTH - margin * 2, 108, 54);
@@ -524,7 +525,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
             </div>
             <div className="story-grid">
                 <div className="story-fields">
-                    <label>{tr("Услуга")}<select value={serviceId} onChange={e => setServiceId(Number(e.target.value))}>{activeServices.map(s => <option key={s.id} value={s.id}>{s.name} · {s.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</option>)}</select></label>
+                    <label>{tr("Услуга")}<select value={serviceId} onChange={e => setServiceId(Number(e.target.value))}>{activeServices.map(s => <option key={s.id} value={s.id}>{s.name} · {s.price_som.toLocaleString("ru-RU")} {tr("сом")}</option>)}</select></label>
                     <label className="story-checkbox"><input type="checkbox" checked={showPrice} onChange={e=>setShowPrice(e.target.checked)} />{tr("Показывать цену услуги")}</label>
                     <div className="story-input-row">
                         <label>{tr("Спеццена, сом")}<input type="number" min="0" max="10000000" inputMode="numeric" value={specialPrice} onChange={e=>setSpecialPrice(e.target.value)} placeholder={tr("Необязательно")} /></label>

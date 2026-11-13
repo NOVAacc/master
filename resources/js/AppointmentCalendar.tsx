@@ -1,3 +1,4 @@
+import { localizedDateTimeFormat } from "./localized-date";
 import { useI18n } from "./i18n";
 import CloseButton from "./CloseButton";
 import { useEffect, useRef, useState } from "react";
@@ -51,10 +52,10 @@ export default function AppointmentCalendar({
 }) {
     const { t: tr, locale } = useI18n();
 const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
-    new Date(`${day}T12:00:00Z`).toLocaleDateString((locale === "ky" ? "ky-KG" : "ru-RU"), {
+    localizedDateTimeFormat(locale, {
         timeZone: "UTC",
         ...options,
-    });
+    }).format(new Date(`${day}T12:00:00Z`));
 
     const root = useRef<HTMLDivElement>(null);
     const detail = useRef<HTMLDivElement>(null);
@@ -391,7 +392,7 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
                                                 {size >= 112 && (
                                                     <small>
                                                         {a.price_som.toLocaleString(
-                                                            (locale === "ky" ? "ky-KG" : "ru-RU"),
+                                                            "ru-RU",
                                                         )}{" "}
                                                         {tr("сом ·")}{" "}{tr(labels[a.status] ?? a.status)}
                                                     </small>
