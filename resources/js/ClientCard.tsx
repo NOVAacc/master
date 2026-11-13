@@ -30,6 +30,7 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved,
     const [editing, setEditing] = useState(false);
     const [history, setHistory] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [notesSaved, setNotesSaved] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true);
     const [menu, setMenu] = useState(false);
@@ -39,6 +40,7 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved,
     const [sourceId, setSourceId] = useState<number | null>(null);
     const [actionBusy, setActionBusy] = useState(false);
     const [actionError, setActionError] = useState("");
+    const saveInFlight = useRef(false);
     const savedNotes = useRef(client.notes ?? "");
 
     useEffect(() => {
@@ -88,20 +90,36 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved,
     }
 
     async function save(patch: Partial<Client>) {
+        if (saveInFlight.current) return;
+        saveInFlight.current = true;
         setSaving(true);
         setError("");
         try {
-            await axios.put(`/clients/${client.id}`, patch, { headers: { Accept: "application/json" } });
-            const updated = { ...(detail?.client ?? client), ...patch };
+            const { data } = await axios.post<{ saved: boolean; client: Client }>(`/clients/${client.id}`, patch, { headers: { Accept: "application/json" } });
+            const updated = data.client;
             setDetail(old => old ? { ...old, client: updated } : old);
             onSaved(updated);
-            if (patch.notes !== undefined) savedNotes.current = patch.notes ?? "";
+            if (patch.notes !== undefined) {
+                savedNotes.current = updated.notes ?? "";
+                setNotes(updated.notes ?? "");
+                setNotesSaved(true);
+            }
             if (patch.name !== undefined || patch.phone_digits !== undefined) setEditing(false);
         } catch (e) {
-            if (axios.isAxiosError(e) && e.response?.status === 422) {
-                setError(tr("Проверьте имя и номер телефона. Возможно, этот номер уже занят."));
-            } else setError(tr("Не удалось сохранить. Повторите попытку."));
+            if (axios.isAxiosError(e)) {
+                const status = e.response?.status;
+                if (status === 422) {
+                    const errors = e.response?.data?.errors as Record<string, string[] | string> | undefined;
+                    const first = errors ? Object.values(errors)[0] : undefined;
+                    setError(first ? (Array.isArray(first) ? first[0] : first) : "Не удалось сохранить. Повторите попытку.");
+                } else if (status === 419 || status === 401) {
+                    setError("Сеанс истёк. Скопируйте заметку и обновите страницу.");
+                } else if (status === 429) {
+                    setError("Слишком много попыток сохранения. Подождите минуту и повторите.");
+                } else setError("Не удалось сохранить. Повторите попытку.");
+            } else setError("Не удалось сохранить. Повторите попытку.");
         } finally {
+            saveInFlight.current = false;
             setSaving(false);
         }
     }
@@ -122,7 +140,7 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved,
         onCancel={e => { e.preventDefault(); if (!saving && !actionBusy) onClose(); }}>
         <div className="service-dialog-header">
             <span className="client-card-eyebrow">{tr("КЛИЕНТ")}</span>
-            <CloseButton label={tr("Закрыть карточку")} onClick={onClose} disabled={actionBusy} />
+            <CloseButton label={tr("Закрыть карточку")} onClick={onClose} disabled={actionBusy || saving} />
         </div>
         <div className="client-card-body">
             {loading ? <p className="muted" role="status">{tr("Загрузка…")}</p> : error && !detail ? <p role="alert" className="errors">{tr(error)}</p> : <>
@@ -155,10 +173,11 @@ export default function ClientCard({ client, services, onClose, onBook, onSaved,
                 <section className="client-card-section">
                     <label htmlFor="client-card-notes">{tr("Заметка мастера")}</label>
                     <textarea id="client-card-notes" rows={2} maxLength={2000} placeholder={tr("Предпочтения и важные детали")}
-                        value={notes} onChange={e => setNotes(e.target.value)}
+                        value={notes} disabled={saving} onChange={e => { setNotes(e.target.value); setNotesSaved(false); setError(""); }}
                         onBlur={() => { if (notes !== savedNotes.current) void save({ notes }); }} />
                     {notes !== savedNotes.current && <button type="button" className="ghost" disabled={saving}
                         onClick={() => void save({ notes })}>{saving ? tr("Сохранение…") : tr("Сохранить заметку")}</button>}
+                    {notesSaved && notes === savedNotes.current && <p className="muted small" role="status">{tr("Сохранено")}</p>}
                 </section>
                 <section className="client-card-section">
                     <button type="button" className="client-card-history-toggle" aria-expanded={history} onClick={() => setHistory(v => !v)}>

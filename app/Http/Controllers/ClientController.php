@@ -160,14 +160,17 @@ final class ClientController extends Controller
             'name' => ['sometimes', 'required', 'string', 'max:100'],
             'phone_digits' => ['sometimes', 'required', 'string', 'regex:/^[0-9]{7,20}$/', Rule::unique('master_clients', 'phone_digits')->where('master_profile_id', $master->id)->ignore($customer->id)],
             'notes' => ['sometimes', 'nullable', 'string', 'max:2000'],
-        ]);
+        ], ['notes.max' => 'Заметка должна содержать не более 2000 символов.']);
         DB::table('master_clients')
             ->where('master_profile_id', $master->id)
             ->where('id', $customer->id)
             ->update(array_merge($data, ['updated_at' => now()]));
 
         if ($request->expectsJson()) {
-            return response()->json(['saved' => true])->header('Cache-Control', 'private, no-store');
+            return response()->json([
+                'saved' => true,
+                'client' => DB::table('master_clients')->where('master_profile_id', $master->id)->where('id', $customer->id)->first(['id', 'name', 'phone_digits', 'notes']),
+            ])->header('Cache-Control', 'private, no-store');
         }
         return back()->with('success', 'Данные клиента сохранены.');
     }
