@@ -29,7 +29,8 @@
 <body>
 <header><div><span class="wordmark">BOSH</span><span class="muted small">Администрирование</span>
 @auth('admin')
-<nav aria-label="Администрирование">
+<nav aria-label="Администрирование" style="flex-wrap:wrap">
+<a href="{{ route('admin.feedback') }}" @if(request()->routeIs('admin.feedback*')) aria-current="page" @endif>Обратная связь</a>
 <a href="{{ route('admin.home') }}" @if(request()->routeIs('admin.home')) aria-current="page" @endif>Обзор</a>
 <a href="{{ route('admin.users') }}" @if(request()->routeIs('admin.users')) aria-current="page" @endif>Пользователи</a>
 <a href="{{ route('admin.categories') }}" @if(request()->routeIs('admin.categories')) aria-current="page" @endif>Категории</a>

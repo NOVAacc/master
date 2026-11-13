@@ -28,6 +28,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/reset-password', [AccountSecurityController::class, 'reset'])->middleware('throttle:5,10')->name('password.update');
 });
 Route::middleware('auth')->group(function () {
+    Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class, 'store'])->middleware('throttle:5,10')->name('feedback.store');
     Route::get('/appointments/clients', [\App\Http\Controllers\ManualBookingController::class, 'clients'])->middleware('throttle:120,1');
     Route::get('/appointments/slots', [\App\Http\Controllers\ManualBookingController::class, 'slots'])->middleware('throttle:120,1');
     Route::post('/appointments', [\App\Http\Controllers\ManualBookingController::class, 'create'])->middleware('throttle:30,1');
@@ -139,6 +140,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('/login', [\App\Http\Controllers\AdminController::class, 'login'])->middleware('throttle:20,1')->name('login.submit');
     Route::middleware(\App\Http\Middleware\RequireAdministrator::class)->group(function () {
         Route::get('/', [\App\Http\Controllers\AdminController::class, 'dashboard'])->name('home');
+        Route::get('/feedback', [\App\Http\Controllers\FeedbackController::class, 'index'])->name('feedback');
+        Route::patch('/feedback/{feedback}', [\App\Http\Controllers\FeedbackController::class, 'update'])->whereNumber('feedback')->name('feedback.update');
         Route::get('/users', [\App\Http\Controllers\AdminController::class, 'users'])->name('users');
         Route::post('/users/onboarding-test', [\App\Http\Controllers\AdminController::class, 'createOnboardingTestUser'])->middleware('throttle:5,10')->name('users.onboarding-test');
         Route::post('/users/{user}/restart-onboarding', [\App\Http\Controllers\AdminController::class, 'restartOnboarding'])->whereNumber('user')->middleware('throttle:10,1')->name('users.restart-onboarding');
