@@ -1,7 +1,7 @@
 import { timezoneLabel } from "./timezone";
 import PhoneInput from "./PhoneInput";
 import { useForm, usePage } from "@inertiajs/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Errors, Field } from "./Shared";
 import ProfileIdentity from "./ProfileIdentity";
 import type { Master, Industries } from "./types";
@@ -48,6 +48,8 @@ function instagram(value: string) {
 export default function ProfileSettings({ master }: { master: Master }) {
     const { industries } = usePage<{ industries: Industries }>().props;
     const [uploadKey, setUploadKey] = useState({ avatar: 0, cover: 0 });
+    const avatarInput = useRef<HTMLInputElement>(null);
+    const coverInput = useRef<HTMLInputElement>(null);
     const f = useForm({
         slug: master.slug,
         display_name: master.display_name,
@@ -80,7 +82,6 @@ export default function ProfileSettings({ master }: { master: Master }) {
         master.cover_url,
         f.data.remove_cover,
     );
-    const images = { avatar, cover };
     const handle = instagram(f.data.instagram_username);
     const preview = {
         ...master,
@@ -141,61 +142,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
                         JPG, PNG или WebP, до 2 МБ. Аватар лучше квадратный,
                         обложка — горизонтальная.
                     </p>
-                    {(
-                        [
-                            [
-                                "avatar",
-                                "Аватар",
-                                "Рекомендуем 400 × 400 пикселей",
-                            ],
-                            [
-                                "cover",
-                                "Обложка профиля",
-                                "Рекомендуем 1600 × 600 пикселей",
-                            ],
-                        ] as const
-                    ).map(([kind, label, hint]) => (
-                        <div className="profile-upload" key={kind}>
-                            <Field label={label}>
-                                <input
-                                    key={`${kind}-${uploadKey[kind]}`}
-                                    type="file"
-                                    accept="image/jpeg,image/png,image/webp"
-                                    onChange={(e) =>
-                                        selectFile(
-                                            kind,
-                                            e.target.files?.[0] || null,
-                                        )
-                                    }
-                                    disabled={f.processing}
-                                />
-                                <small>{hint}</small>
-                            </Field>
-                            {images[kind] && (
-                                <img className="upload-preview" src={images[kind] || ""} alt={label} />
-                            )}
-                            {images[kind] && (
-                                <button
-                                    type="button"
-                                    className="text-button"
-                                    disabled={f.processing}
-                                    onClick={() => {
-                                        f.setData((d) => ({
-                                            ...d,
-                                            [kind]: null,
-                                            [`remove_${kind}`]: true,
-                                        }));
-                                        setUploadKey((k) => ({
-                                            ...k,
-                                            [kind]: k[kind] + 1,
-                                        }));
-                                    }}
-                                >
-                                    Убрать изображение
-                                </button>
-                            )}
-                        </div>
-                    ))}
+                    <p className="muted small">Нажмите на карандаш внутри аватара или «Изменить обложку» в предпросмотре. Затем сохраните профиль.</p>
                     <fieldset className="profile-theme-options">
                         <legend className="field-title">
                             Цвет шапки без обложки
@@ -422,9 +369,27 @@ export default function ProfileSettings({ master }: { master: Master }) {
                 </div>
             </form>
             <aside className="profile-settings-preview">
+                <input key={`avatar-${uploadKey.avatar}`} ref={avatarInput} className="profile-image-hidden-input" type="file"
+                    accept="image/jpeg,image/png,image/webp" aria-label="Выбрать аватар"
+                    disabled={f.processing} onChange={e => selectFile("avatar", e.target.files?.[0] || null)} />
+                <input key={`cover-${uploadKey.cover}`} ref={coverInput} className="profile-image-hidden-input" type="file"
+                    accept="image/jpeg,image/png,image/webp" aria-label="Выбрать обложку"
+                    disabled={f.processing} onChange={e => selectFile("cover", e.target.files?.[0] || null)} />
                 <p className="eyebrow">ПРЕДПРОСМОТР</p>
                 <div className="profile-preview-card">
-                    <ProfileIdentity master={preview} />
+                    <ProfileIdentity master={preview} imageEditing={{
+                        disabled: f.processing,
+                        editAvatar: () => avatarInput.current?.click(),
+                        editCover: () => coverInput.current?.click(),
+                        removeAvatar: () => {
+                            f.setData(d => ({ ...d, avatar: null, remove_avatar: true }));
+                            setUploadKey(k => ({ ...k, avatar: k.avatar + 1 }));
+                        },
+                        removeCover: () => {
+                            f.setData(d => ({ ...d, cover: null, remove_cover: true }));
+                            setUploadKey(k => ({ ...k, cover: k.cover + 1 }));
+                        },
+                    }} />
                     {f.data.bio && (
                         <p className="profile-preview-bio">{f.data.bio}</p>
                     )}
