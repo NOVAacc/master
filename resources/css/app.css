@@ -3592,3 +3592,18 @@ html:has(.landing) { scroll-behavior: auto; }
 .industry-onboarding .onboarding-finish-footer{margin-top:16px;padding-top:14px;border-top:1px solid #ededed}
 .industry-onboarding .onboarding-finish-footer .primary.wide{margin:0}
 @media(max-width:360px){.industry-onboarding .onboarding-finish .bosh-share-buttons{grid-template-columns:1fr}}
+
+/* Interactive profile image controls are visible only in the settings preview. */
+.profile-settings-preview .profile-image-hidden-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden}
+.profile-settings-preview .profile-cover{position:relative}
+.profile-cover-edit-actions{position:absolute;inset:auto 10px 10px 10px;display:flex;justify-content:flex-end;gap:6px;align-items:center}
+.profile-cover-edit-actions button{font:inherit;font-size:11px;font-weight:600;border:1px solid #ffffffa6;border-radius:999px;padding:7px 11px;background:#ffffffec;color:#222;box-shadow:0 2px 10px #0002;cursor:pointer}
+.profile-cover-edit-actions button:hover{background:#fff}
+.profile-cover-edit-actions button:disabled,.profile-avatar-edit-wrap button:disabled{opacity:.5;cursor:not-allowed}
+.profile-avatar-edit-wrap{position:relative;width:80px;height:80px;margin-top:-40px}
+.profile-identity-content .profile-avatar-edit-wrap .master-avatar{margin-top:0}
+.profile-avatar-edit-wrap .profile-avatar-edit-button,.profile-avatar-edit-wrap .profile-avatar-remove-button{position:absolute;z-index:2;display:grid;place-items:center;width:27px;height:27px;padding:0;border:2px solid #fff;border-radius:50%;background:#252525;color:#fff;font-size:16px;line-height:1;cursor:pointer;box-shadow:0 2px 8px #0002}
+.profile-avatar-edit-wrap .profile-avatar-edit-button{right:-5px;bottom:0}
+.profile-avatar-edit-wrap .profile-avatar-remove-button{right:-5px;top:0;background:#fff;color:#343434;border-color:#eee}
+.profile-settings-preview .profile-image-edit-button:focus-visible,.profile-settings-preview .profile-image-remove-button:focus-visible,.profile-settings-preview .profile-avatar-edit-button:focus-visible,.profile-settings-preview .profile-avatar-remove-button:focus-visible{outline:3px solid #e33448;outline-offset:2px}
+@media(max-width:360px){.profile-cover-edit-actions{inset:auto 6px 6px 6px}.profile-cover-edit-actions button{padding:6px 8px;font-size:10px}}
