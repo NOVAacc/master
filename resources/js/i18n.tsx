@@ -4,8 +4,10 @@ export type Locale = 'ru' | 'ky';
 const dictionary: Record<string, string> = kyrgyz;
 const storageKey = 'bosh.locale';
 const LocaleContext = createContext<{ locale: Locale; setLocale: (locale: Locale) => void }>({ locale: 'ru', setLocale: () => {} });
-export function translate(text: string, locale: Locale): string {
-    return locale === 'ky' ? dictionary[text] ?? text : text;
+export type Translator = (text: string, values?: readonly unknown[]) => string;
+export function translate(text: string, locale: Locale, values: readonly unknown[] = []): string {
+    const translated = locale === 'ky' ? dictionary[text] ?? text : text;
+    return translated.replace(/\{(\d+)\}/g, (placeholder, index: string) => Number(index) < values.length ? String(values[Number(index)]) : placeholder);
 }
 function savedLocale(): Locale {
     try { return localStorage.getItem(storageKey) === 'ky' ? 'ky' : 'ru'; } catch { return 'ru'; }
@@ -25,7 +27,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 }
 export function useI18n() {
     const context = useContext(LocaleContext);
-    return { ...context, t: (text: string) => translate(text, context.locale) };
+    return { ...context, t: (text: string, values?: readonly unknown[]) => translate(text, context.locale, values) };
 }
 export default function LanguageSwitch() {
     const { locale, setLocale } = useI18n();

@@ -1,3 +1,5 @@
+import LanguageSwitch from "../i18n";
+import { useI18n } from "../i18n";
 import MasterModeSwitch from "../MasterModeSwitch";
 import FeedbackDrawer from "../FeedbackDrawer";
 import { timezoneLabel } from "../timezone";
@@ -37,6 +39,7 @@ const statuses: Record<string, string> = {
 };
 type HotOffer = {id:number;service_id:number;service_name:string;base_price_som:number|null;special_price_som:number|null;story_template:"white"|"black"|"red";clicks:number;bookings:number;active:boolean;cancelled:boolean;url:string;slots:{starts_at:string;booked:boolean}[]};
 function Schedule({ hours }: { hours: Hour[] }) {
+    const { t: tr, locale } = useI18n();
     const f = useForm({
         hours: hours.map((h) => ({
             weekday: Number(h.weekday),
@@ -59,9 +62,7 @@ function Schedule({ hours }: { hours: Hour[] }) {
             });
         }}>
             <p className="muted">
-                Укажите рабочее время и при необходимости обед. В часы перерыва
-                клиенты не смогут записаться. Существующие записи сохраняются.
-            </p>
+                {tr("Укажите рабочее время и при необходимости обед. В часы перерыва клиенты не смогут записаться. Существующие записи сохраняются.")}{" "}</p>
             <Errors errors={f.errors} />
             {days.map((day, i) => {
                 const weekday = i + 1;
@@ -78,17 +79,17 @@ function Schedule({ hours }: { hours: Hour[] }) {
                                     }]
                                     : f.data.hours.filter(x => x.weekday !== weekday));
                             }} />
-                            {day}
+                            {tr(day)}
                         </label>
                         {h ? (
                             <div className="schedule-day-fields">
                                 <div className="schedule-hours-line">
-                                    <span className="schedule-range-label">Приём</span>
+                                    <span className="schedule-range-label">{tr("Приём")}</span>
                                     <div className="schedule-time-range">
-                                        <input aria-label={day + ": начало работы"} required type="time"
+                                        <input aria-label={tr(day) + tr(": начало работы")} required type="time"
                                             value={h.starts_at} onChange={e => updateDay(weekday, {starts_at: e.target.value})} />
                                         <span aria-hidden="true">–</span>
-                                        <input aria-label={day + ": окончание работы"} required type="time"
+                                        <input aria-label={tr(day) + tr(": окончание работы")} required type="time"
                                             value={h.ends_at} onChange={e => updateDay(weekday, {ends_at: e.target.value})} />
                                     </div>
                                 </div>
@@ -99,29 +100,28 @@ function Schedule({ hours }: { hours: Hour[] }) {
                                                 ? {break_starts_at: "12:00", break_ends_at: "13:00"}
                                                 : {break_starts_at: null, break_ends_at: null}
                                         )} />
-                                        Перерыв
-                                    </label>
+                                        {tr("Перерыв")}{" "}</label>
                                     {lunch && (
                                         <div className="schedule-time-range">
-                                            <input type="time" required aria-label={day + ": начало перерыва"}
+                                            <input type="time" required aria-label={tr(day) + tr(": начало перерыва")}
                                                 value={h.break_starts_at ?? ""}
                                                 onChange={e => updateDay(weekday, {break_starts_at: e.target.value})} />
                                             <span aria-hidden="true">–</span>
-                                            <input type="time" required aria-label={day + ": конец перерыва"}
+                                            <input type="time" required aria-label={tr(day) + tr(": конец перерыва")}
                                                 value={h.break_ends_at ?? ""}
                                                 onChange={e => updateDay(weekday, {break_ends_at: e.target.value})} />
                                         </div>
                                     )}
                                 </div>
                             </div>
-                        ) : <span className="muted">Выходной</span>}
+                        ) : <span className="muted">{tr("Выходной")}</span>}
                     </div>
                 );
             })}
             <button className="primary" disabled={f.processing}>
-                {f.processing ? "Сохраняем…" : "Сохранить расписание"}
+                {f.processing ? tr("Сохраняем…") : tr("Сохранить расписание")}
             </button>
-            {f.recentlySuccessful && <p role="status" className="accent">Расписание сохранено</p>}
+            {f.recentlySuccessful && <p role="status" className="accent">{tr("Расписание сохранено")}</p>}
         </form>
     );
 }
@@ -161,6 +161,7 @@ export default function Dashboard({
     }[];
     hotOffers: HotOffer[];
 }) {
+    const { t: tr, locale } = useI18n();
     const [tab, setTab] = useState("appointments");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -222,7 +223,7 @@ export default function Dashboard({
             axios.get<typeof clients>("/clients/search", { params: { q: query }, signal: controller.signal })
                 .then(({ data }) => setClientSearchResults(data))
                 .catch(e => {
-                    if (!axios.isCancel(e)) setClientSearchError("Не удалось найти клиентов. Попробуйте ещё раз.");
+                    if (!axios.isCancel(e)) setClientSearchError(tr("Не удалось найти клиентов. Попробуйте ещё раз."));
                 })
                 .finally(() => { if (!controller.signal.aborted) setClientSearching(false); });
         }, 250);
@@ -250,7 +251,7 @@ export default function Dashboard({
                 onFinish: () => setCalendarLoading(false),
                 onError: () =>
                     setMessage(
-                        "Не удалось загрузить календарь. Повторите переход.",
+                        tr("Не удалось загрузить календарь. Повторите переход."),
                     ),
             },
         );
@@ -258,7 +259,7 @@ export default function Dashboard({
     const [editingId, setEditingId] = useState<number | null>(null);
     const [pending, setPending] = useState<number | null>(null);
     const date = (s: string) =>
-        new Intl.DateTimeFormat("ru", {
+        new Intl.DateTimeFormat((locale === "ky" ? "ky-KG" : "ru-RU"), {
             timeZone: master.timezone,
             dateStyle: "medium",
             timeStyle: "short",
@@ -298,7 +299,7 @@ export default function Dashboard({
                 preserveScroll: true,
                 onError: () =>
                     setMessage(
-                        "Не удалось изменить статус. Обновите страницу и повторите.",
+                        tr("Не удалось изменить статус. Обновите страницу и повторите."),
                     ),
                 onFinish: () => setPending(null),
             },
@@ -314,13 +315,12 @@ export default function Dashboard({
                         {a.services_snapshot?.length
                             ? a.services_snapshot.map((s) => s.name).join(" + ")
                             : a.service_name_snapshot}{" "}
-                        · {a.price_som.toLocaleString()} сом ·{" "}
+                        · {a.price_som.toLocaleString()} {tr("сом ·")}{" "}
                         {Math.round(
                             (Date.parse(a.ends_at) - Date.parse(a.starts_at)) /
                                 60000,
                         )}{" "}
-                        мин
-                    </p>
+                        {tr("мин")}{" "}</p>
                     <a href={`tel:${a.client_phone.replace(/[^+0-9]/g, "")}`}>
                         {a.client_phone}
                     </a>
@@ -330,9 +330,9 @@ export default function Dashboard({
                 </div>
                 <div className="appt-actions">
                     <span className={`badge ${a.status}`}>
-                        {statuses[a.status]}
+                        {tr(statuses[a.status] ?? a.status)}
                     </span>
-                    {a.status === "cancelled" && new Date(a.starts_at) > new Date() && <button type="button" className="ghost" onClick={() => openStoryFromAppointment(a)}>Создать сторис об освободившемся времени</button>}
+                    {a.status === "cancelled" && new Date(a.starts_at) > new Date() && <button type="button" className="ghost" onClick={() => openStoryFromAppointment(a)}>{tr("Создать сторис об освободившемся времени")}</button>}
                     {a.status === "confirmed" && a.whatsapp_link && (
                         <a
                             className="ghost"
@@ -341,24 +341,24 @@ export default function Dashboard({
                             rel="noreferrer"
                         >
                             {a.notification_revision > 1
-                                ? "Сообщить об изменениях в WhatsApp ↗"
-                                : "Сообщить клиенту в WhatsApp ↗"}
+                                ? tr("Сообщить об изменениях в WhatsApp ↗")
+                                : tr("Сообщить клиенту в WhatsApp ↗")}
                         </a>
                     )}
                     {a.notifications?.map((n) => (
                         <small key={n.id}>
                             WhatsApp{" "}
-                            {n.recipient === "client" ? "клиенту" : "мастеру"}:{" "}
+                            {n.recipient === "client" ? tr("клиенту") : tr("мастеру")}:{" "}
                             {(
                                 {
                                     recipient_changed:
-                                        "номер изменён — отправка остановлена",
-                                    accepted: "принято сервисом",
-                                    not_configured: "отправка не подключена",
-                                    failed: "ошибка отправки",
+                                        tr("номер изменён — отправка остановлена"),
+                                    accepted: tr("принято сервисом"),
+                                    not_configured: tr("отправка не подключена"),
+                                    failed: tr("ошибка отправки"),
                                     unknown:
-                                        "результат неизвестен — проверьте перед повтором",
-                                    sending: "передаётся сервису",
+                                        tr("результат неизвестен — проверьте перед повтором"),
+                                    sending: tr("передаётся сервису"),
                                 } as Record<string, string>
                             )[n.status] || n.status}
                         </small>
@@ -381,8 +381,7 @@ export default function Dashboard({
                                     )
                                 }
                             >
-                                Повторить автоматическую отправку
-                            </button>
+                                {tr("Повторить автоматическую отправку")}{" "}</button>
                         )}
                     {["pending", "confirmed"].includes(a.status) && (
                         <div className="row wrap">
@@ -396,16 +395,14 @@ export default function Dashboard({
                                     )
                                 }
                             >
-                                Перенести / изменить
-                            </button>
+                                {tr("Перенести / изменить")}{" "}</button>
                             {a.status === "pending" && (
                                 <button
                                     className="primary"
                                     disabled={pending === a.id}
                                     onClick={() => changeStatus(a, "confirmed")}
                                 >
-                                    Подтвердить
-                                </button>
+                                    {tr("Подтвердить")}{" "}</button>
                             )}
                             {a.status === "confirmed" &&
                                 new Date(a.ends_at) <= new Date() && (
@@ -416,19 +413,17 @@ export default function Dashboard({
                                             changeStatus(a, "completed")
                                         }
                                     >
-                                        Завершить
-                                    </button>
+                                        {tr("Завершить")}{" "}</button>
                                 )}
                             <button
                                 className="ghost"
                                 disabled={pending === a.id}
                                 onClick={() => {
-                                    if (confirm("Отменить запись?"))
+                                    if (confirm(tr("Отменить запись?")))
                                         changeStatus(a, "cancelled");
                                 }}
                             >
-                                Отменить
-                            </button>
+                                {tr("Отменить")}{" "}</button>
                         </div>
                     )}
                 </div>
@@ -444,48 +439,46 @@ export default function Dashboard({
             )}
             {!!a.changes?.length && (
                 <details className="appointment-history">
-                    <summary>История изменений ({a.changes.length})</summary>
+                    <summary>{tr("История изменений (")}{a.changes.length})</summary>
                     {a.changes.map((change) => (
                         <div key={change.id} className="appointment-change">
                             <strong>{date(change.created_at)}</strong>
                             {change.reason && <p>{change.reason}</p>}
                             <p>
                                 {date(change.before.starts_at)} ·{" "}
-                                {change.before.duration_minutes} мин ·{" "}
+                                {change.before.duration_minutes} {tr("мин ·")}{" "}
                                 {change.before.price_som.toLocaleString(
-                                    "ru-RU",
+                                    (locale === "ky" ? "ky-KG" : "ru-RU"),
                                 )}{" "}
-                                сом
-                                <br />→ {date(change.after.starts_at)} ·{" "}
-                                {change.after.duration_minutes} мин ·{" "}
-                                {change.after.price_som.toLocaleString("ru-RU")}{" "}
-                                сом
-                            </p>
+                                {tr("сом")}{" "}<br />→ {date(change.after.starts_at)} ·{" "}
+                                {change.after.duration_minutes} {tr("мин ·")}{" "}
+                                {change.after.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))}{" "}
+                                {tr("сом")}{" "}</p>
                             {change.before.service_name !==
                                 change.after.service_name && (
                                 <p>
-                                    Услуги: {change.before.service_name} →{" "}
+                                    {tr("Услуги:")}{" "}{change.before.service_name} →{" "}
                                     {change.after.service_name}
                                 </p>
                             )}
                             {change.before.client_name !==
                                 change.after.client_name && (
                                 <p>
-                                    Имя: {change.before.client_name} →{" "}
+                                    {tr("Имя:")}{" "}{change.before.client_name} →{" "}
                                     {change.after.client_name}
                                 </p>
                             )}
                             {change.before.client_phone !==
                                 change.after.client_phone && (
                                 <p>
-                                    Телефон: {change.before.client_phone} →{" "}
+                                    {tr("Телефон:")}{" "}{change.before.client_phone} →{" "}
                                     {change.after.client_phone}
                                 </p>
                             )}
                             {change.before.client_comment !==
                                 change.after.client_comment && (
                                 <p>
-                                    Комментарий:{" "}
+                                    {tr("Комментарий:")}{" "}
                                     {change.before.client_comment || "—"} →{" "}
                                     {change.after.client_comment || "—"}
                                 </p>
@@ -498,18 +491,18 @@ export default function Dashboard({
     );
     return (
         <div className="shell">
-            <Head title="Кабинет" />
+            <Head title={tr("Кабинет")} />
             <FirstIndustryChoice master={master} publicUrl={publicUrl} completed={onboardingCompleted} />
             <aside className={`sidebar${mobileMenuOpen ? " mobile-menu-open" : ""}`}>
                 <div className="sidebar-mobile-header">
                     <div className="sidebar-brand-nav">
                         <Brand />
                     </div>
-                    <Link href="/dashboard" className="mobile-header-title" aria-label="Главная кабинета мастера">Кабинет</Link>
+                    <Link href="/dashboard" className="mobile-header-title" aria-label={tr("Главная кабинета мастера")}>{tr("Кабинет")}</Link>
                     <button
                         type="button"
                         className="sidebar-menu-toggle"
-                        aria-label={mobileMenuOpen ? "Закрыть меню" : "Открыть меню"}
+                        aria-label={mobileMenuOpen ? tr("Закрыть меню") : tr("Открыть меню")}
                         aria-controls="master-sidebar-navigation"
                         aria-expanded={mobileMenuOpen}
                         onClick={() => setMobileMenuOpen(open => !open)}
@@ -517,15 +510,15 @@ export default function Dashboard({
                         <span className="sidebar-menu-lines" aria-hidden="true"><i /><i /><i /></span>
                     </button>
                 </div>
-                <p className="eyebrow">ВАШЕ ДЕЛО</p>
-                <nav id="master-sidebar-navigation" aria-label="Разделы кабинета">
+                <p className="eyebrow">{tr("ВАШЕ ДЕЛО")}</p>
+                <nav id="master-sidebar-navigation" aria-label={tr("Разделы кабинета")}>
                     {Object.entries({
-                        appointments: "Записи",
-                        services: "Услуги",
-                        clients: "Клиенты",
-                        groups: "Групповые занятия",
-                        schedule: "Расписание",
-                        profile: "Моя страница",
+                        appointments: tr("Записи"),
+                        services: tr("Услуги"),
+                        clients: tr("Клиенты"),
+                        groups: tr("Групповые занятия"),
+                        schedule: tr("Расписание"),
+                        profile: tr("Моя страница"),
                     }).map(([key, label]) => (
                         <button
                             key={key}
@@ -551,7 +544,7 @@ export default function Dashboard({
                         </button>
                     ))}
                 </nav>
-                <nav className="sidebar-settings" aria-label="Настройки">
+                <nav className="sidebar-settings" aria-label={tr("Настройки")}>
                     <button
                         type="button"
                         className={tab === "settings" ? "active" : ""}
@@ -559,30 +552,28 @@ export default function Dashboard({
                         onClick={() => selectTab("settings")}
                     >
                         <Icon name="settings" />
-                        <span>Настройки профиля</span>
+                        <span>{tr("Настройки профиля")}</span>
                         <span className="nav-chevron" aria-hidden="true">›</span>
                     </button>
                 </nav>
                 <div className="sidebar-bottom">
                     <a href={publicUrl} target="_blank" rel="noreferrer">
-                        Открыть страницу ↗
-                    </a>
+                        {tr("Открыть страницу ↗")}{" "}</a>
                     <Link
                         href="/logout"
                         method="post"
                         as="button"
                         className="text-button"
                     >
-                        Выйти
-                    </Link>
+                        {tr("Выйти")}{" "}</Link>
                 </div>
             </aside>
             <main className="main">
-                <MasterModeSwitch mode="dashboard" publicUrl={publicUrl} />
+                <div className="master-page-tools"><MasterModeSwitch mode="dashboard" publicUrl={publicUrl} /><LanguageSwitch /></div>
                 <header className="row between dashboard-header">
                     <div>
                         <p className="eyebrow">
-                            ЛИЧНЫЙ КАБИНЕТ · {timezoneLabel(master.timezone)}
+                            {tr("ЛИЧНЫЙ КАБИНЕТ ·")}{" "}{timezoneLabel(master.timezone)}
                         </p>
                         <h1>{master.display_name}</h1>
                     </div>
@@ -592,25 +583,25 @@ export default function Dashboard({
                                 type="button"
                                 className="dashboard-notification-trigger"
                                 onClick={() => setNotificationsOpen(open => !open)}
-                                aria-label={`Уведомления: предстоящих записей ${upcoming.length}, ждут подтверждения ${awaitingConfirmation.length}`}
+                                aria-label={tr("Уведомления: предстоящих записей {0}, ждут подтверждения {1}", [upcoming.length, awaitingConfirmation.length])}
                                 aria-expanded={notificationsOpen}
                                 aria-controls="master-notification-panel"
                             >
-                                <span className="notification-counter" title="Предстоящие записи">{upcoming.length}</span>
+                                <span className="notification-counter" title={tr("Предстоящие записи")}>{upcoming.length}</span>
                                 <Icon name="bell" />
-                                <span className="notification-counter notification-counter-pending" title="Ждут подтверждения">{awaitingConfirmation.length}</span>
+                                <span className="notification-counter notification-counter-pending" title={tr("Ждут подтверждения")}>{awaitingConfirmation.length}</span>
                             </button>
                             {notificationsOpen && (
                                 <div id="master-notification-panel" className="dashboard-notification-panel">
-                                    <div className="dashboard-notification-heading">Уведомления</div>
+                                    <div className="dashboard-notification-heading">{tr("Уведомления")}</div>
                                     <button type="button" onClick={() => showNotificationAppointments("upcoming")}>
-                                        <span>Предстоящие записи</span><strong>{upcoming.length}</strong>
+                                        <span>{tr("Предстоящие записи")}</span><strong>{upcoming.length}</strong>
                                     </button>
                                     <button type="button" onClick={() => showNotificationAppointments("pending")}>
-                                        <span>Ждут подтверждения</span><strong>{awaitingConfirmation.length}</strong>
+                                        <span>{tr("Ждут подтверждения")}</span><strong>{awaitingConfirmation.length}</strong>
                                     </button>
-                                    <button type="button" onClick={() => { setStorySeed({}); setNotificationsOpen(false); }}>Создать сторис о свободном времени</button>
-                                    <p>Выберите категорию, чтобы увидеть соответствующие записи.</p>
+                                    <button type="button" onClick={() => { setStorySeed({}); setNotificationsOpen(false); }}>{tr("Создать сторис о свободном времени")}</button>
+                                    <p>{tr("Выберите категорию, чтобы увидеть соответствующие записи.")}</p>
                                 </div>
                             )}
                         </div>
@@ -628,24 +619,24 @@ export default function Dashboard({
                         <h2>
                             {
                                 {
-                                    appointments: "Записи клиентов",
-                                    services: "Ваши услуги",
-                                    clients: "Клиенты",
-                                    groups: "Групповые занятия",
-                                    schedule: "Рабочая неделя",
-                                    profile: "Моя страница",
-                                    settings: "Настройки профиля",
+                                    appointments: tr("Записи клиентов"),
+                                    services: tr("Ваши услуги"),
+                                    clients: tr("Клиенты"),
+                                    groups: tr("Групповые занятия"),
+                                    schedule: tr("Рабочая неделя"),
+                                    profile: tr("Моя страница"),
+                                    settings: tr("Настройки профиля"),
                                 }[tab]
                             }
                         </h2>
                         {tab === "appointments" && (
                             <div className="row wrap appointment-view-controls">
-                                <button type="button" className="primary" onClick={() => { setBookingSlot(null); setQuickBooking(true); }} disabled={!services.some(s => s.is_active)}>+ Записать клиента</button>
-                                <button type="button" className="ghost" onClick={() => setStorySeed({})} disabled={!services.some(s => s.is_active)}>Создать сторис</button>
+                                <button type="button" className="primary" onClick={() => { setBookingSlot(null); setQuickBooking(true); }} disabled={!services.some(s => s.is_active)}>{tr("+ Записать клиента")}</button>
+                                <button type="button" className="ghost" onClick={() => setStorySeed({})} disabled={!services.some(s => s.is_active)}>{tr("Создать сторис")}</button>
                                 <div
                                     className="display-switch text-switch"
                                     role="group"
-                                    aria-label="Вид записей"
+                                    aria-label={tr("Вид записей")}
                                 >
                                     <button
                                         type="button"
@@ -657,8 +648,7 @@ export default function Dashboard({
                                             setAppointmentFilter("all");
                                         }}
                                     >
-                                        Календарь
-                                    </button>
+                                        {tr("Календарь")}{" "}</button>
                                     <button
                                         type="button"
                                         aria-pressed={
@@ -669,8 +659,7 @@ export default function Dashboard({
                                             setAppointmentFilter("all");
                                         }}
                                     >
-                                        Список
-                                    </button>
+                                        {tr("Список")}{" "}</button>
                                 </div>
                             </div>
                         )}
@@ -692,11 +681,9 @@ export default function Dashboard({
                             ) : (
                                 <>
                                     <p className="muted">
-                                        {appointmentFilter === "upcoming" ? "Предстоящие записи." : appointmentFilter === "pending" ? "Записи, ожидающие подтверждения." : "Последние 200 записей."} Время указано в
-                                        часовом поясе мастера.
-                                    </p>
+                                        {appointmentFilter === "upcoming" ? tr("Предстоящие записи.") : appointmentFilter === "pending" ? tr("Записи, ожидающие подтверждения.") : tr("Последние 200 записей.")} {tr("Время указано в часовом поясе мастера.")}{" "}</p>
                                     {appointmentFilter !== "all" && (
-                                        <button type="button" className="ghost appointment-filter-reset" onClick={() => setAppointmentFilter("all")}>Показать все записи</button>
+                                        <button type="button" className="ghost appointment-filter-reset" onClick={() => setAppointmentFilter("all")}>{tr("Показать все записи")}</button>
                                     )}
                                     <div className="appointment-list">
                                         {visibleAppointments.map(renderAppointment)}
@@ -705,18 +692,18 @@ export default function Dashboard({
                                         <div className="empty">
                                             {appointmentFilter === "upcoming" ? (
                                                 <>
-                                                    <h3>Предстоящих записей пока нет</h3>
-                                                    <p>Здесь появятся будущие записи клиентов.</p>
+                                                    <h3>{tr("Предстоящих записей пока нет")}</h3>
+                                                    <p>{tr("Здесь появятся будущие записи клиентов.")}</p>
                                                 </>
                                             ) : appointmentFilter === "pending" ? (
                                                 <>
-                                                    <h3>Нет записей на подтверждение</h3>
-                                                    <p>Все предстоящие записи обработаны.</p>
+                                                    <h3>{tr("Нет записей на подтверждение")}</h3>
+                                                    <p>{tr("Все предстоящие записи обработаны.")}</p>
                                                 </>
                                             ) : (
                                                 <>
-                                                    <h3>Здесь появятся ваши записи</h3>
-                                                    <p>Добавьте услуги, настройте расписание и поделитесь ссылкой на страницу.</p>
+                                                    <h3>{tr("Здесь появятся ваши записи")}</h3>
+                                                    <p>{tr("Добавьте услуги, настройте расписание и поделитесь ссылкой на страницу.")}</p>
                                                     <a href={publicUrl} target="_blank" rel="noreferrer">{publicUrl}</a>
                                                 </>
                                             )}
@@ -727,16 +714,16 @@ export default function Dashboard({
                         </>
                     )}
                     {tab === "appointments" && hotOffers.length > 0 && (
-                        <section className="hot-offers-panel" aria-label="Горящие окошки">
-                            <div className="row between wrap"><div><p className="eyebrow">ГОРЯЩИЕ ОКОШКИ</p><h3>Ваши предложения</h3></div><span className="muted small">Переходы и записи обновляются при открытии кабинета</span></div>
+                        <section className="hot-offers-panel" aria-label={tr("Горящие окошки")}>
+                            <div className="row between wrap"><div><p className="eyebrow">{tr("ГОРЯЩИЕ ОКОШКИ")}</p><h3>{tr("Ваши предложения")}</h3></div><span className="muted small">{tr("Переходы и записи обновляются при открытии кабинета")}</span></div>
                             <div className="hot-offers-list">
                                 {hotOffers.map(offer=><article className="hot-offer-card" key={offer.id}>
-                                    <div><strong>{offer.service_name}</strong><p className="muted small">{offer.slots.length} {offer.slots.length===1?"интервал":"интервала"} · {offer.clicks} переходов · {offer.bookings} записей</p></div>
-                                    <span className={`badge ${offer.active?"confirmed":"cancelled"}`}>{offer.active?"Активно":offer.cancelled?"Отменено":"Завершено"}</span>
+                                    <div><strong>{offer.service_name}</strong><p className="muted small">{offer.slots.length} {offer.slots.length===1?tr("интервал"):tr("интервала")} · {offer.clicks} {tr("переходов ·")}{" "}{offer.bookings} {tr("записей")}</p></div>
+                                    <span className={`badge ${offer.active?"confirmed":"cancelled"}`}>{offer.active?tr("Активно"):offer.cancelled?tr("Отменено"):tr("Завершено")}</span>
                                     <div className="row wrap">
-                                        <button type="button" className="ghost" onClick={()=>navigator.clipboard.writeText(offer.url)}>Копировать ссылку</button>
-                                        <button type="button" className="ghost" onClick={()=>editOfferStory(offer)}>Скачать сторис</button>
-                                        {offer.active&&<button type="button" className="ghost danger" onClick={()=>router.delete(`/hot-slots/${offer.id}`,{preserveScroll:true})}>Отменить</button>}
+                                        <button type="button" className="ghost" onClick={()=>navigator.clipboard.writeText(offer.url)}>{tr("Копировать ссылку")}</button>
+                                        <button type="button" className="ghost" onClick={()=>editOfferStory(offer)}>{tr("Скачать сторис")}</button>
+                                        {offer.active&&<button type="button" className="ghost danger" onClick={()=>router.delete(`/hot-slots/${offer.id}`,{preserveScroll:true})}>{tr("Отменить")}</button>}
                                     </div>
                                 </article>)}
                             </div>
@@ -752,28 +739,28 @@ export default function Dashboard({
                                         <path d="m16 16 4.2 4.2" />
                                     </svg>
                                     <input id="clients-search-input" type="search" autoComplete="off" maxLength={100}
-                                        aria-label="Поиск клиентов по имени или телефону"
-                                        placeholder="Поиск по имени или телефону"
+                                        aria-label={tr("Поиск клиентов по имени или телефону")}
+                                        placeholder={tr("Поиск по имени или телефону")}
                                         value={clientQuery} onChange={e => setClientQuery(e.target.value)} />
                                 </label>
                                 <span className="clients-count" role="status">
-                                    {clientSearching ? "Поиск…" : clientQuery.trim()
-                                        ? `Найдено: ${visibleClients.length}${visibleClients.length === 100 ? "+" : ""}`
-                                        : `Показано клиентов: ${visibleClients.length}${visibleClients.length === 200 ? "+" : ""}`}
+                                    {clientSearching ? tr("Поиск…") : clientQuery.trim()
+                                        ? tr("Найдено: {0}{1}", [visibleClients.length, visibleClients.length === 100 ? "+" : ""])
+                                        : tr("Показано клиентов: {0}{1}", [visibleClients.length, visibleClients.length === 200 ? "+" : ""])}
                                 </span>
                             </div>
                             {clientSearchError ? (
                                 <div className="clients-empty" role="alert">
                                     {clientSearchError}
-                                    <button className="ghost" type="button" onClick={() => setClientSearchRevision(n => n + 1)}>Повторить</button>
+                                    <button className="ghost" type="button" onClick={() => setClientSearchRevision(n => n + 1)}>{tr("Повторить")}</button>
                                 </div>
                             ) : clientSearching ? (
-                                <div className="clients-empty" role="status">Поиск клиентов…</div>
+                                <div className="clients-empty" role="status">{tr("Поиск клиентов…")}</div>
                             ) : visibleClients.length === 0 ? (
                                 <div className="clients-empty">
                                     {clientQuery.trim()
-                                        ? "Клиенты не найдены. Проверьте имя или номер телефона."
-                                        : "Пока нет клиентов. После первой записи здесь появится карточка."}
+                                        ? tr("Клиенты не найдены. Проверьте имя или номер телефона.")
+                                        : tr("Пока нет клиентов. После первой записи здесь появится карточка.")}
                                 </div>
                             ) : (
                                 <div className="clients-grid" aria-busy={clientSearching}>
@@ -796,7 +783,7 @@ export default function Dashboard({
                     )}
                     {tab === "groups" && (
                         <div>
-                            <p className="muted">Групповые занятия бронируют время мастера один раз. Количество участников ограничено вместимостью.</p>
+                            <p className="muted">{tr("Групповые занятия бронируют время мастера один раз. Количество участников ограничено вместимостью.")}</p>
                             <form onSubmit={event => {
                                 event.preventDefault();
                                 const data = new FormData(event.currentTarget);
@@ -806,44 +793,44 @@ export default function Dashboard({
                                     capacity: Number(data.get("capacity")),
                                 }, { preserveScroll: true });
                             }}>
-                                <Field label="Услуга">
+                                <Field label={tr("Услуга")}>
                                     <select name="service_id" required>
                                         {services.filter(service => service.is_active).map(service =>
                                             <option key={service.id} value={service.id}>{service.name}</option>)}
                                     </select>
                                 </Field>
-                                <Field label="Дата и время">
+                                <Field label={tr("Дата и время")}>
                                     <input name="starts_at_local" type="datetime-local" required step={1800}/>
                                 </Field>
-                                <Field label="Количество мест">
+                                <Field label={tr("Количество мест")}>
                                     <input name="capacity" type="number" min={2} max={100} defaultValue={8} required/>
                                 </Field>
-                                <button className="primary" type="submit" disabled={!services.some(s => s.is_active)}>Создать занятие</button>
+                                <button className="primary" type="submit" disabled={!services.some(s => s.is_active)}>{tr("Создать занятие")}</button>
                             </form>
-                            <h3>Ближайшие занятия</h3>
-                            {groupSessions.length === 0 && <p className="muted">Занятий пока нет.</p>}
+                            <h3>{tr("Ближайшие занятия")}</h3>
+                            {groupSessions.length === 0 && <p className="muted">{tr("Занятий пока нет.")}</p>}
                             {groupSessions.map(session => (
                                 <article className="appointment" key={session.id}>
                                     <div>
                                         <strong>{session.service_name_snapshot}</strong>
-                                        <p>{date(session.starts_at)} · {session.price_som.toLocaleString("ru-RU")} сом</p>
-                                        <p className="muted">Занято {session.reserved_seats} из {session.capacity} мест</p>
+                                        <p>{date(session.starts_at)} · {session.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</p>
+                                        <p className="muted">{tr("Занято")}{" "}{session.reserved_seats} {tr("из")}{" "}{session.capacity} {tr("мест")}</p>
                                         {session.participants.length > 0 && (
                                             <details>
-                                                <summary>Участники ({session.participants.length})</summary>
+                                                <summary>{tr("Участники (")}{session.participants.length})</summary>
                                                 {session.participants.map(person => (
                                                     <div className="row between wrap" key={person.id}>
                                                         <div>
                                                             <strong>{person.client_name}</strong>
-                                                            <p className="muted small">{person.client_phone} · {person.status === "cancelled" ? "Отменён" : "Записан"}</p>
+                                                            <p className="muted small">{person.client_phone} · {person.status === "cancelled" ? tr("Отменён") : tr("Записан")}</p>
                                                         </div>
                                                         {person.status === "confirmed" && (
                                                             <button className="ghost" type="button"
                                                                 onClick={() => {
-                                                                    if (window.confirm("Снять участника с занятия?")) {
+                                                                    if (window.confirm(tr("Снять участника с занятия?"))) {
                                                                         router.post(`/group-sessions/${session.id}/participants/${person.id}/cancel`, {}, {preserveScroll: true});
                                                                     }
-                                                                }}>Снять с занятия</button>
+                                                                }}>{tr("Снять с занятия")}</button>
                                                         )}
                                                     </div>
                                                 ))}
@@ -861,8 +848,7 @@ export default function Dashboard({
                     {tab === "profile" && (
                         <>
                             <p className="muted">
-                                Это ссылка на вашу страницу, которую видят клиенты.
-                            </p>
+                                {tr("Это ссылка на вашу страницу, которую видят клиенты.")}{" "}</p>
                             <p className="link-box">
                                 <a
                                     href={publicUrl}
@@ -873,14 +859,14 @@ export default function Dashboard({
                                 </a>
                             </p>
                             <div className="bosh-profile-next">
-                                <strong>Дополните вашу страницу</strong>
-                                <p className="muted small">Эти детали необязательны для запуска, но помогут клиентам найти вас и записаться.</p>
+                                <strong>{tr("Дополните вашу страницу")}</strong>
+                                <p className="muted small">{tr("Эти детали необязательны для запуска, но помогут клиентам найти вас и записаться.")}</p>
                                 <ul>
-                                    <li>{master.avatar_url ? "✓" : "○"} Фотография профиля</li>
-                                    <li>{master.bio?.trim() ? "✓" : "○"} Описание услуг и опыта</li>
+                                    <li>{master.avatar_url ? "✓" : "○"} {tr("Фотография профиля")}</li>
+                                    <li>{master.bio?.trim() ? "✓" : "○"} {tr("Описание услуг и опыта")}</li>
                                     <li>{master.instagram_username ? "✓" : "○"} Instagram</li>
-                                    <li>{master.address?.trim() ? "✓" : "○"} Адрес приёма</li>
-                                    <li>{master.address_url?.trim() ? "✓" : "○"} Ссылка 2GIS для построения маршрута</li>
+                                    <li>{master.address?.trim() ? "✓" : "○"} {tr("Адрес приёма")}</li>
+                                    <li>{master.address_url?.trim() ? "✓" : "○"} {tr("Ссылка 2GIS для построения маршрута")}</li>
                                 </ul>
                                 <ShareProfile url={publicUrl} />
                             </div>

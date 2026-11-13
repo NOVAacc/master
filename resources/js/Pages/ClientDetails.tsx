@@ -1,3 +1,5 @@
+import LanguageSwitch from "../i18n";
+import { useI18n } from "../i18n";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { FormEvent } from "react";
 import { Brand, Errors } from "../Shared";
@@ -15,50 +17,51 @@ const statusLabels: Record<string, string> = {
 export default function ClientDetails({
     client, timezone, visits, visitsShown,
 }: { client: Client; timezone: string; visits: Visit[]; visitsShown: number }) {
+    const { t: tr, locale } = useI18n();
     const form = useForm({ notes: client.notes ?? "" });
     function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         form.put(`/clients/${client.id}`, { preserveScroll: true });
     }
     function formatDate(value: string) {
-        return new Intl.DateTimeFormat("ru", {
+        return new Intl.DateTimeFormat((locale === "ky" ? "ky-KG" : "ru-RU"), {
             timeZone: timezone, dateStyle: "medium", timeStyle: "short",
         }).format(new Date(value));
     }
     return (
         <div className="shell">
-            <Head title={`Клиент · ${client.name}`} />
+            <Head title={tr("Клиент · {0}", [client.name])} />
             <aside className="sidebar">
-                <Brand />
-                <nav><Link href="/dashboard" className="text-button">← Назад в кабинет</Link></nav>
+                <div className="public-page-tools"><Brand /><LanguageSwitch /></div>
+                <nav><Link href="/dashboard" className="text-button">{tr("← Назад в кабинет")}</Link></nav>
             </aside>
             <main className="main">
                 <div className="panel">
-                    <p className="eyebrow">КАРТОЧКА КЛИЕНТА</p>
+                    <p className="eyebrow">{tr("КАРТОЧКА КЛИЕНТА")}</p>
                     <h1>{client.name}</h1>
                     <p><a href={`tel:+${client.phone_digits}`}>+{client.phone_digits}</a></p>
                     <form onSubmit={submit}>
-                        <label htmlFor="client-notes">Личные заметки мастера</label>
+                        <label htmlFor="client-notes">{tr("Личные заметки мастера")}</label>
                         <textarea id="client-notes" maxLength={2000} rows={4}
                             value={form.data.notes}
                             onChange={event => form.setData("notes", event.target.value)}
-                            placeholder="Предпочтения клиента или важная информация" />
+                            placeholder={tr("Предпочтения клиента или важная информация")} />
                         <Errors errors={form.errors} />
                         <button className="primary" disabled={form.processing} type="submit">
-                            {form.processing ? "Сохранение…" : "Сохранить заметку"}
+                            {form.processing ? tr("Сохранение…") : tr("Сохранить заметку")}
                         </button>
-                        {form.recentlySuccessful && <p role="status">Сохранено</p>}
+                        {form.recentlySuccessful && <p role="status">{tr("Сохранено")}</p>}
                     </form>
                 </div>
                 <div className="panel">
-                    <h2>История посещений</h2>
-                    <p className="muted">Показаны последние {visitsShown} записей этого клиента.</p>
-                    {visits.length === 0 ? <p className="muted">История пока пуста.</p> : visits.map(visit => (
+                    <h2>{tr("История посещений")}</h2>
+                    <p className="muted">{tr("Показаны последние")}{" "}{visitsShown} {tr("записей этого клиента.")}</p>
+                    {visits.length === 0 ? <p className="muted">{tr("История пока пуста.")}</p> : visits.map(visit => (
                         <article key={visit.id} className="appointment">
                             <div>
                                 <strong>{formatDate(visit.starts_at)}</strong>
-                                <p>{visit.service_name_snapshot} · {visit.price_som.toLocaleString("ru-RU")} сом</p>
-                                <p className="muted">{statusLabels[visit.status] ?? visit.status}</p>
+                                <p>{visit.service_name_snapshot} · {visit.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</p>
+                                <p className="muted">{tr(statusLabels[visit.status] ?? visit.status)}</p>
                             </div>
                         </article>
                     ))}

@@ -1,3 +1,4 @@
+import { useI18n } from "./i18n";
 import CloseButton from "./CloseButton";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -24,11 +25,6 @@ const labels: Record<string, string> = {
     completed: "Завершена",
     no_show: "Не пришёл",
 };
-const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
-    new Date(`${day}T12:00:00Z`).toLocaleDateString("ru-RU", {
-        timeZone: "UTC",
-        ...options,
-    });
 const minuteLabel = (value: number) =>
     `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`;
 
@@ -53,6 +49,13 @@ export default function AppointmentCalendar({
     renderDetails: (appointment: Appointment) => ReactNode;
     onCreateBooking?: (date: string, time: string) => void;
 }) {
+    const { t: tr, locale } = useI18n();
+const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
+    new Date(`${day}T12:00:00Z`).toLocaleDateString((locale === "ky" ? "ky-KG" : "ru-RU"), {
+        timeZone: "UTC",
+        ...options,
+    });
+
     const root = useRef<HTMLDivElement>(null);
     const detail = useRef<HTMLDivElement>(null);
     const [compact, setCompact] = useState(false);
@@ -162,8 +165,8 @@ export default function AppointmentCalendar({
                         disabled={loading}
                         aria-label={
                             view === "week"
-                                ? "Предыдущая неделя"
-                                : "Предыдущий день"
+                                ? tr("Предыдущая неделя")
+                                : tr("Предыдущий день")
                         }
                         onClick={() =>
                             onNavigate(addDays(date, view === "week" ? -7 : -1))
@@ -177,16 +180,15 @@ export default function AppointmentCalendar({
                         disabled={loading}
                         onClick={() => onNavigate(today)}
                     >
-                        Сегодня
-                    </button>
+                        {tr("Сегодня")}{" "}</button>
                     <button
                         type="button"
                         className="calendar-nav"
                         disabled={loading}
                         aria-label={
                             view === "week"
-                                ? "Следующая неделя"
-                                : "Следующий день"
+                                ? tr("Следующая неделя")
+                                : tr("Следующий день")
                         }
                         onClick={() =>
                             onNavigate(addDays(date, view === "week" ? 7 : 1))
@@ -207,28 +209,25 @@ export default function AppointmentCalendar({
                 <div
                     className="display-switch text-switch"
                     role="group"
-                    aria-label="Период календаря"
+                    aria-label={tr("Период календаря")}
                 >
                     <button
                         type="button"
                         aria-pressed={view === "day"}
                         onClick={() => setMode("day")}
                     >
-                        День
-                    </button>
+                        {tr("День")}{" "}</button>
                     <button
                         type="button"
                         aria-pressed={view === "week"}
                         onClick={() => setMode("week")}
                     >
-                        Неделя
-                    </button>
+                        {tr("Неделя")}{" "}</button>
                 </div>
             </div>
             {loading && (
                 <p role="status" className="muted small">
-                    Загружаем записи…
-                </p>
+                    {tr("Загружаем записи…")}{" "}</p>
             )}
             {height > 0 ? <div
                 className="time-calendar-scroll"
@@ -241,14 +240,14 @@ export default function AppointmentCalendar({
                             gridTemplateColumns: `54px repeat(${days.length}, minmax(0, 1fr))`,
                         }}
                     >
-                        <span className="time-zone-mark">Время</span>
+                        <span className="time-zone-mark">{tr("Время")}</span>
                         {days.map((day) => (
                             <button
                                 key={day}
                                 type="button"
                                 className={`time-day-heading${day === today ? " today" : ""}`}
                                 aria-current={day === today ? "date" : undefined}
-                                aria-label={`Открыть ${dayLabel(day, { day: "numeric", month: "long" })}`}
+                                aria-label={tr("Открыть {0}", [dayLabel(day, { day: "numeric", month: "long" })])}
                                 disabled={loading}
                                 onClick={() => {
                                     setMode("day");
@@ -349,18 +348,18 @@ export default function AppointmentCalendar({
                                                     key={item.id}
                                                     className="calendar-time-block"
                                                     style={style}
-                                                    title={`${minuteLabel(item.start)}–${minuteLabel(item.end)} · ${item.block.reason || "Время закрыто"}`}
+                                                    title={`${minuteLabel(item.start)}–${minuteLabel(item.end)} · ${item.block.reason || tr("Время закрыто")}`}
                                                 >
                                                     {minuteLabel(item.start)}–
                                                     {minuteLabel(item.end)}
                                                     <br />
                                                     {item.block.reason ||
-                                                        "Время закрыто"}
+                                                        tr("Время закрыто")}
                                                 </div>
                                             );
                                         const a = item.appointment!;
                                         const past = new Date(a.ends_at).getTime() <= now;
-                                        const text = `${minuteLabel(item.start)}–${minuteLabel(item.end)} · ${a.client_name} · ${a.client_phone} · ${a.service_name_snapshot} · ${labels[a.status] || a.status}${past ? " · Прошедшая запись" : ""}`;
+                                        const text = `${minuteLabel(item.start)}–${minuteLabel(item.end)} · ${a.client_name} · ${a.client_phone} · ${a.service_name_snapshot} · ${tr(labels[a.status] || a.status)}${past ? tr(" · Прошедшая запись") : ""}`;
                                         return (
                                             <button
                                                 key={item.id}
@@ -392,9 +391,9 @@ export default function AppointmentCalendar({
                                                 {size >= 112 && (
                                                     <small>
                                                         {a.price_som.toLocaleString(
-                                                            "ru-RU",
+                                                            (locale === "ky" ? "ky-KG" : "ru-RU"),
                                                         )}{" "}
-                                                        сом · {labels[a.status]}
+                                                        {tr("сом ·")}{" "}{tr(labels[a.status] ?? a.status)}
                                                     </small>
                                                 )}
                                             </button>
@@ -406,26 +405,26 @@ export default function AppointmentCalendar({
                     </div>
                 </div>
             </div>
-            : <p className="muted small">На выбранный период рабочие часы не настроены.</p>}
+            : <p className="muted small">{tr("На выбранный период рабочие часы не настроены.")}</p>}
             <div className="calendar-legend">
-                <span className="badge pending">Ожидает</span>
-                <span className="badge confirmed">Подтверждена</span>
-                <span className="badge completed" title="Мастер отметил, что приём состоялся">Завершена</span>
-                <span className="badge calendar-past" title="Время записи закончилось. Это не отметка о посещении">Время прошло</span>
+                <span className="badge pending">{tr("Ожидает")}</span>
+                <span className="badge confirmed">{tr("Подтверждена")}</span>
+                <span className="badge completed" title={tr("Мастер отметил, что приём состоялся")}>{tr("Завершена")}</span>
+                <span className="badge calendar-past" title={tr("Время записи закончилось. Это не отметка о посещении")}>{tr("Время прошло")}</span>
             </div>
             {!all.length && (
-                <p className="muted small">На выбранный период записей нет.</p>
+                <p className="muted small">{tr("На выбранный период записей нет.")}</p>
             )}
             {selected && (
                 <div
                     className="calendar-detail"
                     ref={detail}
                     tabIndex={-1}
-                    aria-label="Детали записи"
+                    aria-label={tr("Детали записи")}
                 >
                     <div className="row between">
-                        <h3>Детали записи</h3>
-                        <CloseButton label="Закрыть детали записи" onClick={() => setSelectedId(null)} />
+                        <h3>{tr("Детали записи")}</h3>
+                        <CloseButton label={tr("Закрыть детали записи")} onClick={() => setSelectedId(null)} />
                     </div>
                     {renderDetails(selected)}
                 </div>

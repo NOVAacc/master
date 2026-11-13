@@ -1,3 +1,4 @@
+import { useI18n } from "./i18n";
 import CloseButton from "./CloseButton";
 import Icon from "./Icon";
 import { useEffect, useRef, useState } from "react";
@@ -13,6 +14,7 @@ function ServiceEditor({
     service?: Service;
     onClose: () => void;
 }) {
+    const { t: tr, locale } = useI18n();
     const dialog = useRef<HTMLDialogElement>(null);
     useEffect(() => {
         const element = dialog.current;
@@ -28,7 +30,7 @@ function ServiceEditor({
     });
     const requestClose = () => {
         if (f.processing) return;
-        if (f.isDirty && !confirm("Закрыть форму без сохранения изменений?"))
+        if (f.isDirty && !confirm(tr("Закрыть форму без сохранения изменений?")))
             return;
         onClose();
     };
@@ -44,9 +46,9 @@ function ServiceEditor({
         >
             <div className="service-dialog-header">
                 <h2 id="service-dialog-title">
-                    {service ? "Редактирование услуги" : "Новая услуга"}
+                    {service ? tr("Редактирование услуги") : tr("Новая услуга")}
                 </h2>
-                <CloseButton label="Закрыть форму услуги" disabled={f.processing} onClick={requestClose} />
+                <CloseButton label={tr("Закрыть форму услуги")} disabled={f.processing} onClick={requestClose} />
             </div>
             <form
                 className="service-editor"
@@ -60,7 +62,7 @@ function ServiceEditor({
             >
                 <Errors errors={f.errors} />
                 <div className="form-grid">
-                    <Field label="Название">
+                    <Field label={tr("Название")}>
                         <input
                             autoFocus
                             required
@@ -69,7 +71,7 @@ function ServiceEditor({
                             onChange={(e) => f.setData("name", e.target.value)}
                         />
                     </Field>
-                    <Field label="Описание">
+                    <Field label={tr("Описание")}>
                         <textarea
                             maxLength={2000}
                             value={f.data.description}
@@ -78,7 +80,7 @@ function ServiceEditor({
                             }
                         />
                     </Field>
-                    <Field label="Длительность, минут">
+                    <Field label={tr("Длительность, минут")}>
                         <input
                             required
                             type="number"
@@ -93,7 +95,7 @@ function ServiceEditor({
                             }
                         />
                     </Field>
-                    <Field label="Цена, сом">
+                    <Field label={tr("Цена, сом")}>
                         <input
                             required
                             type="number"
@@ -115,8 +117,7 @@ function ServiceEditor({
                                 f.setData("is_active", e.target.checked)
                             }
                         />
-                        Доступна для записи
-                    </label>
+                        {tr("Доступна для записи")}{" "}</label>
                     <div className="row wrap">
                         <button
                             type="button"
@@ -124,14 +125,13 @@ function ServiceEditor({
                             disabled={f.processing}
                             onClick={requestClose}
                         >
-                            Отмена
-                        </button>
+                            {tr("Отмена")}{" "}</button>
                         <button className="primary" disabled={f.processing}>
                             {f.processing
-                                ? "Сохраняем…"
+                                ? tr("Сохраняем…")
                                 : service
-                                  ? "Сохранить"
-                                  : "Добавить услугу"}
+                                  ? tr("Сохранить")
+                                  : tr("Добавить услугу")}
                         </button>
                     </div>
                 </div>
@@ -141,44 +141,45 @@ function ServiceEditor({
 }
 
 export default function ServicesPanel({ services, publicUrl }: { services: Service[]; publicUrl: string }) {
+    const { t: tr, locale } = useI18n();
     const [query, setQuery] = useState("");
     const [linkSelections, setLinkSelections] = useState<number[]>([]);
     const [linkFeedback, setLinkFeedback] = useState("");
     async function copyBookingLink(ids: number[]): Promise<void> {
         const availableIds = new Set(services.filter(item => item.is_active).map(item => item.id));
         if (!ids.length || ids.some(id => !availableIds.has(id))) {
-            setLinkFeedback("Выберите доступные для записи услуги.");
+            setLinkFeedback(tr("Выберите доступные для записи услуги."));
             return;
         }
         const link = serviceBookingLink(publicUrl, ids);
         try {
             await navigator.clipboard.writeText(link);
-            setLinkFeedback("Ссылка скопирована.");
+            setLinkFeedback(tr("Ссылка скопирована."));
         } catch {
-            setLinkFeedback("Не удалось скопировать автоматически. Скопируйте ссылку из поля ниже.");
+            setLinkFeedback(tr("Не удалось скопировать автоматически. Скопируйте ссылку из поля ниже."));
         }
     }
     const [filter, setFilter] = useState("all");
     const [sort, setSort] = useState("default");
     const [page, setPage] = useState(1);
     const [editor, setEditor] = useState<number | "new" | null>(null);
-    const term = query.trim().toLocaleLowerCase("ru-RU");
+    const term = query.trim().toLocaleLowerCase((locale === "ky" ? "ky-KG" : "ru-RU"));
     const matched = services.filter(
         (service) =>
             (!term ||
                 `${service.name} ${service.description || ""}`
-                    .toLocaleLowerCase("ru-RU")
+                    .toLocaleLowerCase((locale === "ky" ? "ky-KG" : "ru-RU"))
                     .includes(term)) &&
             (filter === "all" ||
                 (filter === "active" ? service.is_active : !service.is_active)),
     );
     if (sort === "name")
-        matched.sort((a, b) => a.name.localeCompare(b.name, "ru-RU"));
+        matched.sort((a, b) => a.name.localeCompare(b.name, (locale === "ky" ? "ky-KG" : "ru-RU")));
     if (sort === "price")
         matched.sort(
             (a, b) =>
                 a.price_som - b.price_som ||
-                a.name.localeCompare(b.name, "ru-RU"),
+                a.name.localeCompare(b.name, (locale === "ky" ? "ky-KG" : "ru-RU")),
         );
     const pages = Math.max(1, Math.ceil(matched.length / 10));
     const current = Math.min(page, pages);
@@ -191,7 +192,7 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
         <div className="services-catalog">
             <div className="row between wrap services-summary">
                 <p className="muted small">
-                    Всего: {services.length} · Доступно для записи:{" "}
+                    {tr("Всего:")}{" "}{services.length} {tr("· Доступно для записи:")}{" "}
                     {services.filter((s) => s.is_active).length}
                 </p>
                 <button
@@ -199,28 +200,24 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                     className="primary"
                     onClick={() => setEditor("new")}
                 >
-                    + Добавить услугу
-                </button>
+                    {tr("+ Добавить услугу")}{" "}</button>
             </div>
-            <div className="panel" aria-label="Ссылки для записи">
-                <h3>Ссылки на услуги</h3>
+            <div className="panel" aria-label={tr("Ссылки для записи")}>
+                <h3>{tr("Ссылки на услуги")}</h3>
                 <p className="muted small">
-                    Отправьте клиенту ссылку на одну услугу или готовый набор.
-                    Выбранные услуги откроются сразу, без повторного поиска.
-                </p>
+                    {tr("Отправьте клиенту ссылку на одну услугу или готовый набор. Выбранные услуги откроются сразу, без повторного поиска.")}{" "}</p>
                 <div className="row wrap">
                     <button className="ghost" type="button"
                         disabled={linkSelections.length === 0}
                         onClick={() => void copyBookingLink(linkSelections)}>
-                        Скопировать ссылку на набор ({linkSelections.length})
+                        {tr("Скопировать ссылку на набор (")}{linkSelections.length})
                     </button>
                     <button className="ghost" type="button" disabled={!linkSelections.length}
                         onClick={() => {setLinkSelections([]); setLinkFeedback("");}}>
-                        Очистить выбор
-                    </button>
+                        {tr("Очистить выбор")}{" "}</button>
                 </div>
                 {linkSelections.length > 0 && (
-                    <input aria-label="Ссылка на выбранные услуги" type="text" readOnly
+                    <input aria-label={tr("Ссылка на выбранные услуги")} type="text" readOnly
                         value={serviceBookingLink(publicUrl, linkSelections)}
                         onFocus={event => event.currentTarget.select()} />
                 )}
@@ -229,8 +226,8 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
             <div className="services-tools">
                 <input
                     type="search"
-                    aria-label="Поиск услуг"
-                    placeholder="Поиск по названию или описанию"
+                    aria-label={tr("Поиск услуг")}
+                    placeholder={tr("Поиск по названию или описанию")}
                     value={query}
                     onChange={(e) => {
                         setQuery(e.target.value);
@@ -238,28 +235,28 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                     }}
                 />
                 <select
-                    aria-label="Активность услуг"
+                    aria-label={tr("Активность услуг")}
                     value={filter}
                     onChange={(e) => {
                         setFilter(e.target.value);
                         setPage(1);
                     }}
                 >
-                    <option value="all">Все услуги</option>
-                    <option value="active">Доступные</option>
-                    <option value="hidden">Скрытые</option>
+                    <option value="all">{tr("Все услуги")}</option>
+                    <option value="active">{tr("Доступные")}</option>
+                    <option value="hidden">{tr("Скрытые")}</option>
                 </select>
                 <select
-                    aria-label="Порядок услуг"
+                    aria-label={tr("Порядок услуг")}
                     value={sort}
                     onChange={(e) => {
                         setSort(e.target.value);
                         setPage(1);
                     }}
                 >
-                    <option value="default">По порядку</option>
-                    <option value="name">По названию</option>
-                    <option value="price">По цене ↑</option>
+                    <option value="default">{tr("По порядку")}</option>
+                    <option value="name">{tr("По названию")}</option>
+                    <option value="price">{tr("По цене ↑")}</option>
                 </select>
             </div>
             {shown.length ? (
@@ -267,13 +264,13 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                     <table className="services-table">
                         <thead>
                             <tr>
-                                <th scope="col" className="service-select-cell"><span className="sr-only">Выбрать для ссылки</span></th>
-                                <th scope="col">Услуга</th>
-                                <th scope="col">Время</th>
-                                <th scope="col">Стоимость</th>
-                                <th scope="col">Статус</th>
+                                <th scope="col" className="service-select-cell"><span className="sr-only">{tr("Выбрать для ссылки")}</span></th>
+                                <th scope="col">{tr("Услуга")}</th>
+                                <th scope="col">{tr("Время")}</th>
+                                <th scope="col">{tr("Стоимость")}</th>
+                                <th scope="col">{tr("Статус")}</th>
                                 <th scope="col">
-                                    <span className="sr-only">Действия</span>
+                                    <span className="sr-only">{tr("Действия")}</span>
                                 </th>
                             </tr>
                         </thead>
@@ -282,7 +279,7 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                                 <tr key={service.id}>
                                     <td className="service-select-cell">
                                         <input type="checkbox" disabled={!service.is_active}
-                                            aria-label={`Включить «${service.name}» в ссылку`}
+                                            aria-label={tr("Включить «{0}» в ссылку", [service.name])}
                                             checked={linkSelections.includes(service.id)}
                                             onChange={event => {
                                                 setLinkFeedback("");
@@ -300,36 +297,34 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                                         )}
                                     </td>
                                     <td className="service-duration-cell">
-                                        {service.duration_minutes} мин
-                                    </td>
+                                        {service.duration_minutes} {tr("мин")}{" "}</td>
                                     <td className="service-price-cell">
                                         {service.price_som.toLocaleString(
-                                            "ru-RU",
+                                            (locale === "ky" ? "ky-KG" : "ru-RU"),
                                         )}{" "}
-                                        сом
-                                    </td>
+                                        {tr("сом")}{" "}</td>
                                     <td className="service-status-cell">
                                         <span
                                             className={`badge${service.is_active ? " confirmed" : ""}`}
                                         >
                                             {service.is_active
-                                                ? "Доступна"
-                                                : "Скрыта"}
+                                                ? tr("Доступна")
+                                                : tr("Скрыта")}
                                         </span>
                                     </td>
                                     <td className="service-action-cell">
                                         <div className="service-action-buttons">
                                             {service.is_active && (
                                                 <button className="service-icon-button" type="button"
-                                                    title="Скопировать ссылку"
-                                                    aria-label={`Скопировать ссылку на услугу «${service.name}»`}
+                                                    title={tr("Скопировать ссылку")}
+                                                    aria-label={tr("Скопировать ссылку на услугу «{0}»", [service.name])}
                                                     onClick={() => void copyBookingLink([service.id])}>
                                                     <Icon name="link" />
                                                 </button>
                                             )}
                                             <button type="button" className="service-icon-button"
-                                                title="Изменить услугу"
-                                                aria-label={`Изменить услугу «${service.name}»`}
+                                                title={tr("Изменить услугу")}
+                                                aria-label={tr("Изменить услугу «{0}»", [service.name])}
                                                 onClick={() => setEditor(service.id)}>
                                                 <Icon name="pencil" />
                                             </button>
@@ -344,13 +339,13 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                 <div className="empty">
                     <h3>
                         {services.length
-                            ? "Услуги не найдены"
-                            : "Добавьте первую услугу"}
+                            ? tr("Услуги не найдены")
+                            : tr("Добавьте первую услугу")}
                     </h3>
                     <p>
                         {services.length
-                            ? "Измените поисковый запрос или фильтр."
-                            : "Укажите название, цену и длительность — услуга появится на странице записи."}
+                            ? tr("Измените поисковый запрос или фильтр.")
+                            : tr("Укажите название, цену и длительность — услуга появится на странице записи.")}
                     </p>
                     {services.length > 0 && (
                         <button
@@ -362,26 +357,24 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                                 setPage(1);
                             }}
                         >
-                            Сбросить поиск
-                        </button>
+                            {tr("Сбросить поиск")}{" "}</button>
                     )}
                 </div>
             )}
             <div className="services-pagination">
                 <p className="muted small" role="status">
                     {matched.length
-                        ? `${(current - 1) * 10 + 1}–${Math.min(current * 10, matched.length)} из ${matched.length}`
-                        : "0 услуг"}
+                        ? tr("{0}–{1} из {2}", [(current - 1) * 10 + 1, Math.min(current * 10, matched.length), matched.length])
+                        : tr("0 услуг")}
                 </p>
-                <nav className="row" aria-label="Страницы услуг">
+                <nav className="row" aria-label={tr("Страницы услуг")}>
                     <button
                         type="button"
                         className="ghost"
                         disabled={current === 1}
                         onClick={() => setPage(current - 1)}
                     >
-                        Назад
-                    </button>
+                        {tr("Назад")}{" "}</button>
                     <span className="muted small">
                         {current} / {pages}
                     </span>
@@ -391,8 +384,7 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                         disabled={current === pages}
                         onClick={() => setPage(current + 1)}
                     >
-                        Далее
-                    </button>
+                        {tr("Далее")}{" "}</button>
                 </nav>
             </div>
             {editor !== null && (editor === "new" || selected) && (

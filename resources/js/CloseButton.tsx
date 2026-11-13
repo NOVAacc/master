@@ -1,3 +1,4 @@
+import { useI18n } from "./i18n";
 import type { ButtonHTMLAttributes } from "react";
 
 /** Shared compact dismissal control for BOSH overlays and detail panels. */
@@ -9,13 +10,14 @@ export default function CloseButton({
 }: Omit<ButtonHTMLAttributes<HTMLButtonElement>, "aria-label"> & {
     label?: string;
 }) {
+    const { t: tr, locale } = useI18n();
     return (
         <button
             {...props}
             type={type}
             className={["bosh-close-button", className].filter(Boolean).join(" ")}
-            aria-label={label}
-            title={label}
+            aria-label={tr(label)}
+            title={tr(label)}
         >
             <svg aria-hidden="true" viewBox="0 0 16 16" width="12" height="12" fill="none"
                 stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">

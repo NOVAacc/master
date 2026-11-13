@@ -1,3 +1,5 @@
+import LanguageSwitch from "../i18n";
+import { useI18n } from "../i18n";
 import MasterModeSwitch from "../MasterModeSwitch";
 import PhoneInput from "../PhoneInput";
 import Icon from "../Icon";
@@ -24,12 +26,14 @@ type Props = {
     bookingReceipt: {
         status: string;
         text: string;
+        details?: { id: number; client_name: string; services: string; starts_at: string; ends_at: string; price_som: number };
         masterLink: string | null;
         automaticStatus: string | null;
         manageUrl: string;
     } | null;
 };
 export default function Booking(p: Props) {
+    const { t: tr, locale } = useI18n();
     const f = useForm({
         service_ids: p.selectedServices,
         starts_at: p.storyTime ? (p.slots.find(s => s.available && s.label === p.storyTime)?.value ?? "") : "",
@@ -69,7 +73,7 @@ export default function Booking(p: Props) {
                 onStart: () => setLoading(true),
                 onError: () =>
                     setLoadError(
-                        "Не удалось обновить свободное время. Повторите выбор даты.",
+                        tr("Не удалось обновить свободное время. Повторите выбор даты."),
                     ),
                 onFinish: () => setLoading(false),
                 onCancel: () => setLoading(false),
@@ -79,7 +83,7 @@ export default function Booking(p: Props) {
     return (
         <main className="booking-wrap">
             <Head title={p.master.display_name} />
-            <Brand />
+            <div className="public-page-tools"><Brand /><LanguageSwitch /></div>
             {p.isOwner && <MasterModeSwitch mode="page" publicUrl={`/m/${p.master.slug}`} />}
             <div className="booking-grid">
                 <aside className="panel profile-card">
@@ -90,11 +94,11 @@ export default function Booking(p: Props) {
                             <div className="profile-address">
                                 <Icon name="location" />
                                 <div>
-                                    <span className="profile-address-label">Адрес приёма</span>
+                                    <span className="profile-address-label">{tr("Адрес приёма")}</span>
                                     {p.master.address_url ? (
                                         <a href={p.master.address_url} target="_blank" rel="noopener noreferrer">
                                             {p.master.address}
-                                            <span className="profile-address-map">Открыть в 2ГИС ↗</span>
+                                            <span className="profile-address-map">{tr("Открыть в 2ГИС ↗")}</span>
                                         </a>
                                     ) : <span>{p.master.address}</span>}
                                 </div>
@@ -103,58 +107,57 @@ export default function Booking(p: Props) {
                     </div>
                 </aside>
                 <section className="panel">
-                    <p className="eyebrow">ОНЛАЙН-ЗАПИСЬ</p>
-                    <h1>Выберите удобное время</h1>
+                    <p className="eyebrow">{tr("ОНЛАЙН-ЗАПИСЬ")}</p>
+                    <h1>{tr("Выберите удобное время")}</h1>
                     <Notice />
                     {p.hotOffer && (
                         <div className="hot-offer-banner">
-                            <strong>Горящее окошко</strong>
-                            <span>Выберите одно из предложенных свободных времён.</span>
+                            <strong>{tr("Горящее окошко")}</strong>
+                            <span>{tr("Выберите одно из предложенных свободных времён.")}</span>
                         </div>
                     )}
                     {p.bookingReceipt && (
                         <section
                             className="booking-receipt"
-                            aria-label="Итог записи"
+                            aria-label={tr("Итог записи")}
                         >
                             <h2>
                                 {p.bookingReceipt.status === "confirmed"
-                                    ? "Вы записаны"
-                                    : "Заявка отправлена мастеру"}
+                                    ? tr("Вы записаны")
+                                    : tr("Заявка отправлена мастеру")}
                             </h2>
                             {p.bookingReceipt.manageUrl && (
                                 <div>
                                     <a href={p.bookingReceipt.manageUrl} className="ghost" referrerPolicy="no-referrer">
-                                        Отменить или перенести запись →
-                                    </a>
-                                    <p className="muted small">Сохраните ссылку: она действует 30 дней, но изменения доступны только заранее.</p>
+                                        {tr("Отменить или перенести запись →")}{" "}</a>
+                                    <p className="muted small">{tr("Сохраните ссылку: она действует 30 дней, но изменения доступны только заранее.")}</p>
                                 </div>
                             )}
-                            <p className="receipt-text">
-                                {p.bookingReceipt.text}
-                            </p>
+                            {p.bookingReceipt.details ? <div className="receipt-text">
+                                <p>BOSH · №{p.bookingReceipt.details.id}</p>
+                                <p>{tr("Мастер:")} {p.master.display_name}</p>
+                                <p>{tr("Клиент:")} {p.bookingReceipt.details.client_name}</p>
+                                <p>{tr("Услуги:")} {p.bookingReceipt.details.services}</p>
+                                <p>{tr("Дата и время:")} {new Intl.DateTimeFormat(locale === "ky" ? "ky-KG" : "ru-RU", {timeZone: p.master.timezone, dateStyle: "medium", timeStyle: "short"}).format(new Date(p.bookingReceipt.details.starts_at))}–{new Intl.DateTimeFormat(locale === "ky" ? "ky-KG" : "ru-RU", {timeZone: p.master.timezone, hour: "2-digit", minute: "2-digit"}).format(new Date(p.bookingReceipt.details.ends_at))} ({p.master.timezone})</p>
+                                <p>{tr("Стоимость:")} {Number(p.bookingReceipt.details.price_som).toLocaleString(locale === "ky" ? "ky-KG" : "ru-RU")} {tr("сом")}</p>
+                                {p.master.address && <p>{tr("Адрес:")} {p.master.address}</p>}
+                                {p.master.phone && <p>{tr("Телефон мастера:")} {p.master.phone}</p>}
+                            </div> : <p className="receipt-text">{p.bookingReceipt.text}</p>}
                             {p.bookingReceipt.status !== "confirmed" && (
                                 <p className="muted small">
-                                    Запись пока ожидает подтверждения мастера.
-                                </p>
+                                    {tr("Запись пока ожидает подтверждения мастера.")}{" "}</p>
                             )}
                             {p.bookingReceipt.automaticStatus === "accepted" ? (
                                 <p className="muted small">
-                                    Уведомление принято сервисом WhatsApp.
-                                    Доставка ещё не подтверждена.
-                                </p>
+                                    {tr("Уведомление принято сервисом WhatsApp. Доставка ещё не подтверждена.")}{" "}</p>
                             ) : (
                                 p.bookingReceipt.automaticStatus && (
                                     <p className="muted small">
-                                        Автоматическое сообщение пока не
-                                        отправлено или его результат неизвестен.
-                                        При необходимости свяжитесь с мастером.
-                                    </p>
+                                        {tr("Автоматическое сообщение пока не отправлено или его результат неизвестен. При необходимости свяжитесь с мастером.")}{" "}</p>
                                 )
                             )}
                             <button type="button" className="button small" onClick={() => router.get(`/m/${p.master.slug}`, {}, { replace: true })}>
-                                Записаться ещё раз
-                            </button>
+                                {tr("Записаться ещё раз")}{" "}</button>
                             {p.bookingReceipt.masterLink ? (
                                 <>
                                     <a
@@ -163,33 +166,28 @@ export default function Booking(p: Props) {
                                         target="_blank"
                                         rel="noreferrer"
                                     >
-                                        Отправить мастеру в WhatsApp ↗
-                                    </a>
+                                        {tr("Отправить мастеру в WhatsApp ↗")}{" "}</a>
                                     <p className="muted small">
-                                        Откроется WhatsApp с готовым сообщением.
-                                        Для отправки нажмите кнопку в WhatsApp.
-                                    </p>
+                                        {tr("Откроется WhatsApp с готовым сообщением. Для отправки нажмите кнопку в WhatsApp.")}{" "}</p>
                                 </>
                             ) : (
                                 <p className="muted small">
-                                    Мастер пока не указал номер WhatsApp. Заявка
-                                    уже сохранена в его кабинете.
-                                </p>
+                                    {tr("Мастер пока не указал номер WhatsApp. Заявка уже сохранена в его кабинете.")}{" "}</p>
                             )}
                         </section>
                     )}
                     {!p.bookingReceipt && p.groupSessions?.length > 0 && !p.master.is_demo && (
                         <section>
-                            <h2>Групповые занятия</h2>
-                            <p className="muted small">Выберите занятие и запишитесь на свободное место.</p>
+                            <h2>{tr("Групповые занятия")}</h2>
+                            <p className="muted small">{tr("Выберите занятие и запишитесь на свободное место.")}</p>
                             {p.groupSessions.map(group => (
                                 <div key={group.id} className="appointment">
                                     <div>
                                         <strong>{group.name}</strong>
-                                        <p>{new Intl.DateTimeFormat("ru-RU", {
+                                        <p>{new Intl.DateTimeFormat((locale === "ky" ? "ky-KG" : "ru-RU"), {
                                             dateStyle: "medium", timeStyle: "short", timeZone: p.master.timezone,
                                         }).format(new Date(group.starts_at))}</p>
-                                        <p className="muted small">Свободно {group.capacity - group.reserved_seats} из {group.capacity} мест · {group.price_som.toLocaleString("ru-RU")} сом</p>
+                                        <p className="muted small">{tr("Свободно")}{" "}{group.capacity - group.reserved_seats} {tr("из")}{" "}{group.capacity} {tr("мест ·")}{" "}{group.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</p>
                                         {group.reserved_seats < group.capacity && (
                                             <form onSubmit={event => {
                                                 event.preventDefault();
@@ -200,10 +198,10 @@ export default function Booking(p: Props) {
                                                     consent: fd.get("consent") === "on",
                                                 }, { preserveScroll: true });
                                             }}>
-                                                <Field label="Ваше имя"><input required maxLength={100} name="client_name"/></Field>
-                                                <Field label="Телефон"><input required name="client_phone" type="tel" minLength={7} maxLength={30}/></Field>
-                                                <label className="check"><input type="checkbox" name="consent" required/> Согласен на обработку данных для записи</label>
-                                                <button className="primary" type="submit">Записаться на занятие</button>
+                                                <Field label={tr("Ваше имя")}><input required maxLength={100} name="client_name"/></Field>
+                                                <Field label={tr("Телефон")}><input required name="client_phone" type="tel" minLength={7} maxLength={30}/></Field>
+                                                <label className="check"><input type="checkbox" name="consent" required/> {tr("Согласен на обработку данных для записи")}</label>
+                                                <button className="primary" type="submit">{tr("Записаться на занятие")}</button>
                                             </form>
                                         )}
                                     </div>
@@ -213,23 +211,22 @@ export default function Booking(p: Props) {
                     )}
                     {p.bookingReceipt ? null : p.master.is_demo ? (
                         <div>
-                            <p className="notice">Демонстрационный профиль. Мастер вымышленный, фотографии — иллюстрации. Цены примерные. Запись недоступна.</p>
+                            <p className="notice">{tr("Демонстрационный профиль. Мастер вымышленный, фотографии — иллюстрации. Цены примерные. Запись недоступна.")}</p>
                             {p.services.map(service => (
                                 <div className="appointment" key={service.id}>
                                     <div><h3>{service.name}</h3><p className="muted small">{service.description}</p></div>
                                     <div style={{ textAlign: "right", flexShrink: 0 }}>
-                                        <strong>{service.price_som.toLocaleString("ru-RU")} сом</strong>
-                                        <p className="booking-service-duration">{service.duration_minutes} мин</p>
+                                        <strong>{service.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</strong>
+                                        <p className="booking-service-duration">{service.duration_minutes} {tr("мин")}</p>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     ) : !p.master.booking_enabled ? (
                         <p className="empty">
-                            Мастер временно отключил онлайн-запись.
-                        </p>
+                            {tr("Мастер временно отключил онлайн-запись.")}{" "}</p>
                     ) : p.services.length === 0 ? (
-                        <p className="empty">Услуги пока не добавлены.</p>
+                        <p className="empty">{tr("Услуги пока не добавлены.")}</p>
                     ) : (
                         <form
                             onSubmit={(e) => {
@@ -279,10 +276,9 @@ export default function Booking(p: Props) {
                         >
                             <Errors errors={f.errors} />
                             <fieldset className="booking-services">
-                                <legend className="field-title">Услуги</legend>
+                                <legend className="field-title">{tr("Услуги")}</legend>
                                 <p className="muted small">
-                                    Можно выбрать несколько услуг за один визит.
-                                </p>
+                                    {tr("Можно выбрать несколько услуг за один визит.")}{" "}</p>
                                 {p.services.map((s) => (
                                     <label
                                         key={s.id}
@@ -323,12 +319,10 @@ export default function Booking(p: Props) {
                                         </span>
                                         <span className="booking-service-price">
                                             {s.price_som.toLocaleString(
-                                                "ru-RU",
+                                                (locale === "ky" ? "ky-KG" : "ru-RU"),
                                             )}{" "}
-                                            сом
-                                            <span className="booking-service-duration">
-                                                {s.duration_minutes} мин
-                                            </span>
+                                            {tr("сом")}{" "}<span className="booking-service-duration">
+                                                {s.duration_minutes} {tr("мин")}{" "}</span>
                                         </span>
                                     </label>
                                 ))}
@@ -336,17 +330,16 @@ export default function Booking(p: Props) {
                             <div className="booking-total" aria-live="polite">
                                 <span>
                                     {selected.length
-                                        ? `Выбрано услуг: ${selected.length} · ${duration} мин`
-                                        : "Выберите хотя бы одну услугу"}
+                                        ? tr("Выбрано услуг: {0} · {1} мин", [selected.length, duration])
+                                        : tr("Выберите хотя бы одну услугу")}
                                 </span>
                                 <strong>
-                                    {price.toLocaleString("ru-RU")} сом
-                                    {p.hotOffer?.special_price_som != null && p.hotOffer.special_price_som !== basePrice && (
-                                        <del className="muted small"> {basePrice.toLocaleString("ru-RU")} сом</del>
+                                    {price.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}{" "}{p.hotOffer?.special_price_som != null && p.hotOffer.special_price_som !== basePrice && (
+                                        <del className="muted small"> {basePrice.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</del>
                                     )}
                                 </strong>
                             </div>
-                            <p className="field-title">Дата</p>
+                            <p className="field-title">{tr("Дата")}</p>
                             <BookingCalendar
                                 value={chosenDate}
                                 min={p.minDate}
@@ -358,12 +351,12 @@ export default function Booking(p: Props) {
                             />
                             {loadError && (
                                 <div className="booking-retry" role="alert">
-                                    <p className="errors">{loadError}</p>
+                                    <p className="errors">{tr(loadError)}</p>
                                     <button type="button" className="ghost" disabled={loading || f.processing}
-                                        onClick={() => change(chosenDate, f.data.service_ids)}>Повторить загрузку</button>
+                                        onClick={() => change(chosenDate, f.data.service_ids)}>{tr("Повторить загрузку")}</button>
                                 </div>
                             )}
-                            <p className="field-title">Свободное время</p>
+                            <p className="field-title">{tr("Свободное время")}</p>
                             <div className="slots">
                                 {(ready && selected.length ? p.slots : []).map(
                                     (s) => (
@@ -375,7 +368,7 @@ export default function Booking(p: Props) {
                                                 f.data.starts_at === s.value
                                             }
                                             disabled={f.processing || !s.available}
-                                            aria-label={s.available ? s.label : `${s.label}, занято`}
+                                            aria-label={s.available ? s.label : tr("{0}, занято", [s.label])}
                                             onClick={() =>
                                                 f.setData("starts_at", s.value)
                                             }
@@ -388,22 +381,17 @@ export default function Booking(p: Props) {
                             <div aria-live="polite">
                                 {loading ? (
                                     <p className="muted small" role="status">
-                                        Обновляем свободное время… Пожалуйста, дождитесь результата.
-                                    </p>
+                                        {tr("Обновляем свободное время… Пожалуйста, дождитесь результата.")}{" "}</p>
                                 ) : loadError ? null : !selected.length ? (
                                     <p className="muted small">
-                                        Сначала выберите услуги.
-                                    </p>
+                                        {tr("Сначала выберите услуги.")}{" "}</p>
                                 ) : ready && !p.slots.some(s => s.available) ? (
                                     <p className="empty">
-                                        На этот день нет свободного времени на
-                                        все выбранные услуги. Выберите другую
-                                        дату.
-                                    </p>
+                                        {tr("На этот день нет свободного времени на все выбранные услуги. Выберите другую дату.")}{" "}</p>
                                 ) : null}
                             </div>
                             <div className="form-grid">
-                                <Field label="Ваше имя">
+                                <Field label={tr("Ваше имя")}>
                                     <input
                                         required
                                         maxLength={100}
@@ -417,11 +405,11 @@ export default function Booking(p: Props) {
                                         autoComplete="name"
                                     />
                                 </Field>
-                                <Field label="Телефон">
-                                    <PhoneInput required value={f.data.client_phone} onChange={value => f.setData("client_phone", value)} label="Телефон клиента" />
+                                <Field label={tr("Телефон")}>
+                                    <PhoneInput required value={f.data.client_phone} onChange={value => f.setData("client_phone", value)} label={tr("Телефон клиента")} />
                                 </Field>
                             </div>
-                            <Field label="Комментарий (необязательно)">
+                            <Field label={tr("Комментарий (необязательно)")}>
                                 <textarea
                                     maxLength={1000}
                                     value={f.data.client_comment}
@@ -442,10 +430,7 @@ export default function Booking(p: Props) {
                                         f.setData("consent", e.target.checked)
                                     }
                                 />
-                                Я согласен передать имя, телефон и комментарий
-                                этому мастеру для оформления записи и связи со
-                                мной.
-                            </label>
+                                {tr("Я согласен передать имя, телефон и комментарий этому мастеру для оформления записи и связи со мной.")}{" "}</label>
                             {p.whatsappAutomatic && (
                                 <label className="check">
                                     <input
@@ -458,9 +443,7 @@ export default function Booking(p: Props) {
                                             )
                                         }
                                     />
-                                    Получать подтверждение этой записи в
-                                    WhatsApp на указанный номер
-                                </label>
+                                    {tr("Получать подтверждение этой записи в WhatsApp на указанный номер")}{" "}</label>
                             )}
                             <button
                                 className="primary wide"
@@ -471,12 +454,12 @@ export default function Booking(p: Props) {
                                     !f.data.starts_at
                                 }
                             >
-                                {f.processing ? "Отправляем…" : "Записаться"}
+                                {f.processing ? tr("Отправляем…") : tr("Записаться")}
                             </button>
                             <p className="muted small">
                                 {p.master.auto_confirm
-                                    ? "Запись подтверждается автоматически."
-                                    : "Заявка требует подтверждения мастера."}
+                                    ? tr("Запись подтверждается автоматически.")
+                                    : tr("Заявка требует подтверждения мастера.")}
                             </p>
                         </form>
                     )}

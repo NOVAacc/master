@@ -1,3 +1,4 @@
+import { useI18n } from "./i18n";
 import { timezoneLabel } from "./timezone";
 import PhoneInput from "./PhoneInput";
 import { useForm } from "@inertiajs/react";
@@ -25,6 +26,7 @@ export default function EditAppointmentForm({
     timezone: string;
     onClose: () => void;
 }) {
+    const { t: tr, locale } = useI18n();
     const old = a.services_snapshot?.length
         ? a.services_snapshot
         : a.master_service_id
@@ -68,7 +70,7 @@ export default function EditAppointmentForm({
         date.setUTCMinutes(
             date.getUTCMinutes() + Number(f.data.duration_minutes),
         );
-        return date.toLocaleString("ru-RU", {
+        return date.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"), {
             timeZone: "UTC",
             day: "numeric",
             month: "short",
@@ -102,13 +104,12 @@ export default function EditAppointmentForm({
                 });
             }}
         >
-            <h3>Перенос и редактирование</h3>
+            <h3>{tr("Перенос и редактирование")}</h3>
             <p className="muted small">
-                Время мастера: {timezoneLabel(timezone)}. Изменения сохраняются в истории.
-            </p>
+                {tr("Время мастера:")}{" "}{timezoneLabel(timezone)}{tr(". Изменения сохраняются в истории.")}{" "}</p>
             <Errors errors={f.errors} />
             <div className="form-grid">
-                <Field label="Дата и время начала">
+                <Field label={tr("Дата и время начала")}>
                     <input
                         type="datetime-local"
                         required
@@ -118,7 +119,7 @@ export default function EditAppointmentForm({
                         }
                     />
                 </Field>
-                <Field label="Длительность, минут">
+                <Field label={tr("Длительность, минут")}>
                     <input
                         type="number"
                         required
@@ -134,12 +135,12 @@ export default function EditAppointmentForm({
                         }
                     />
                     <span className="muted small">
-                        Окончание: {end || "укажите начало и длительность"}
+                        {tr("Окончание:")}{" "}{end || tr("укажите начало и длительность")}
                     </span>
                 </Field>
             </div>
             <fieldset className="booking-services">
-                <legend className="field-title">Услуги</legend>
+                <legend className="field-title">{tr("Услуги")}</legend>
                 {options.map((s) => (
                     <label key={s.id} className="check">
                         <input
@@ -147,17 +148,14 @@ export default function EditAppointmentForm({
                             checked={f.data.service_ids.includes(s.id)}
                             onChange={(e) => toggle(s.id, e.target.checked)}
                         />
-                        {s.name} · {s.duration_minutes} мин ·{" "}
-                        {s.price_som.toLocaleString("ru-RU")} сом
-                    </label>
+                        {s.name} · {s.duration_minutes} {tr("мин ·")}{" "}
+                        {s.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}{" "}</label>
                 ))}
             </fieldset>
             <p className="muted small">
-                При смене услуг длительность и сумма пересчитываются. Итоговые
-                значения можно скорректировать вручную.
-            </p>
+                {tr("При смене услуг длительность и сумма пересчитываются. Итоговые значения можно скорректировать вручную.")}{" "}</p>
             <div className="form-grid">
-                <Field label="Итоговая стоимость, сом">
+                <Field label={tr("Итоговая стоимость, сом")}>
                     <input
                         type="number"
                         required
@@ -170,7 +168,7 @@ export default function EditAppointmentForm({
                         }
                     />
                 </Field>
-                <Field label="Имя клиента">
+                <Field label={tr("Имя клиента")}>
                     <input
                         required
                         maxLength={100}
@@ -180,11 +178,11 @@ export default function EditAppointmentForm({
                         }
                     />
                 </Field>
-                <Field label="Телефон клиента">
-                    <PhoneInput required value={f.data.client_phone} onChange={value => f.setData("client_phone", value)} label="Телефон клиента" />
+                <Field label={tr("Телефон клиента")}>
+                    <PhoneInput required value={f.data.client_phone} onChange={value => f.setData("client_phone", value)} label={tr("Телефон клиента")} />
                 </Field>
             </div>
-            <Field label="Комментарий к записи">
+            <Field label={tr("Комментарий к записи")}>
                 <textarea
                     maxLength={1000}
                     value={f.data.client_comment}
@@ -193,25 +191,22 @@ export default function EditAppointmentForm({
                     }
                 />
             </Field>
-            <Field label="Причина изменения (необязательно)">
+            <Field label={tr("Причина изменения (необязательно)")}>
                 <input
                     maxLength={500}
-                    placeholder="Например: клиент попросил перенести визит"
+                    placeholder={tr("Например: клиент попросил перенести визит")}
                     value={f.data.reason}
                     onChange={(e) => f.setData("reason", e.target.value)}
                 />
             </Field>
             <p className="muted small">
-                После сохранения можно отправить клиенту актуальные данные через
-                WhatsApp. Если меняется номер клиента, прежнее согласие на
-                автоматические сообщения сбрасывается.
-            </p>
+                {tr("После сохранения можно отправить клиенту актуальные данные через WhatsApp. Если меняется номер клиента, прежнее согласие на автоматические сообщения сбрасывается.")}{" "}</p>
             <div className="row wrap">
                 <button
                     className="primary"
                     disabled={f.processing || !f.data.service_ids.length}
                 >
-                    {f.processing ? "Сохраняем…" : "Сохранить изменения"}
+                    {f.processing ? tr("Сохраняем…") : tr("Сохранить изменения")}
                 </button>
                 <button
                     type="button"
@@ -219,8 +214,7 @@ export default function EditAppointmentForm({
                     disabled={f.processing}
                     onClick={onClose}
                 >
-                    Без изменений
-                </button>
+                    {tr("Без изменений")}{" "}</button>
             </div>
         </form>
     );

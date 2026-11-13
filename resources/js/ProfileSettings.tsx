@@ -1,3 +1,4 @@
+import { useI18n } from "./i18n";
 import { timezoneLabel } from "./timezone";
 import PhoneInput from "./PhoneInput";
 import { router, useForm, usePage } from "@inertiajs/react";
@@ -46,6 +47,7 @@ function instagram(value: string) {
         : null;
 }
 export default function ProfileSettings({ master }: { master: Master }) {
+    const { t: tr, locale } = useI18n();
     const { industries } = usePage<{ industries: Industries }>().props;
     const [uploadKey, setUploadKey] = useState({ avatar: 0, cover: 0 });
     const avatarInput = useRef<HTMLInputElement>(null);
@@ -99,7 +101,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
             (!["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
                 file.size > 2 * 1024 * 1024)
         ) {
-            f.setError(kind, "Выберите JPG, PNG или WebP размером до 2 МБ.");
+            f.setError(kind, tr("Выберите JPG, PNG или WebP размером до 2 МБ."));
             f.setData((d) => ({ ...d, [kind]: null }));
             setUploadKey((k) => ({ ...k, [kind]: k[kind] + 1 }));
             return;
@@ -139,23 +141,20 @@ export default function ProfileSettings({ master }: { master: Master }) {
             >
                 <Errors errors={f.errors} />
                 <section className="profile-settings-section">
-                    <p className="eyebrow">ВИЗУАЛЬНЫЙ СТИЛЬ</p>
-                    <h3>Фото и обложка</h3>
+                    <p className="eyebrow">{tr("ВИЗУАЛЬНЫЙ СТИЛЬ")}</p>
+                    <h3>{tr("Фото и обложка")}</h3>
                     <p className="muted small">
-                        JPG, PNG или WebP, до 2 МБ. Аватар лучше квадратный,
-                        обложка — горизонтальная.
-                    </p>
-                    <p className="muted small">Нажмите на карандаш внутри аватара или «Изменить обложку» в предпросмотре. Затем сохраните профиль.</p>
+                        {tr("JPG, PNG или WebP, до 2 МБ. Аватар лучше квадратный, обложка — горизонтальная.")}{" "}</p>
+                    <p className="muted small">{tr("Нажмите на карандаш внутри аватара или «Изменить обложку» в предпросмотре. Затем сохраните профиль.")}</p>
                     <fieldset className="profile-theme-options">
                         <legend className="field-title">
-                            Цвет шапки без обложки
-                        </legend>
+                            {tr("Цвет шапки без обложки")}{" "}</legend>
                         {(
                             [
-                                ["graphite", "Графит"],
-                                ["sand", "Песочный"],
-                                ["sage", "Шалфей"],
-                                ["lilac", "Лаванда"],
+                                ["graphite", tr("Графит")],
+                                ["sand", tr("Песочный")],
+                                ["sage", tr("Шалфей")],
+                                ["lilac", tr("Лаванда")],
                             ] as const
                         ).map(([value, name]) => (
                             <label
@@ -172,15 +171,15 @@ export default function ProfileSettings({ master }: { master: Master }) {
                                     }
                                 />
                                 <span className="theme-swatch" />
-                                {name}
+                                {tr(name)}
                             </label>
                         ))}
                     </fieldset>
                 </section>
                 <section className="profile-settings-section">
-                    <p className="eyebrow">О ВАС</p>
-                    <h3>Первое впечатление</h3>
-                    <Field label="Имя на странице">
+                    <p className="eyebrow">{tr("О ВАС")}</p>
+                    <h3>{tr("Первое впечатление")}</h3>
+                    <Field label={tr("Имя на странице")}>
                         <input
                             required
                             maxLength={100}
@@ -190,7 +189,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
                             }
                         />
                     </Field>
-                    <Field label="Адрес вашей страницы">
+                    <Field label={tr("Адрес вашей страницы")}>
                         <div className="input-prefix">
                             <span>/m/</span>
                             <input
@@ -205,42 +204,42 @@ export default function ProfileSettings({ master }: { master: Master }) {
                                 onChange={(e) =>
                                     f.setData("slug", e.target.value.toLowerCase())
                                 }
-                                aria-label="Уникальный адрес публичной страницы"
+                                aria-label={tr("Уникальный адрес публичной страницы")}
                             />
                         </div>
-                        <small>От 3 до 30 символов: только латинские буквы и цифры. Адрес должен быть свободен.</small>
+                        <small>{tr("От 3 до 30 символов: только латинские буквы и цифры. Адрес должен быть свободен.")}</small>
                         {f.data.slug !== master.slug && (
-                            <small>После смены адреса прежняя ссылка перестанет работать. Поделитесь новой ссылкой с клиентами.</small>
+                            <small>{tr("После смены адреса прежняя ссылка перестанет работать. Поделитесь новой ссылкой с клиентами.")}</small>
                         )}
                         {/^[a-z0-9]{3,30}$/.test(f.data.slug) && (
-                            <small>Новый адрес: {typeof window !== "undefined" ? window.location.origin : "https://bosh.kg"}/m/{f.data.slug}</small>
+                            <small>{tr("Новый адрес:")}{" "}{typeof window !== "undefined" ? window.location.origin : "https://bosh.kg"}/m/{f.data.slug}</small>
                         )}
                     </Field>
                     <div className="form-grid">
-                        <Field label="Сфера деятельности">
+                        <Field label={tr("Сфера деятельности")}>
                             <select value={f.data.industry} onChange={e => f.setData(d => ({ ...d, industry: e.target.value, activity: "" }))}>
-                                <option value="">Выберите сферу</option>
-                                {Object.entries(industries).map(([key, item]) => <option key={key} value={key}>{item.name}</option>)}
+                                <option value="">{tr("Выберите сферу")}</option>
+                                {Object.entries(industries).map(([key, item]) => <option key={key} value={key}>{tr(item.name)}</option>)}
                             </select>
                         </Field>
-                        <Field label="Направление">
+                        <Field label={tr("Направление")}>
                             <select value={f.data.activity} disabled={!f.data.industry} onChange={e => f.setData("activity", e.target.value)}>
-                                <option value="">Выберите направление</option>
-                                {Object.entries(industries[f.data.industry]?.activities || {}).map(([key, name]) => <option key={key} value={key}>{name}</option>)}
+                                <option value="">{tr("Выберите направление")}</option>
+                                {Object.entries(industries[f.data.industry]?.activities || {}).map(([key, name]) => <option key={key} value={key}>{tr(name)}</option>)}
                             </select>
                         </Field>
                     </div>
-                    <Field label="Специализация">
+                    <Field label={tr("Специализация")}>
                         <input
                             maxLength={150}
-                            placeholder="Мастер по наращиванию ресниц"
+                            placeholder={tr("Мастер по наращиванию ресниц")}
                             value={f.data.specialty}
                             onChange={(e) =>
                                 f.setData("specialty", e.target.value)
                             }
                         />
                     </Field>
-                    <Field label="О себе">
+                    <Field label={tr("О себе")}>
                         <textarea
                             maxLength={2000}
                             value={f.data.bio}
@@ -249,9 +248,9 @@ export default function ProfileSettings({ master }: { master: Master }) {
                     </Field>
                 </section>
                 <section className="profile-settings-section">
-                    <p className="eyebrow">КОНТАКТЫ</p>
-                    <h3>Как вас найти</h3>
-                    <Field label="Instagram — ник или ссылка">
+                    <p className="eyebrow">{tr("КОНТАКТЫ")}</p>
+                    <h3>{tr("Как вас найти")}</h3>
+                    <Field label={tr("Instagram — ник или ссылка")}>
                         <input
                             maxLength={250}
                             autoCapitalize="none"
@@ -264,13 +263,12 @@ export default function ProfileSettings({ master }: { master: Master }) {
                             }
                         />
                         <small>
-                            Клиент сможет открыть ваш Instagram одним нажатием.
-                        </small>
+                            {tr("Клиент сможет открыть ваш Instagram одним нажатием.")}{" "}</small>
                     </Field>
-                    <Field label="Телефон / WhatsApp">
-                        <PhoneInput value={f.data.phone} onChange={value => f.setData("phone", value)} label="Телефон мастера" />
+                    <Field label={tr("Телефон / WhatsApp")}>
+                        <PhoneInput value={f.data.phone} onChange={value => f.setData("phone", value)} label={tr("Телефон мастера")} />
                     </Field>
-                    <Field label="Адрес приёма">
+                    <Field label={tr("Адрес приёма")}>
                         <input
                             maxLength={255}
                             value={f.data.address}
@@ -279,7 +277,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
                             }
                         />
                     </Field>
-                    <Field label="Ссылка на адрес в 2ГИС">
+                    <Field label={tr("Ссылка на адрес в 2ГИС")}>
                         <input
                             type="url"
                             maxLength={2048}
@@ -290,12 +288,12 @@ export default function ProfileSettings({ master }: { master: Master }) {
                             value={f.data.address_url}
                             onChange={(e) => f.setData("address_url", e.target.value)}
                         />
-                        <small>Вставьте ссылку из 2ГИС — клиент сможет открыть карту нажатием на адрес.</small>
+                        <small>{tr("Вставьте ссылку из 2ГИС — клиент сможет открыть карту нажатием на адрес.")}</small>
                     </Field>
                 </section>
                 <details className="profile-advanced">
-                    <summary>Дополнительные настройки записи</summary>
-                    <Field label="Часовой пояс">
+                    <summary>{tr("Дополнительные настройки записи")}</summary>
+                    <Field label={tr("Часовой пояс")}>
                         <select
                             value={f.data.timezone}
                             onChange={(e) =>
@@ -324,14 +322,12 @@ export default function ProfileSettings({ master }: { master: Master }) {
                                 f.setData("booking_enabled", e.target.checked)
                             }
                         />
-                        Принимать онлайн-записи
-                    </label>
+                        {tr("Принимать онлайн-записи")}{" "}</label>
                     <label className="check">
                         <input type="checkbox" checked={f.data.show_busy_slots}
                             onChange={(e) => f.setData("show_busy_slots", e.target.checked)} />
-                        Показывать занятое время зачёркнутым
-                    </label>
-                    <p className="muted small">Занятые часы будут видны клиенту, но выбрать их нельзя. Если выключить — показывается только свободное время.</p>
+                        {tr("Показывать занятое время зачёркнутым")}{" "}</label>
+                    <p className="muted small">{tr("Занятые часы будут видны клиенту, но выбрать их нельзя. Если выключить — показывается только свободное время.")}</p>
                     <label className="check">
                         <input
                             type="checkbox"
@@ -340,8 +336,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
                                 f.setData("auto_confirm", e.target.checked)
                             }
                         />
-                        Подтверждать записи автоматически
-                    </label>
+                        {tr("Подтверждать записи автоматически")}{" "}</label>
                     <label className="check">
                         <input
                             type="checkbox"
@@ -353,32 +348,31 @@ export default function ProfileSettings({ master }: { master: Master }) {
                                 )
                             }
                         />
-                        Получать подтверждённые записи в WhatsApp
-                    </label>
+                        {tr("Получать подтверждённые записи в WhatsApp")}{" "}</label>
 
                 </details>
                 <div className="profile-save-bar">
                     <button className="primary" disabled={f.processing}>
-                        {f.processing ? "Сохраняем…" : "Сохранить профиль"}
+                        {f.processing ? tr("Сохраняем…") : tr("Сохранить профиль")}
                     </button>
                     {f.progress && (
                         <small role="status">
-                            Загрузка: {f.progress.percentage}%
+                            {tr("Загрузка:")}{" "}{f.progress.percentage}%
                         </small>
                     )}
                     {f.recentlySuccessful && (
-                        <small role="status">Профиль сохранён</small>
+                        <small role="status">{tr("Профиль сохранён")}</small>
                     )}
                 </div>
             </form>
             <aside className="profile-settings-preview">
                 <input key={`avatar-${uploadKey.avatar}`} ref={avatarInput} className="profile-image-hidden-input" type="file"
-                    accept="image/jpeg,image/png,image/webp" aria-label="Выбрать аватар"
+                    accept="image/jpeg,image/png,image/webp" aria-label={tr("Выбрать аватар")}
                     disabled={f.processing} onChange={e => selectFile("avatar", e.target.files?.[0] || null)} />
                 <input key={`cover-${uploadKey.cover}`} ref={coverInput} className="profile-image-hidden-input" type="file"
-                    accept="image/jpeg,image/png,image/webp" aria-label="Выбрать обложку"
+                    accept="image/jpeg,image/png,image/webp" aria-label={tr("Выбрать обложку")}
                     disabled={f.processing} onChange={e => selectFile("cover", e.target.files?.[0] || null)} />
-                <p className="eyebrow">ПРЕДПРОСМОТР</p>
+                <p className="eyebrow">{tr("ПРЕДПРОСМОТР")}</p>
                 <div className="profile-preview-card">
                     <ProfileIdentity master={preview} imageEditing={{
                         disabled: f.processing,
@@ -398,8 +392,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
                     )}
                 </div>
                 <p className="muted small">
-                    Так будет выглядеть ваша страница после сохранения.
-                </p>
+                    {tr("Так будет выглядеть ваша страница после сохранения.")}{" "}</p>
             </aside>
         </div>
     );

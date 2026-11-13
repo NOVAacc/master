@@ -1,15 +1,9 @@
+import { useI18n } from "./i18n";
 import { useEffect, useState } from "react";
 
 const parse = (value: string) => new Date(`${value}T12:00:00`);
 const iso = (value: Date) =>
     `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
-const longDate = (value: Date) =>
-    value.toLocaleDateString("ru-RU", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-    });
-
 export default function BookingCalendar({
     value,
     min,
@@ -23,6 +17,15 @@ export default function BookingCalendar({
     workingDays: number[];
     onChange: (date: string) => void;
 }) {
+    const { t: tr, locale } = useI18n();
+const longDate = (value: Date) =>
+    value.toLocaleDateString((locale === "ky" ? "ky-KG" : "ru-RU"), {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
+
+
     const [month, setMonth] = useState(value.slice(0, 7));
     useEffect(() => setMonth(value.slice(0, 7)), [value]);
     const first = parse(`${month}-01`);
@@ -32,7 +35,7 @@ export default function BookingCalendar({
         first.getMonth() + 1,
         0,
     ).getDate();
-    const title = first.toLocaleDateString("ru-RU", {
+    const title = first.toLocaleDateString((locale === "ky" ? "ky-KG" : "ru-RU"), {
         month: "long",
         year: "numeric",
     });
@@ -43,12 +46,12 @@ export default function BookingCalendar({
             ).slice(0, 7),
         );
     return (
-        <section className="booking-calendar" aria-label="Выбор даты">
+        <section className="booking-calendar" aria-label={tr("Выбор даты")}>
             <div className="calendar-heading">
                 <button
                     type="button"
                     className="calendar-nav"
-                    aria-label="Предыдущий месяц"
+                    aria-label={tr("Предыдущий месяц")}
                     disabled={month <= min.slice(0, 7)}
                     onClick={() => move(-1)}
                 >
@@ -58,7 +61,7 @@ export default function BookingCalendar({
                 <button
                     type="button"
                     className="calendar-nav"
-                    aria-label="Следующий месяц"
+                    aria-label={tr("Следующий месяц")}
                     disabled={month >= max.slice(0, 7)}
                     onClick={() => move(1)}
                 >
@@ -66,9 +69,9 @@ export default function BookingCalendar({
                 </button>
             </div>
             <div className="calendar-grid">
-                {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map((day) => (
+                {[tr("Пн"), tr("Вт"), tr("Ср"), tr("Чт"), tr("Пт"), tr("Сб"), tr("Вс")].map((day) => (
                     <span key={day} className="calendar-weekday">
-                        {day}
+                        {tr(day)}
                     </span>
                 ))}
                 {Array.from({ length: offset }, (_, i) => (
@@ -89,7 +92,7 @@ export default function BookingCalendar({
                             key={key}
                             type="button"
                             disabled={disabled}
-                            aria-label={`${longDate(date)}${!working ? ", нерабочий день" : ""}`}
+                            aria-label={`${longDate(date)}${!working ? tr(", нерабочий день") : ""}`}
                             aria-pressed={key === value}
                             aria-current={key === min ? "date" : undefined}
                             className={`calendar-day${key === value ? " selected" : ""}${key === min ? " today" : ""}`}
@@ -102,9 +105,7 @@ export default function BookingCalendar({
                 })}
             </div>
             <div className="calendar-caption">
-                <span className="calendar-dot" /> Рабочий день · свободное время
-                ниже
-            </div>
+                <span className="calendar-dot" /> {tr("Рабочий день · свободное время ниже")}{" "}</div>
         </section>
     );
 }

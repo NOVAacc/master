@@ -1,3 +1,4 @@
+import { useI18n } from "./i18n";
 import { useEffect, useState } from "react";
 
 export type ProfileIdentityData = {
@@ -17,17 +18,18 @@ export function MasterAvatar({
     master: ProfileIdentityData;
     large?: boolean;
 }) {
+    const { t: tr, locale } = useI18n();
     const [failed, setFailed] = useState(false);
     useEffect(() => setFailed(false), [master.avatar_url]);
     return (
         <div className={`avatar master-avatar${large ? " large" : ""}`}>
             <span aria-hidden="true">
-                {Array.from(master.display_name || "М")[0]}
+                {Array.from(master.display_name || tr("М"))[0]}
             </span>
             {master.avatar_url && !failed && (
                 <img
                     src={master.avatar_url}
-                    alt={`Фото: ${master.display_name}`}
+                    alt={tr("Фото: {0}", [master.display_name])}
                     onError={() => setFailed(true)}
                 />
             )}
@@ -47,6 +49,7 @@ export default function ProfileIdentity({
         removeCover: () => void;
     };
 }) {
+    const { t: tr, locale } = useI18n();
     const phone = (master.phone || "").replace(/\D/g, "");
     const whatsappUrl = /^[1-9][0-9]{6,14}$/.test(phone)
         ? `https://wa.me/${phone}`
@@ -57,22 +60,22 @@ export default function ProfileIdentity({
         >
             <div className="profile-cover">
                 {master.cover_url && (
-                    <img src={master.cover_url} alt="Обложка профиля" />
+                    <img src={master.cover_url} alt={tr("Обложка профиля")} />
                 )}
                 {imageEditing && <div className="profile-cover-edit-actions">
-                    <button type="button" className="profile-image-edit-button" disabled={imageEditing.disabled} onClick={imageEditing.editCover} aria-label="Загрузить или заменить обложку">Изменить обложку</button>
-                    {master.cover_url && <button type="button" className="profile-image-remove-button" disabled={imageEditing.disabled} onClick={imageEditing.removeCover} aria-label="Удалить обложку">Убрать</button>}
+                    <button type="button" className="profile-image-edit-button" disabled={imageEditing.disabled} onClick={imageEditing.editCover} aria-label={tr("Загрузить или заменить обложку")}>{tr("Изменить обложку")}</button>
+                    {master.cover_url && <button type="button" className="profile-image-remove-button" disabled={imageEditing.disabled} onClick={imageEditing.removeCover} aria-label={tr("Удалить обложку")}>{tr("Убрать")}</button>}
                 </div>}
             </div>
             <div className="profile-identity-content">
                 {imageEditing ? <div className="profile-avatar-edit-wrap">
                     <MasterAvatar master={master} large />
-                    <button type="button" className="profile-avatar-edit-button" disabled={imageEditing.disabled} onClick={imageEditing.editAvatar} aria-label="Загрузить или заменить аватар" title="Изменить аватар">✎</button>
-                    {master.avatar_url && <button type="button" className="profile-avatar-remove-button" disabled={imageEditing.disabled} onClick={imageEditing.removeAvatar} aria-label="Удалить аватар" title="Удалить аватар">×</button>}
+                    <button type="button" className="profile-avatar-edit-button" disabled={imageEditing.disabled} onClick={imageEditing.editAvatar} aria-label={tr("Загрузить или заменить аватар")} title={tr("Изменить аватар")}>✎</button>
+                    {master.avatar_url && <button type="button" className="profile-avatar-remove-button" disabled={imageEditing.disabled} onClick={imageEditing.removeAvatar} aria-label={tr("Удалить аватар")} title={tr("Удалить аватар")}>×</button>}
                 </div> : <MasterAvatar master={master} large />}
-                <h1>{master.display_name || "Ваше имя"}</h1>
+                <h1>{master.display_name || tr("Ваше имя")}</h1>
                 <p className="profile-specialty">
-                    {master.specialty || "Специализация"}
+                    {master.specialty || tr("Специализация")}
                 </p>
                 <div className="profile-social-links">
                 {master.instagram_url && master.instagram_username && (
@@ -111,7 +114,7 @@ export default function ProfileIdentity({
                         href={whatsappUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label={`Написать мастеру в WhatsApp: ${master.phone}`}
+                        aria-label={tr("Написать мастеру в WhatsApp: {0}", [master.phone])}
                         title={master.phone || undefined}
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24"

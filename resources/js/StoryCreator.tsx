@@ -1,3 +1,4 @@
+import { useI18n, translate, type Locale, type Translator } from "./i18n";
 import axios from "axios";
 import { useEffect, useMemo, useRef, useState } from "react";
 import CloseButton from "./CloseButton";
@@ -248,8 +249,9 @@ function wrappedText(ctx: CanvasRenderingContext2D, value: string, maxWidth: num
     }
     return clipped;
 }
-async function drawCategoryStory(canvas:HTMLCanvasElement,master:Master,service:Service,date:string,time:string,link:string,categoryName:string,template:CategoryTemplate,showPrice=true){
- const ctx=canvas.getContext("2d");if(!ctx)throw new Error("Canvas недоступен");
+async function drawCategoryStory(canvas:HTMLCanvasElement,master:Master,service:Service,date:string,time:string,link:string,categoryName:string,template:CategoryTemplate,showPrice=true,locale:Locale="ru"){
+ const tr: Translator = (text,values) => translate(text,locale,values);
+ const ctx=canvas.getContext("2d");if(!ctx)throw new Error(tr("Canvas недоступен"));
  const design=categoryLook[template.id]||categoryLook.editorial;
  const g=ctx.createLinearGradient(0,0,1080,1920);
  g.addColorStop(0,design.bg);g.addColorStop(1,design.end);
@@ -279,29 +281,30 @@ async function drawCategoryStory(canvas:HTMLCanvasElement,master:Master,service:
  ctx.font=`500 36px ${font}`;
  wrappedText(ctx,master.display_name,840,2).forEach((line,i)=>ctx.fillText(line,108,225+i*46,864));
  ctx.font=`600 38px ${font}`;
- ctx.fillText("ЕСТЬ СВОБОДНОЕ ВРЕМЯ",108,560,864);
+ ctx.fillText(tr("ЕСТЬ СВОБОДНОЕ ВРЕМЯ"),108,560,864);
  ctx.font=`bold ${Math.round(140*size)}px ${font}`;
  wrappedText(ctx,categoryName,850,3).forEach((line,i)=>ctx.fillText(line,108,650+i*180,864));
  ctx.font=`600 50px ${font}`;
  wrappedText(ctx,service.name,850,2).forEach((line,i)=>ctx.fillText(line,108,1210+i*60,864));
  ctx.font=`bold 96px ${font}`;
  ctx.fillText(time,108,1360,864);
- const niceDate=new Date(date+"T12:00:00Z").toLocaleDateString("ru-RU",{timeZone:"UTC",day:"numeric",month:"long"});
+ const niceDate=new Date(date+"T12:00:00Z").toLocaleDateString((locale === "ky" ? "ky-KG" : "ru-RU"),{timeZone:"UTC",day:"numeric",month:"long"});
  ctx.font=`500 46px ${font}`;
- ctx.fillText(niceDate+(showPrice?" · "+service.price_som.toLocaleString("ru-RU")+" сом":""),108,1495,864);
+ ctx.fillText(niceDate+(showPrice?" · "+service.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))+tr(" сом"):""),108,1495,864);
  ctx.fillStyle=design.action;
  ctx.beginPath();ctx.roundRect(108,1560,864,112,55);ctx.fill();
  ctx.fillStyle=design.actionText;ctx.font=`bold 46px ${font}`;
- ctx.fillText("Записаться",160,1590,760);
+ ctx.fillText(tr("Записаться"),160,1590,760);
  ctx.fillStyle=fg;ctx.font=`500 30px ${font}`;
  const url=new URL(link);ctx.fillText(url.host+url.pathname,108,1740,864);
 }
-export async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId, hairTemplate: HairTemplateId, browTemplate: BrowTemplateId, extraId:string, catalog:StoryCatalog,categoryTemplate?:CategoryTemplate,categoryName?:string,showPrice=true) {
+export async function drawStory(canvas: HTMLCanvasElement, master: Master, service: Service, date: string, time: string, style: Style, link: string, theme: Theme, nailTemplate: NailTemplateId, hairTemplate: HairTemplateId, browTemplate: BrowTemplateId, extraId:string, catalog:StoryCatalog,categoryTemplate?:CategoryTemplate,categoryName?:string,showPrice=true,locale:Locale="ru") {
+    const tr: Translator = (text,values) => translate(text,locale,values);
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
-    if(theme==="category" && categoryTemplate){await drawCategoryStory(canvas,master,service,date,time,link,categoryName||"Услуги",categoryTemplate,showPrice);return;}
+    if(theme==="category" && categoryTemplate){await drawCategoryStory(canvas,master,service,date,time,link,categoryName||tr("Услуги"),categoryTemplate,showPrice,locale);return;}
     const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Браузер не поддерживает создание изображений.");
+    if (!ctx) throw new Error(tr("Браузер не поддерживает создание изображений."));
     const design = nailTemplates.find(t=>t.id===nailTemplate)??nailTemplates[0];
     const hairDesign = hairTemplates.find(t=>t.id===hairTemplate)??hairTemplates[0];
     const browDesign = browTemplates.find(t=>t.id===browTemplate)??browTemplates[0];
@@ -346,24 +349,24 @@ export async function drawStory(canvas: HTMLCanvasElement, master: Master, servi
     mast.forEach((line, i) => ctx.fillText(line, margin, 235 + i * 48, WIDTH-margin*2));
     ctx.fillStyle = p.sub;
     ctx.font = `500 38px ${family}`;
-    ctx.fillText("ЕСТЬ СВОБОДНОЕ ВРЕМЯ", margin, 580, WIDTH-margin*2);
+    ctx.fillText(tr("ЕСТЬ СВОБОДНОЕ ВРЕМЯ"), margin, 580, WIDTH-margin*2);
     ctx.fillStyle = p.fg;
     ctx.font = `bold ${Math.round(94*headingSize)}px ${family}`;
-    wrappedText(ctx, theme==="nails" ? "Маникюр" : theme==="hair" ? "Волосы" : theme==="brows" ? "Брови" : extraTheme ? themes[extraTheme] : "Освободилось окно", 870, 3).forEach((line, i) => ctx.fillText(line, margin, 690 + i * 112, WIDTH-margin*2));
+    wrappedText(ctx, theme==="nails" ? tr("Маникюр") : theme==="hair" ? tr("Волосы") : theme==="brows" ? tr("Брови") : extraTheme ? tr(themes[extraTheme]) : tr("Освободилось окно"), 870, 3).forEach((line, i) => ctx.fillText(line, margin, 690 + i * 112, WIDTH-margin*2));
     ctx.font = `600 54px ${family}`;
     wrappedText(ctx, service.name, 860, 2).forEach((line, i) => ctx.fillText(line, margin, 1030 + i * 68, WIDTH-margin*2));
-    const niceDate = new Date(date + "T12:00:00Z").toLocaleDateString("ru-RU", { timeZone: "UTC", day: "numeric", month: "long" });
+    const niceDate = new Date(date + "T12:00:00Z").toLocaleDateString((locale === "ky" ? "ky-KG" : "ru-RU"), { timeZone: "UTC", day: "numeric", month: "long" });
     ctx.font = `bold 138px ${family}`;
     ctx.fillText(time, margin, 1230, WIDTH-margin*2);
     ctx.font = `500 49px ${family}`;
-    ctx.fillText(niceDate + (showPrice ? " · " + service.price_som.toLocaleString("ru-RU") + " сом" : ""), margin, 1400, WIDTH-margin*2);
+    ctx.fillText(niceDate + (showPrice ? " · " + service.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU")) + tr(" сом") : ""), margin, 1400, WIDTH-margin*2);
     ctx.fillStyle = p.action;
     ctx.beginPath();
     ctx.roundRect(margin, 1570, WIDTH - margin * 2, 108, 54);
     ctx.fill();
     ctx.fillStyle = p.actionText;
     ctx.font = `600 48px ${family}`;
-    ctx.fillText("Записаться", margin + 55, 1594);
+    ctx.fillText(tr("Записаться"), margin + 55, 1594);
     ctx.fillStyle = p.sub;
     ctx.font = `500 28px ${family}`;
     const url = new URL(link);
@@ -378,6 +381,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     initialDate?: string; initialTime?: string; initialService?: number;
     initialOffer?: {url:string;special_price_som:number|null;story_template:"white"|"black"|"red";slots:{date:string;time:string}[]};
 }) {
+    const { t: tr, locale } = useI18n();
     const activeServices = services.filter(s => s.is_active);
 
     const [serviceId, setServiceId] = useState(initialService && activeServices.some(s => s.id === initialService) ? initialService : activeServices[0]?.id || 0);
@@ -399,7 +403,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         const saved=master.story_template?.split(":");
         return saved?.[0]==="category" ? [saved[1],saved[2]] : [master.industry||"",master.activity||""];
     });
-    useEffect(()=>{let live=true;axios.get<CategoryResponse>("/stories/category/catalog",{params:{industry:categoryPair[0],activity:categoryPair[1]}}).then(({data})=>{if(live)setCategoryCatalog(data);}).catch(()=>{if(live)setError("Не удалось загрузить шаблоны категории. Попробуйте ещё раз.");});return()=>{live=false;};},[categoryPair[0],categoryPair[1]]);
+    useEffect(()=>{let live=true;axios.get<CategoryResponse>("/stories/category/catalog",{params:{industry:categoryPair[0],activity:categoryPair[1]}}).then(({data})=>{if(live)setCategoryCatalog(data);}).catch(()=>{if(live)setError(tr("Не удалось загрузить шаблоны категории. Попробуйте ещё раз."));});return()=>{live=false;};},[categoryPair[0],categoryPair[1]]);
     const [prepared, setPrepared] = useState<File | null>(null);
     const canvas = useRef<HTMLCanvasElement>(null);
 
@@ -416,7 +420,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
     const service = activeServices.find(s => s.id === serviceId);
     const hasCategory=!!(categoryCatalog.category && categoryCatalog.category.industry===categoryPair[0] && categoryCatalog.category.activity===categoryPair[1] && categoryCatalog.templates.length);
     const theme:Theme="category";
-    const headline=headlineOverride ?? categoryCatalog.category?.name ?? "";
+    const headline=headlineOverride ?? tr(categoryCatalog.category?.name ?? "");
     const baseCategoryTemplate=hasCategory?categoryCatalog.templates.find(t=>t.id===categorySelection)??categoryCatalog.templates[0]:undefined;
     const [templateEdits,setTemplateEdits]=useState<Record<string,Partial<TemplateSetting>>>({});
     const templateKey=categoryPair.join(":")+":"+baseCategoryTemplate?.id;
@@ -438,11 +442,11 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
             const preview=canvas.current;
             // A temporary canvas prevents late image loads from overwriting a newer template.
             const offscreen=document.createElement("canvas");
-            void drawStory(offscreen,master,storyService,date,storyTimeLabel,style,link,theme,nailTemplate,hairTemplate,browTemplate,extraId,catalog,hotCategoryTemplate,headline,showPrice)
+            void drawStory(offscreen,master,storyService,date,storyTimeLabel,style,link,theme,nailTemplate,hairTemplate,browTemplate,extraId,catalog,hotCategoryTemplate,headline,showPrice,locale)
                 .then(()=>{if(sequence!==renderSequence.current)return;const c=preview.getContext("2d");if(c){preview.width=offscreen.width;preview.height=offscreen.height;c.drawImage(offscreen,0,0);}})
-                .catch(()=>{if(sequence===renderSequence.current)setError("Не удалось отобразить сторис.");});
+                .catch(()=>{if(sequence===renderSequence.current)setError(tr("Не удалось отобразить сторис."));});
         }
-    }, [master, storyService, date, time, storyTimeLabel, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, hotCategoryTemplate, headline, hasCategory, showPrice, storyTemplate, specialPrice]);
+    }, [master, storyService, date, time, storyTimeLabel, style, link, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, hotCategoryTemplate, headline, hasCategory, showPrice, storyTemplate, specialPrice, locale]);
     useEffect(() => {
         const handleKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
         window.addEventListener("keydown", handleKey);
@@ -456,7 +460,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
             const {data}=await axios.post<{template:string}>("/stories/style",{template:selected});
             setSavedTemplate(data.template);
         }catch{
-            setError("Не удалось сохранить выбранный шаблон. Проверьте соединение.");
+            setError(tr("Не удалось сохранить выбранный шаблон. Проверьте соединение."));
         }finally{setSavingTemplate(false);}
     };
     async function prepare() {
@@ -470,7 +474,7 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
             if(!publishedUrl){
                 for(const slot of allSlots){
                     const response = await axios.get<{available: boolean; reason?: string}>("/stories/availability", {params: {service: service.id, date:slot.date, time:slot.time}});
-                    if (!response.data.available) throw new Error(response.data.reason || `Время ${slot.date} ${slot.time} недоступно.`);
+                    if (!response.data.available) throw new Error(response.data.reason || tr("Время {0} {1} недоступно.", [slot.date, slot.time]));
                 }
                 const created=await axios.post<{id:number;url:string}>("/hot-slots",{
                     service_id:service.id,
@@ -481,13 +485,13 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
                 publishedUrl=created.data.url;
             }
             const pricedService=specialPrice===""?service:{...service,price_som:Number(specialPrice)};
-            await drawStory(canvas.current, master, pricedService, date, storyTimeLabel, style, publishedUrl!, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, hotCategoryTemplate, headline, showPrice);
+            await drawStory(canvas.current, master, pricedService, date, storyTimeLabel, style, publishedUrl!, theme, nailTemplate, hairTemplate, browTemplate, extraId, catalog, hotCategoryTemplate, headline, showPrice, locale);
             const blob = await toBlob(canvas.current);
-            if(blob.size===0) throw new Error("PNG пустой.");
+            if(blob.size===0) throw new Error(tr("PNG пустой."));
             setOfferUrl(publishedUrl!);
             setPrepared(new File([blob], `bosh-${date}-${time.replace(":", "-")}.png`, { type: "image/png" }));
         } catch (e) {
-            setError(e instanceof Error ? e.message : "Не удалось создать сторис. Попробуйте снова.");
+            setError(e instanceof Error ? e.message : tr("Не удалось создать сторис. Попробуйте снова."));
         } finally { setBusy(false); }
     }
     function download() {
@@ -502,87 +506,87 @@ export default function StoryCreator({ master, services, onClose, initialDate, i
         if (!prepared) return;
         if (!navigator.canShare?.({files: [prepared]}) || !navigator.share) {
             download();
-            setError("Системная отправка недоступна. PNG сохранён на устройство.");
+            setError(tr("Системная отправка недоступна. PNG сохранён на устройство."));
             return;
         }
         try {
-            await navigator.share({files: [prepared], title: "Свободное время"});
+            await navigator.share({files: [prepared], title: tr("Свободное время")});
         } catch (e) {
-            if ((e as DOMException).name !== "AbortError") setError("Не удалось поделиться. Используйте «Скачать PNG».");
+            if ((e as DOMException).name !== "AbortError") setError(tr("Не удалось поделиться. Используйте «Скачать PNG»."));
         }
     }
     return <div className="story-overlay" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
-        <section className={`story-dialog panel story-view-${mobileStoryView}`} role="dialog" aria-modal="true" aria-label="Создать сторис">
-            <div className="row between"><h2>Сторис об окне</h2><CloseButton onClick={onClose} label="Закрыть" /></div>
-            <div className="story-mobile-tabs" role="group" aria-label="Режим просмотра сторис">
-                <button type="button" className={mobileStoryView === "edit" ? "selected" : ""} aria-pressed={mobileStoryView === "edit"} onClick={() => setMobileStoryView("edit")}>Настройки</button>
-                <button type="button" className={mobileStoryView === "preview" ? "selected" : ""} aria-pressed={mobileStoryView === "preview"} onClick={() => setMobileStoryView("preview")}>Превью</button>
+        <section className={`story-dialog panel story-view-${mobileStoryView}`} role="dialog" aria-modal="true" aria-label={tr("Создать сторис")}>
+            <div className="row between"><h2>{tr("Сторис об окне")}</h2><CloseButton onClick={onClose} label={tr("Закрыть")} /></div>
+            <div className="story-mobile-tabs" role="group" aria-label={tr("Режим просмотра сторис")}>
+                <button type="button" className={mobileStoryView === "edit" ? "selected" : ""} aria-pressed={mobileStoryView === "edit"} onClick={() => setMobileStoryView("edit")}>{tr("Настройки")}</button>
+                <button type="button" className={mobileStoryView === "preview" ? "selected" : ""} aria-pressed={mobileStoryView === "preview"} onClick={() => setMobileStoryView("preview")}>{tr("Превью")}</button>
             </div>
             <div className="story-grid">
                 <div className="story-fields">
-                    <label>Услуга<select value={serviceId} onChange={e => setServiceId(Number(e.target.value))}>{activeServices.map(s => <option key={s.id} value={s.id}>{s.name} · {s.price_som.toLocaleString("ru-RU")} сом</option>)}</select></label>
-                    <label className="story-checkbox"><input type="checkbox" checked={showPrice} onChange={e=>setShowPrice(e.target.checked)} />Показывать цену услуги</label>
+                    <label>{tr("Услуга")}<select value={serviceId} onChange={e => setServiceId(Number(e.target.value))}>{activeServices.map(s => <option key={s.id} value={s.id}>{s.name} · {s.price_som.toLocaleString((locale === "ky" ? "ky-KG" : "ru-RU"))} {tr("сом")}</option>)}</select></label>
+                    <label className="story-checkbox"><input type="checkbox" checked={showPrice} onChange={e=>setShowPrice(e.target.checked)} />{tr("Показывать цену услуги")}</label>
                     <div className="story-input-row">
-                        <label>Спеццена, сом<input type="number" min="0" max="10000000" inputMode="numeric" value={specialPrice} onChange={e=>setSpecialPrice(e.target.value)} placeholder="Необязательно" /></label>
-                        <label>Цвет<select value={storyTemplate} onChange={e=>setStoryTemplate(e.target.value as "white"|"black"|"red")}><option value="white">Белый</option><option value="black">Чёрный</option><option value="red">Красный</option></select></label>
+                        <label>{tr("Спеццена, сом")}<input type="number" min="0" max="10000000" inputMode="numeric" value={specialPrice} onChange={e=>setSpecialPrice(e.target.value)} placeholder={tr("Необязательно")} /></label>
+                        <label>{tr("Цвет")}<select value={storyTemplate} onChange={e=>setStoryTemplate(e.target.value as "white"|"black"|"red")}><option value="white">{tr("Белый")}</option><option value="black">{tr("Чёрный")}</option><option value="red">{tr("Красный")}</option></select></label>
                     </div>
                     <div className="story-input-row">
-                        <label>Дата<input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
-                        <label>Время<input type="time" step="1800" value={time} onChange={e => setTime(e.target.value)} /></label>
+                        <label>{tr("Дата")}<input type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
+                        <label>{tr("Время")}<input type="time" step="1800" value={time} onChange={e => setTime(e.target.value)} /></label>
                     </div>
                     {extraSlots.map((slot,index)=><div className="story-input-row" key={`${slot.date}-${slot.time}-${index}`}>
-                        <label>Ещё дата<input type="date" value={slot.date} onChange={e=>setExtraSlots(items=>items.map((item,i)=>i===index?{...item,date:e.target.value}:item))}/></label>
-                        <label>Ещё время<input type="time" step="1800" value={slot.time} onChange={e=>setExtraSlots(items=>items.map((item,i)=>i===index?{...item,time:e.target.value}:item))}/></label>
-                        <button type="button" className="ghost" aria-label="Удалить интервал" onClick={()=>setExtraSlots(items=>items.filter((_,i)=>i!==index))}>Удалить</button>
+                        <label>{tr("Ещё дата")}<input type="date" value={slot.date} onChange={e=>setExtraSlots(items=>items.map((item,i)=>i===index?{...item,date:e.target.value}:item))}/></label>
+                        <label>{tr("Ещё время")}<input type="time" step="1800" value={slot.time} onChange={e=>setExtraSlots(items=>items.map((item,i)=>i===index?{...item,time:e.target.value}:item))}/></label>
+                        <button type="button" className="ghost" aria-label={tr("Удалить интервал")} onClick={()=>setExtraSlots(items=>items.filter((_,i)=>i!==index))}>{tr("Удалить")}</button>
                     </div>)}
-                    {extraSlots.length<9&&<button type="button" className="ghost" onClick={()=>setExtraSlots(items=>[...items,{date,time}])}>+ Добавить время</button>}
-                    <label>Категория шаблонов<select value={categoryPair[0]} onChange={e=>{const group=categoryCatalog.groups?.find(g=>g.id===e.target.value);if(group){setCategoryPair([group.id,Object.keys(group.activities)[0]]);setHeadlineOverride(null);setCategorySelection("editorial");}}}>
-                        <option value="" disabled>Выберите категорию</option>
-                        {categoryCatalog.groups?.map(g=><option key={g.id} value={g.id}>{g.name}</option>)}
+                    {extraSlots.length<9&&<button type="button" className="ghost" onClick={()=>setExtraSlots(items=>[...items,{date,time}])}>{tr("+ Добавить время")}</button>}
+                    <label>{tr("Категория шаблонов")}<select value={categoryPair[0]} onChange={e=>{const group=categoryCatalog.groups?.find(g=>g.id===e.target.value);if(group){setCategoryPair([group.id,Object.keys(group.activities)[0]]);setHeadlineOverride(null);setCategorySelection("editorial");}}}>
+                        <option value="" disabled>{tr("Выберите категорию")}</option>
+                        {categoryCatalog.groups?.map(g=><option key={g.id} value={g.id}>{tr(g.name)}</option>)}
                     </select></label>
-                    {categoryPair[0] && <label>Подборка<select value={categoryPair[1]} onChange={e=>{setCategoryPair([categoryPair[0],e.target.value]);setHeadlineOverride(null);setCategorySelection("editorial");}}>
-                        {Object.entries(categoryCatalog.groups?.find(g=>g.id===categoryPair[0])?.activities||{}).map(([id,name])=><option key={id} value={id}>{name}</option>)}
+                    {categoryPair[0] && <label>{tr("Подборка")}<select value={categoryPair[1]} onChange={e=>{setCategoryPair([categoryPair[0],e.target.value]);setHeadlineOverride(null);setCategorySelection("editorial");}}>
+                        {Object.entries(categoryCatalog.groups?.find(g=>g.id===categoryPair[0])?.activities||{}).map(([id,name])=><option key={id} value={id}>{tr(name)}</option>)}
                     </select></label>}
-                    <label>Текст на картинке<textarea value={headline} maxLength={80} rows={3} onChange={e=>setHeadlineOverride(e.target.value)} placeholder="Напишите свой текст" /></label>
+                    <label>{tr("Текст на картинке")}<textarea value={headline} maxLength={80} rows={3} onChange={e=>setHeadlineOverride(e.target.value)} placeholder={tr("Напишите свой текст")} /></label>
                     {theme==="category" && hasCategory && <div>
-                        <p className="muted small">{categoryCatalog.category?.name} · 8 вариантов оформления</p>
-                        <div className="story-nail-templates" role="group" aria-label="Шаблоны моей категории">
+                        <p className="muted small">{tr(categoryCatalog.category?.name ?? "")} {tr("· 8 вариантов оформления")}</p>
+                        <div className="story-nail-templates" role="group" aria-label={tr("Шаблоны моей категории")}>
                         {categoryCatalog.templates.map(t=><button type="button" key={t.id} aria-pressed={categoryTemplate?.id===t.id}
                           className={categoryTemplate?.id===t.id?"story-nail-template selected":"story-nail-template"}
                           disabled={savingTemplate}
                           onClick={()=>{setCategorySelection(t.id);void saveTemplate("category:"+categoryCatalog.category!.industry+":"+categoryCatalog.category!.activity,t.id);}}>
                           <span className="story-nail-thumb" style={{backgroundImage:t.image_url?`linear-gradient(180deg,transparent,rgba(0,0,0,.45)),url("${t.image_url}")`:undefined,backgroundColor:categoryLook[t.id]?.bg||"#e9e5df"}}/>
-                          <span>{t.name}</span>
+                          <span>{tr(t.name)}</span>
                         </button>)}
                         </div>
-                        <p className="muted small" role="status">{savingTemplate?"Сохраняем шаблон…":savedTemplate==="category:"+categoryCatalog.category?.industry+":"+categoryCatalog.category?.activity+":"+categoryTemplate?.id?"Шаблон сохранён":""}</p>
+                        <p className="muted small" role="status">{savingTemplate?tr("Сохраняем шаблон…"):savedTemplate==="category:"+categoryCatalog.category?.industry+":"+categoryCatalog.category?.activity+":"+categoryTemplate?.id?tr("Шаблон сохранён"):""}</p>
                     </div>}
                     {categoryTemplate && editorOptions && <div className="story-editor-controls">
                         <div className="story-input-row">
-                            <label>Шрифт<select value={categoryTemplate.font} onChange={e=>editTemplate({font:e.target.value as TemplateSetting["font"]})}>{Object.entries(editorOptions.fonts).map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>
-                            <label>Размер заголовка<select value={categoryTemplate.scale} onChange={e=>editTemplate({scale:Number(e.target.value)})}>{editorOptions.scales.map(value=><option key={value} value={value}>{value}%</option>)}</select></label>
+                            <label>{tr("Шрифт")}<select value={categoryTemplate.font} onChange={e=>editTemplate({font:e.target.value as TemplateSetting["font"]})}>{Object.entries(editorOptions.fonts).map(([id,name])=><option key={id} value={id}>{tr(name)}</option>)}</select></label>
+                            <label>{tr("Размер заголовка")}<select value={categoryTemplate.scale} onChange={e=>editTemplate({scale:Number(e.target.value)})}>{editorOptions.scales.map(value=><option key={value} value={value}>{value}%</option>)}</select></label>
                         </div>
-                        <label>Цвет текста<select value={categoryTemplate.text_color} onChange={e=>editTemplate({text_color:e.target.value})}>{Object.entries(editorOptions.colors).map(([hex,name])=><option key={hex} value={hex}>{name}</option>)}</select></label>
-                        <div className="story-color-swatches" role="group" aria-label="Цвет текста">
-                            {Object.entries(editorOptions.colors).map(([hex,name])=><button type="button" key={hex} title={name} aria-label={name} aria-pressed={categoryTemplate.text_color===hex} onClick={()=>editTemplate({text_color:hex})}><span style={{background:hex||"conic-gradient(#fff 0 25%,#222 0 50%,#fff 0 75%,#222 0)"}} /></button>)}
+                        <label>{tr("Цвет текста")}<select value={categoryTemplate.text_color} onChange={e=>editTemplate({text_color:e.target.value})}>{Object.entries(editorOptions.colors).map(([hex,name])=><option key={hex} value={hex}>{tr(name)}</option>)}</select></label>
+                        <div className="story-color-swatches" role="group" aria-label={tr("Цвет текста")}>
+                            {Object.entries(editorOptions.colors).map(([hex,name])=><button type="button" key={hex} title={tr(name)} aria-label={tr(name)} aria-pressed={categoryTemplate.text_color===hex} onClick={()=>editTemplate({text_color:hex})}><span style={{background:hex||"conic-gradient(#fff 0 25%,#222 0 50%,#fff 0 75%,#222 0)"}} /></button>)}
                         </div>
                         <div className="story-input-row">
-                            <label>Дополнительное затемнение<select value={categoryTemplate.shade??0} onChange={e=>editTemplate({shade:Number(e.target.value)})}>{Array.from(new Set([...editorOptions.shades,categoryTemplate.shade??0])).sort((a,b)=>a-b).map(value=><option key={value} value={value}>{value}%</option>)}</select></label>
+                            <label>{tr("Дополнительное затемнение")}<select value={categoryTemplate.shade??0} onChange={e=>editTemplate({shade:Number(e.target.value)})}>{Array.from(new Set([...editorOptions.shades,categoryTemplate.shade??0])).sort((a,b)=>a-b).map(value=><option key={value} value={value}>{value}%</option>)}</select></label>
                         </div>
-                        <button type="button" className="ghost" onClick={()=>setTemplateEdits(current=>{const next={...current};delete next[templateKey];return next;})}>Вернуть настройки шаблона</button>
+                        <button type="button" className="ghost" onClick={()=>setTemplateEdits(current=>{const next={...current};delete next[templateKey];return next;})}>{tr("Вернуть настройки шаблона")}</button>
                     </div>}
-                    <p className="muted small">Сторис создаётся в размере 1080 × 1920. Ссылка на запись подготовлена отдельно для стикера Instagram.</p>
+                    <p className="muted small">{tr("Сторис создаётся в размере 1080 × 1920. Ссылка на запись подготовлена отдельно для стикера Instagram.")}</p>
                 </div>
-                <canvas ref={canvas} className="story-preview" aria-label="Предпросмотр сторис" />
+                <canvas ref={canvas} className="story-preview" aria-label={tr("Предпросмотр сторис")} />
             </div>
             <div className="story-actions">
                     <div className="row wrap">
-                        <button type="button" className="primary" disabled={busy || !service || !hasCategory || !headline.trim()} onClick={() => void prepare()}>{busy ? "Проверяем время…" : "Создать сторис"}</button>
-                        {prepared && <button type="button" className="ghost" onClick={download}>Скачать PNG</button>}
-                        {prepared && <button type="button" className="ghost" onClick={() => void share()}>Поделиться</button>}
-                        {prepared && offerUrl && <button type="button" className="ghost" onClick={() => navigator.clipboard.writeText(offerUrl).then(() => setError("Ссылка скопирована.")).catch(() => setError("Не удалось скопировать ссылку."))}>Копировать ссылку</button>}
+                        <button type="button" className="primary" disabled={busy || !service || !hasCategory || !headline.trim()} onClick={() => void prepare()}>{busy ? tr("Проверяем время…") : tr("Создать сторис")}</button>
+                        {prepared && <button type="button" className="ghost" onClick={download}>{tr("Скачать PNG")}</button>}
+                        {prepared && <button type="button" className="ghost" onClick={() => void share()}>{tr("Поделиться")}</button>}
+                        {prepared && offerUrl && <button type="button" className="ghost" onClick={() => navigator.clipboard.writeText(offerUrl).then(() => setError(tr("Ссылка скопирована."))).catch(() => setError(tr("Не удалось скопировать ссылку.")))}>{tr("Копировать ссылку")}</button>}
                     </div>
-                    {error && <p role="status" className="muted small">{error}</p>}
+                    {error && <p role="status" className="muted small">{tr(error)}</p>}
             </div>
         </section>
     </div>;
