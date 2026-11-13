@@ -35,6 +35,29 @@ class AccountSecurityController extends Controller
         return back()->with('success', 'Пароль сохранён. Теперь входите по электронной почте и паролю.');
     }
 
+    public function destroy(Request $request, \App\Services\DeleteMasterAccount $deletion)
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'confirm_account_id' => ['required', 'string', Rule::in([(string) $user->id])],
+            'confirm_deletion' => ['required', 'accepted'],
+            'deletion_password' => ['required', 'string', 'max:128'],
+        ], [
+            'confirm_account_id.required' => 'Введите ID своего аккаунта для подтверждения.',
+            'confirm_account_id.in' => 'ID аккаунта не совпадает. Удаление отменено.',
+            'confirm_deletion.accepted' => 'Подтвердите, что понимаете последствия удаления.',
+            'confirm_deletion.required' => 'Подтвердите, что понимаете последствия удаления.',
+            'deletion_password.required' => 'Введите текущий пароль для удаления аккаунта.',
+        ]);
+        $filesRemoved = $deletion->delete($user, $data['deletion_password']);
+        \Illuminate\Support\Facades\Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login')->with($filesRemoved ? 'success' : 'error', $filesRemoved
+            ? 'Ваш аккаунт и связанные данные удалены.'
+            : 'Аккаунт удалён. Очистка фотографий требует обращения в поддержку: gmederio@gmail.com.');
+    }
+
     private function ensureMailer(): void
     {
         if (in_array(config('mail.default'), ['log', 'array'], true)) {

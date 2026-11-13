@@ -1,5 +1,6 @@
+import DeleteAccount from "./DeleteAccount";
 import { useI18n } from "./i18n";
-import { useForm, router } from "@inertiajs/react";
+import { useForm, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import { Errors, Field } from "./Shared";
 import PasswordHints from "./PasswordHints";
@@ -12,13 +13,15 @@ export type SecurityStatus = {
 
 export default function AccountSecurity({ status }: { status: SecurityStatus }) {
     const { t: tr, locale } = useI18n();
+    const { auth } = usePage<{ auth: { user: { id: number } } }>().props;
     const [dismissPassword, setDismissPassword] = useState(false);
     const emailForm = useForm({ email: status.email || "" });
     const passForm = useForm({ current_password: "", password: "", password_confirmation: "" });
     return (
-        <section className="panel" aria-label={tr("Безопасность аккаунта")}>
+        <><section className="panel" aria-label={tr("Безопасность аккаунта")}>
             <p className="eyebrow">{tr("БЕЗОПАСНОСТЬ АККАУНТА")}</p>
             <h2>{tr("Вход и восстановление")}</h2>
+            <div className="account-id-card"><div><span>{tr("ID аккаунта")}</span><strong className="account-id-number">#{auth.user.id}</strong></div><p>{tr("Ваш постоянный внутренний номер. Не меняется при изменении имени, почты или адреса страницы.")}</p></div>
             {!status.emailVerified && (
                 <div className="notice" role="status">
                     <strong>{status.email ? tr("Подтвердите вашу почту") : tr("Добавьте электронную почту")}</strong>
@@ -85,5 +88,6 @@ export default function AccountSecurity({ status }: { status: SecurityStatus }) 
                 </form>
             </div>
         </section>
+        <DeleteAccount accountId={auth.user.id} passwordSet={status.passwordSet} /></>
     );
 }

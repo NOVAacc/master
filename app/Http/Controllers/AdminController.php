@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -161,32 +160,10 @@ class AdminController extends Controller
             'confirm_user_id' => ['required', 'integer', \Illuminate\Validation\Rule::in([$user->id])],
             'confirm_deletion' => ['required', 'accepted'],
         ]);
-        $masterId = DB::transaction(function () use ($user) {
-            $lockedUser = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
-            $master = MasterProfile::where('user_id', $lockedUser->id)->lockForUpdate()->first();
-            DB::table('sessions')->where('user_id', $lockedUser->id)->delete();
-            if ($lockedUser->email !== null) {
-                DB::table('password_reset_tokens')->where('email', $lockedUser->email)->delete();
-            }
-            // Foreign keys cascade through the master's CRM, bookings and notifications.
-            // Administrator accounts live in a different table and cannot be targeted here.
-            $lockedUser->delete();
-            return $master?->id;
-        }, 3);
-
-        // Remove only this master's private upload directory, after the DB commit.
-        // Shared demo assets and other masters' directories are never removed.
-        $message = 'Аккаунт и связанные данные удалены.';
-        if ($masterId !== null) {
-            try {
-                if (!Storage::disk('local')->deleteDirectory('profile-images/'.$masterId)) {
-                    throw new \RuntimeException('Could not remove deleted master upload directory: '.$masterId);
-                }
-            } catch (\Throwable $error) {
-                report($error);
-                $message = 'Аккаунт удалён. Не удалось удалить файлы фотографий; требуется очистка на сервере.';
-            }
-        }
+        $filesRemoved = app(\App\Services\DeleteMasterAccount::class)->delete($user);
+        $message = $filesRemoved
+            ? 'Аккаунт и связанные данные удалены.'
+            : 'Аккаунт удалён. Не удалось удалить файлы фотографий; требуется очистка на сервере.';
         return redirect()->route('admin.users')->with('success', $message);
     }
 
