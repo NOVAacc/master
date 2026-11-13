@@ -1,3 +1,4 @@
+import { useI18n } from "./i18n";
 import type { ChangeEvent } from "react";
 
 export default function PhoneInput({
@@ -17,6 +18,7 @@ export default function PhoneInput({
     fixedPrefix?: boolean;
     showHint?: boolean;
 }) {
+    const { t } = useI18n();
     const digits = (value || "").replace(/\D/g, "");
     const local = digits.startsWith("996") ? digits.slice(3, 12) : digits.slice(0, 9);
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -38,7 +40,7 @@ export default function PhoneInput({
                 type="tel"
                 inputMode="numeric"
                 autoComplete={autoComplete}
-                aria-label={!showHint ? label : fixedPrefix ? label + ": 9 цифр после 996, без плюса" : label + ": только цифры, без плюса"}
+                aria-label={!showHint ? t(label) : fixedPrefix ? t(label) + t(": 9 цифр после 996, без плюса") : t(label) + t(": только цифры, без плюса")}
                 placeholder={fixedPrefix ? "555123456" : "996555123456"}
                 value={fixedPrefix ? local : digits}
                 maxLength={fixedPrefix ? 9 : 15}
@@ -46,7 +48,7 @@ export default function PhoneInput({
                 required={required}
                 onChange={handleChange}
             />
-            {showHint && !fixedPrefix && <small className="phone-hint">Только цифры, без «+»</small>}
+            {showHint && !fixedPrefix && <small className="phone-hint">{t("Только цифры, без «+»")}</small>}
         </div>
     );
 }

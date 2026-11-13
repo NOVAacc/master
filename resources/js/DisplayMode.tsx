@@ -1,3 +1,4 @@
+import { useI18n } from "./i18n";
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
 import { Link, router } from "@inertiajs/react";
@@ -34,6 +35,7 @@ try {
 applyMode(initialMode);
 
 export default function DisplayModeFooter({ initialInstagramUsername }: { initialInstagramUsername: string }) {
+    const { t } = useI18n();
     const [instagramUsername, setInstagramUsername] = useState(initialInstagramUsername);
     useEffect(() => router.on("navigate", event => {
         const site = event.detail.page.props.site as { instagramUsername?: string } | undefined;
@@ -63,12 +65,12 @@ export default function DisplayModeFooter({ initialInstagramUsername }: { initia
     return (
         <footer className="site-footer">
             <div className="footer-identity">
-                <a href="/" aria-label="BOSH — главная страница"><BrandMark small /></a>
-                <p className="muted small">BOSH — время для вашего дела.</p>
+                <a href="/" aria-label={t("BOSH — главная страница")}><BrandMark small /></a>
+                <p className="muted small">{t("BOSH — время для вашего дела.")}</p>
             </div>
-            <nav className="footer-legal" aria-label="Правовые документы">
-                <Link href="/legal/terms">Условия использования</Link>
-                <Link href="/legal/privacy">Конфиденциальность</Link>
+            <nav className="footer-legal" aria-label={t("Правовые документы")}>
+                <Link href="/legal/terms">{t("Условия использования")}</Link>
+                <Link href="/legal/privacy">{t("Конфиденциальность")}</Link>
                 <Link href="/legal/cookies">Cookie</Link>
             </nav>
             <a className="site-instagram" href={`https://www.instagram.com/${encodeURIComponent(instagramUsername)}/`} target="_blank" rel="noopener noreferrer" aria-label={`Instagram BOSH: @${instagramUsername}`}>
@@ -77,21 +79,21 @@ export default function DisplayModeFooter({ initialInstagramUsername }: { initia
             <div
                 className="display-switch"
                 role="group"
-                aria-label="Версия сайта"
+                aria-label={t("Версия сайта")}
             >
                 {(
                     [
-                        ["auto", "Авто"],
-                        ["mobile", "Мобильная"],
-                        ["desktop", "Десктопная"],
+                        ["auto", t("Авто")],
+                        ["mobile", t("Мобильная")],
+                        ["desktop", t("Десктопная")],
                     ] as const
                 ).map(([value, label]) => (
                     <button
                         key={value}
                         type="button"
                         aria-pressed={mode === value}
-                        aria-label={label === "Авто" ? "Автоматический режим" : label === "Мобильная" ? "Мобильная версия" : "Десктопная версия"}
-                        title={label === "Авто" ? "Автоматический режим" : label === "Мобильная" ? "Мобильная версия" : "Десктопная версия"}
+                        aria-label={label === t("Авто") ? t("Автоматический режим") : label === t("Мобильная") ? t("Мобильная версия") : t("Десктопная версия")}
+                        title={label === t("Авто") ? t("Автоматический режим") : label === t("Мобильная") ? t("Мобильная версия") : t("Десктопная версия")}
                         onClick={() => selectMode(value)}
                     >
                         <Icon name={value === "auto" ? "devices" : value === "mobile" ? "phone" : "monitor"} />

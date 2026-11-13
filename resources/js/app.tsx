@@ -1,3 +1,4 @@
+import { LocaleProvider } from "./i18n";
 import { createInertiaApp } from "@inertiajs/react";
 import { createRoot } from "react-dom/client";
 import "../css/app.css";
@@ -10,10 +11,10 @@ createInertiaApp({
     },
     setup({ el, App, props }) {
         createRoot(el).render(
-            <div className="display-frame">
+            <LocaleProvider><div className="display-frame">
                 <App {...props} />
                 <DisplayModeFooter initialInstagramUsername={(props.initialPage.props.site as { instagramUsername?: string } | undefined)?.instagramUsername ?? "bosh.kgz"} />
-            </div>,
+            </div></LocaleProvider>,
         );
     },
     progress: { color: "#252525" },
