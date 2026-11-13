@@ -1,6 +1,6 @@
 import { timezoneLabel } from "./timezone";
 import PhoneInput from "./PhoneInput";
-import { useForm, usePage } from "@inertiajs/react";
+import { router, useForm, usePage } from "@inertiajs/react";
 import { useEffect, useRef, useState } from "react";
 import { Errors, Field } from "./Shared";
 import ProfileIdentity from "./ProfileIdentity";
@@ -130,6 +130,9 @@ export default function ProfileSettings({ master }: { master: Master }) {
                                 avatar: k.avatar + 1,
                                 cover: k.cover + 1,
                             }));
+                            // Refresh the authoritative profile after the server commits the change.
+                            // This also refreshes the dashboard title, public URL and preview.
+                            router.reload({ only: ["master", "publicUrl"], preserveScroll: true });
                         },
                     });
                 }}
