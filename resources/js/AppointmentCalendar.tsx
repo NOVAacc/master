@@ -58,7 +58,8 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
     }).format(new Date(`${day}T12:00:00Z`));
 
     const root = useRef<HTMLDivElement>(null);
-    const detail = useRef<HTMLDivElement>(null);
+    const detail = useRef<HTMLDialogElement>(null);
+    const [detailPosition, setDetailPosition] = useState({left: 16, top: 16});
     const [compact, setCompact] = useState(false);
     const [now, setNow] = useState(() => Date.now());
     useEffect(() => {
@@ -83,7 +84,7 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
         return () => observer.disconnect();
     }, []);
     useEffect(() => {
-        if (selected) detail.current?.focus();
+        if (selected && detail.current && !detail.current.open) detail.current.showModal();
     }, [selectedId]);
     const entries = days.map((day) => {
         const bookings = appointments.flatMap((a) => {
@@ -371,15 +372,21 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
                                                 aria-pressed={
                                                     selectedId === a.id
                                                 }
-                                                title={text}
-                                                onClick={() =>
-                                                    setSelectedId(a.id)
-                                                }
+                                                aria-haspopup="dialog"
+                                                onClick={event => {
+                                                    const rect = event.currentTarget.getBoundingClientRect();
+                                                    const width = Math.min(460, window.innerWidth - 32);
+                                                    const left = rect.right + width + 16 <= window.innerWidth ? rect.right + 12 : rect.left - width - 12 >= 16 ? rect.left - width - 12 : Math.max(16, Math.min(rect.left, window.innerWidth - width - 16));
+                                                    const height = Math.min(560, window.innerHeight - 32);
+                                                    setDetailPosition({left, top: Math.max(16, Math.min(rect.top, window.innerHeight - height - 16))});
+                                                    setSelectedId(a.id);
+                                                }}
                                             >
                                                 <span className="calendar-appt-time">
                                                     {minuteLabel(item.start)}–
                                                     {minuteLabel(item.end)}
                                                 </span>
+                                                {a.payment_status === "paid" && <span className="calendar-paid-marker" title={tr("Оплачено")} aria-label={tr("Оплачено")}>✓</span>}
                                                 <strong>{a.client_name}</strong>
                                                 <span className="calendar-appt-phone">{a.client_phone}</span>
                                                 {size >= 88 && (
@@ -417,18 +424,25 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
                 <p className="muted small">{tr("На выбранный период записей нет.")}</p>
             )}
             {selected && (
-                <div
-                    className="calendar-detail"
+                <dialog
+                    className="calendar-detail calendar-detail-popup"
                     ref={detail}
-                    tabIndex={-1}
-                    aria-label={tr("Детали записи")}
+                    style={detailPosition}
+                    aria-labelledby="calendar-detail-title"
+                    onCancel={event => { event.preventDefault(); setSelectedId(null); }}
+                    onClose={() => setSelectedId(null)}
+                    onClick={event => {
+                        if (event.target !== event.currentTarget) return;
+                        const r = event.currentTarget.getBoundingClientRect();
+                        if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) setSelectedId(null);
+                    }}
                 >
                     <div className="row between">
-                        <h3>{tr("Детали записи")}</h3>
+                        <h3 id="calendar-detail-title">{tr("Детали записи")}</h3>
                         <CloseButton label={tr("Закрыть детали записи")} onClick={() => setSelectedId(null)} />
                     </div>
                     {renderDetails(selected)}
-                </div>
+                </dialog>
             )}
         </div>
     );

@@ -357,6 +357,21 @@ class DashboardController extends Controller
         return back()->with('success', 'Статусы WhatsApp обновлены. Проверьте результат в записи.');
     }
 
+    public function payment(Request $request, MasterAppointment $appointment)
+    {
+        $master = $this->master($request);
+        abort_unless((int) $appointment->master_profile_id === (int) $master->id, 404);
+        $data = $request->validate(['paid' => ['required', 'boolean']]);
+        $status = $data['paid'] ? 'paid' : 'unpaid';
+        DB::transaction(function () use ($master, $appointment, $status) {
+            MasterProfile::whereKey($master->id)->lockForUpdate()->firstOrFail();
+            $locked = MasterAppointment::whereKey($appointment->id)->where('master_profile_id', $master->id)->lockForUpdate()->firstOrFail();
+            $locked->payment_status = $status;
+            $locked->save();
+        }, 3);
+        return response()->json(['id' => $appointment->id, 'payment_status' => $status])->header('Cache-Control', 'private, no-store');
+    }
+
     public function status(Request $request, MasterAppointment $appointment)
     {
         $master = $this->master($request);

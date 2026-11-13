@@ -53,6 +53,7 @@ export type Appointment = {
     status: string;
     revision: number;
     notification_revision: number;
+    payment_status?: string | null;
     master_service_id?: number | null;
     changes?: {
         id: number;

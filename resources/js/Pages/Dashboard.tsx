@@ -1,3 +1,4 @@
+import PaymentToggle from "../PaymentToggle";
 import { localizedDateTimeFormat } from "../localized-date";
 import LanguageSwitch from "../i18n";
 import { useI18n } from "../i18n";
@@ -163,6 +164,7 @@ export default function Dashboard({
     hotOffers: HotOffer[];
 }) {
     const { t: tr, locale } = useI18n();
+    const [paymentStates, setPaymentStates] = useState<Record<number, string>>({});
     const [tab, setTab] = useState("appointments");
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -330,6 +332,7 @@ export default function Dashboard({
                     )}
                 </div>
                 <div className="appt-actions">
+                    <PaymentToggle key={a.id} appointmentId={a.id} paid={(paymentStates[a.id] ?? a.payment_status) === "paid"} onSaved={status => setPaymentStates(previous => ({...previous, [a.id]: status}))} />
                     <span className={`badge ${a.status}`}>
                         {tr(statuses[a.status] ?? a.status)}
                     </span>
@@ -669,7 +672,7 @@ export default function Dashboard({
                         <>
                             {appointmentView === "calendar" ? (
                                 <AppointmentCalendar
-                                    appointments={calendarAppointments}
+                                    appointments={calendarAppointments.map(a => ({...a, payment_status: paymentStates[a.id] ?? a.payment_status}))}
                                     blocks={calendarBlocks}
                                     hours={hours}
                                     timezone={master.timezone}
