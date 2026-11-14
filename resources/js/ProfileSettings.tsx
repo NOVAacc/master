@@ -68,7 +68,6 @@ export default function ProfileSettings({ master }: { master: Master }) {
         booking_enabled: master.booking_enabled,
         show_busy_slots: master.show_busy_slots ?? false,
         auto_confirm: master.auto_confirm,
-        whatsapp_notifications: master.whatsapp_notifications || false,
         avatar: null as File | null,
         cover: null as File | null,
         remove_avatar: false,
@@ -265,7 +264,7 @@ export default function ProfileSettings({ master }: { master: Master }) {
                         <small>
                             {tr("Клиент сможет открыть ваш Instagram одним нажатием.")}{" "}</small>
                     </Field>
-                    <Field label={tr("Телефон / WhatsApp")}>
+                    <Field label={tr("Телефон")}>
                         <PhoneInput value={f.data.phone} onChange={value => f.setData("phone", value)} label={tr("Телефон мастера")} />
                     </Field>
                     <Field label={tr("Адрес приёма")}>
@@ -337,19 +336,6 @@ export default function ProfileSettings({ master }: { master: Master }) {
                             }
                         />
                         {tr("Подтверждать записи автоматически")}{" "}</label>
-                    <label className="check">
-                        <input
-                            type="checkbox"
-                            checked={f.data.whatsapp_notifications}
-                            onChange={(e) =>
-                                f.setData(
-                                    "whatsapp_notifications",
-                                    e.target.checked,
-                                )
-                            }
-                        />
-                        {tr("Получать подтверждённые записи в WhatsApp")}{" "}</label>
-
                 </details>
                 <div className="profile-save-bar">
                     <button className="primary" disabled={f.processing}>

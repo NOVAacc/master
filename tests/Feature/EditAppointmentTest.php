@@ -145,12 +145,12 @@ class EditAppointmentTest extends TestCase
         $a->refresh();
         $this->assertSame(2, $a->revision);
         $this->assertSame(1, $a->notification_revision);
-        Http::assertSentCount(2);
+        Http::assertNothingSent();
         $data['revision'] = 2;
         $this->post('/appointments/'.$a->id.'/edit', $data)->assertSessionHasNoErrors();
         $this->assertSame(2, $a->fresh()->revision);
         $this->assertSame(1, $a->changes()->count());
-        Http::assertSentCount(2);
+        Http::assertNothingSent();
     }
 
     public function test_notification_versions_send_updated_data_once_and_new_phone_revokes_consent(): void
@@ -158,17 +158,16 @@ class EditAppointmentTest extends TestCase
         config(['services.whatsapp' => ['enabled' => true, 'token' => 'test', 'phone_number_id' => '123', 'version' => 'v23.0', 'language' => 'ru', 'client_template' => 'client', 'master_template' => 'master']]);
         Http::fake(['graph.facebook.com/*' => Http::response(['messages' => [['id' => 'wamid.edit']]], 200)]);
         [$user, , , $a] = $this->fixture();
-        Http::assertSentCount(2);
+        Http::assertNothingSent();
         $data = $this->payload($a);
         $this->actingAs($user)->post('/appointments/'.$a->id.'/edit', $data)->assertSessionHasNoErrors();
-        Http::assertSentCount(4);
+        Http::assertNothingSent();
         $a->refresh();
-        app(WhatsApp::class)->confirmed($a);
-        Http::assertSentCount(4);
+        Http::assertNothingSent();
         $data['revision'] = 2;
         $data['client_phone'] = '+996700999888';
         $this->post('/appointments/'.$a->id.'/edit', $data)->assertSessionHasNoErrors();
-        Http::assertSentCount(5);
+        Http::assertNothingSent();
         $this->assertFalse($a->fresh()->whatsapp_consent);
     }
 }

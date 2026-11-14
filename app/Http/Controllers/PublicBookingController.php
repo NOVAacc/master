@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\MasterProfile;
 use App\Models\HotSlotOffer;
 use App\Services\BookAppointment;
-use App\Services\WhatsApp;
 use App\Services\WorkingHours;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -98,7 +97,6 @@ class PublicBookingController extends Controller
             ] : null,
             'date' => $date, 'minDate' => $today->toDateString(),
             'maxDate' => $today->addDays(90)->toDateString(), 'slots' => $slots,
-            'whatsappAutomatic' => app(WhatsApp::class)->configured(),
             'bookingReceipt' => $request->session()->get('booking_receipt.master_slug') === $master->slug ? $request->session()->get('booking_receipt') : null,
         ]);
     }
@@ -121,7 +119,6 @@ class PublicBookingController extends Controller
                 }],
             'client_comment' => ['nullable', 'string', 'max:1000'],
             'consent' => ['accepted'],
-            'whatsapp_consent' => ['sometimes', 'boolean'],
         ]);
         $ids = $data['service_ids'] ?? [$data['service_id']];
         $services = $master->services()->where('is_active', true)->whereIn('id', $ids)->get();
@@ -142,13 +139,12 @@ class PublicBookingController extends Controller
             $specialPrice = $offer->special_price_som;
         }
         $appointment = $booking->create($master, $services->all(), CarbonImmutable::parse($data['starts_at'])->utc(),
-            $data['client_name'], $data['client_phone'], $data['client_comment'] ?? null, (bool) ($data['whatsapp_consent'] ?? false),
+            $data['client_name'], $data['client_phone'], $data['client_comment'] ?? null, false,
             false, $offerSlot, $specialPrice);
 
         return redirect()->route('public.master', $master->slug)->with('booking_receipt', [
             'master_slug' => $master->slug,
             'status' => $appointment->status,
-            'text' => app(WhatsApp::class)->message($appointment, 'client'),
             'details' => [
                 'id' => $appointment->id,
                 'client_name' => $appointment->client_name,
@@ -157,8 +153,6 @@ class PublicBookingController extends Controller
                 'ends_at' => $appointment->ends_at->toIso8601String(),
                 'price_som' => $appointment->price_som,
             ],
-            'masterLink' => app(WhatsApp::class)->link($master->phone, app(WhatsApp::class)->message($appointment, 'master')),
-            'automaticStatus' => $appointment->notifications()->where('recipient', 'client')->value('status'),
             'manageUrl' => URL::temporarySignedRoute('booking.manage', now()->addDays(30), ['appointment' => $appointment->id, 'revision' => $appointment->revision]),
         ])->with('success',
             $appointment->status === 'confirmed' ? 'Запись подтверждена. Ждём вас!' : 'Заявка отправлена. Мастер свяжется с вами для подтверждения.');
