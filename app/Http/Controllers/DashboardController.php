@@ -380,7 +380,10 @@ class DashboardController extends Controller
             app(\App\Services\MasterAlerts::class)->record($fresh, 'cancelled');
             app(\App\Services\ClientBookingAlerts::class)->record($fresh, 'cancelled');
         }
-        if ($data['status'] === 'confirmed') app(\App\Services\MasterAlerts::class)->record($fresh, 'confirmed');
+        if ($data['status'] === 'confirmed') {
+            app(\App\Services\MasterAlerts::class)->record($fresh, 'confirmed');
+            app(\App\Services\ClientBookingAlerts::class)->record($fresh, 'confirmed');
+        }
 
         return back()->with('success', 'Статус записи изменён.');
     }
