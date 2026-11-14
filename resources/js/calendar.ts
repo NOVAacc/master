@@ -75,3 +75,20 @@ export function arrangeIntervals<T extends CalendarInterval>(
     finish();
     return result;
 }
+
+
+// Only full half-hour cells inside working hours and outside any visible event.
+export function freeCalendarSlots(
+    hours: { starts_at: string; ends_at: string; break_starts_at: string | null; break_ends_at: string | null }[],
+    items: { start: number; end: number }[],
+    start: number,
+    end: number,
+): number[] {
+    const slots: number[] = [];
+    for (let minute = Math.ceil(start / 30) * 30; minute + 30 <= end; minute += 30) {
+        const working = hours.some(h => minute >= clockMinutes(h.starts_at) && minute + 30 <= clockMinutes(h.ends_at) &&
+            !(h.break_starts_at && h.break_ends_at && minute < clockMinutes(h.break_ends_at) && minute + 30 > clockMinutes(h.break_starts_at)));
+        if (working && !items.some(item => minute < item.end && minute + 30 > item.start)) slots.push(minute);
+    }
+    return slots;
+}

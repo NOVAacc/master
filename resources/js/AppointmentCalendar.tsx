@@ -11,6 +11,7 @@ import {
     intervalOnDay,
     localDay,
     weekStart,
+    freeCalendarSlots,
 } from "./calendar";
 
 type TimeBlock = {
@@ -60,6 +61,8 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
     const root = useRef<HTMLDivElement>(null);
     const detail = useRef<HTMLDialogElement>(null);
     const [detailPosition, setDetailPosition] = useState({left: 16, top: 16});
+    const [activeSlot, setActiveSlot] = useState<string | null>(null);
+    const pointerKind = useRef("mouse");
     const [compact, setCompact] = useState(false);
     const [now, setNow] = useState(() => Date.now());
     useEffect(() => {
@@ -74,6 +77,7 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
         view === "day"
             ? [date]
             : Array.from({ length: 7 }, (_, i) => addDays(first, i));
+    useEffect(() => setActiveSlot(null), [date, view, appointments, blocks, hours]);
     const today = localDay(new Date(now), timezone);
     const selected = appointments.find((a) => a.id === selectedId);
     useEffect(() => {
@@ -227,6 +231,8 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
                         {tr("Неделя")}{" "}</button>
                 </div>
             </div>
+            {onCreateBooking && <p className="calendar-touch-hint muted small">{tr("Коснитесь свободного времени, затем нажмите ещё раз, чтобы добавить запись.")}</p>}
+            {compact && view === "week" && <p className="muted small">{tr("Листайте календарь влево и вправо, чтобы увидеть остальные дни.")}</p>}
             {loading && (
                 <p role="status" className="muted small">
                     {tr("Загружаем записи…")}{" "}</p>
@@ -299,22 +305,7 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
                                         day: "numeric",
                                         month: "long",
                                     })}
-                                    onClick={event => {
-                                        if (!onCreateBooking || loading ||
-                                            (event.target as HTMLElement).closest(".calendar-appointment, .calendar-time-block")) return;
-                                        const y = event.clientY - event.currentTarget.getBoundingClientRect().top;
-                                        const minute = Math.floor((start + y / 1.4) / 30) * 30;
-                                        const availableWork = work.some(h => {
-                                            const starts = clockMinutes(h.starts_at), ends = clockMinutes(h.ends_at);
-                                            const breakStarts = h.break_starts_at ? clockMinutes(h.break_starts_at) : null;
-                                            const breakEnds = h.break_ends_at ? clockMinutes(h.break_ends_at) : null;
-                                            return minute >= starts && minute < ends &&
-                                                !(breakStarts !== null && breakEnds !== null && minute >= breakStarts && minute < breakEnds);
-                                        });
-                                        const occupied = items.some(item => item.start <= minute && item.end > minute &&
-                                            (item.block || (item.appointment && ["pending", "confirmed"].includes(item.appointment.status))));
-                                        if (availableWork && !occupied) onCreateBooking(day, minuteLabel(minute));
-                                    }}
+
                                 >
                                     {work.map((h, i) => (
                                         <div
@@ -334,6 +325,30 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
                                             }}
                                         />
                                     ))}
+                                    {work.filter(h => h.break_starts_at && h.break_ends_at).map((h, i) => <div key={`break-${i}`}
+                                        className="calendar-break-time" style={{top: (clockMinutes(h.break_starts_at!) - start) * 1.4,
+                                        height: (clockMinutes(h.break_ends_at!) - clockMinutes(h.break_starts_at!)) * 1.4}}>{tr("Перерыв")}</div>)}
+                                    {onCreateBooking && freeCalendarSlots(work, items, start, end).map(minute => {
+                                        const key = `${day}-${minute}`;
+                                        const label = minuteLabel(minute);
+                                        return <button key={key} type="button"
+                                            className={`calendar-free-slot${activeSlot === key ? " selected" : ""}`}
+                                            style={{top: (minute - start) * 1.4, height: 42}}
+                                            disabled={loading}
+                                            aria-label={tr("Добавить запись на {0}", [dayLabel(day, {day: "numeric", month: "long"}) + ", " + label])}
+                                            aria-pressed={activeSlot === key}
+                                            onPointerDown={event => { pointerKind.current = event.pointerType; }}
+                                            onClick={event => {
+                                                if (event.detail !== 0 && pointerKind.current !== "mouse" && activeSlot !== key) {
+                                                    setActiveSlot(key);
+                                                    return;
+                                                }
+                                                setActiveSlot(null);
+                                                onCreateBooking(day, label);
+                                            }}>
+                                            <span>+ {label} · {tr("Добавить запись")}</span>
+                                        </button>;
+                                    })}
                                     {items.map((item) => {
                                         const top = (item.start - start) * 1.4;
                                         const size =
@@ -374,6 +389,7 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
                                                 }
                                                 aria-haspopup="dialog"
                                                 onClick={event => {
+                                                    setActiveSlot(null);
                                                     const rect = event.currentTarget.getBoundingClientRect();
                                                     const width = Math.min(460, window.innerWidth - 32);
                                                     const left = rect.right + width + 16 <= window.innerWidth ? rect.right + 12 : rect.left - width - 12 >= 16 ? rect.left - width - 12 : Math.max(16, Math.min(rect.left, window.innerWidth - width - 16));

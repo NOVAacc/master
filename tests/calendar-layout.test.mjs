@@ -27,3 +27,11 @@ test('chain overlaps use consistent lanes and adjacent appointments reuse a lane
     assert.ok(items.every(item => item.lanes === 2));
     assert.deepEqual(arrangeIntervals([]), []);
 });
+
+test('free half-hours exclude breaks, partial overlaps, closed time and schedule edges', async () => {
+    const { freeCalendarSlots } = await import('../resources/js/calendar.ts');
+    const hours = [{starts_at:'09:15', ends_at:'13:45', break_starts_at:'12:00', break_ends_at:'13:00'}];
+    assert.deepEqual(freeCalendarSlots(hours, [{start:600,end:615},{start:645,end:660}], 540, 840), [570, 660, 690, 780]);
+    assert.deepEqual(freeCalendarSlots([], [], 540, 1080), []);
+    assert.deepEqual(freeCalendarSlots(hours, [{start:0,end:1440}], 540, 1080), []);
+});

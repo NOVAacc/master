@@ -1564,9 +1564,7 @@ h2 {
     min-width: 0;
 }
 .calendar-appointment:hover {
-    filter: brightness(0.98);
-    box-shadow: 0 2px 8px #00000012;
-    z-index: 4;
+    box-shadow: inset 0 0 0 1px currentColor;
 }
 .calendar-appointment.selected {
     outline: 2px solid #252525;
@@ -3629,3 +3627,27 @@ html:has(.landing) { scroll-behavior: auto; }
 
 /* Origin label follows BOSH's neutral cards and compact typography. */
 .landing-made-in{display:inline-flex;align-items:center;gap:12px;width:fit-content;max-width:100%;margin-top:22px;padding:11px 16px 11px 11px;border:1px solid #e6e6e6;border-radius:14px;background:#fff;box-shadow:0 2px 8px #00000004}.landing-origin-icon{display:grid;place-items:center;flex-shrink:0;width:40px;height:40px;border:1px solid #ececec;border-radius:10px;background:#f7f7f7}.landing-origin-icon img{display:block;width:30px;height:18px;border-radius:3px;object-fit:contain}.landing-origin-copy{display:flex;flex-direction:column;gap:4px;min-width:0}.landing-origin-copy strong{font-size:13px;font-weight:650;line-height:1.4;letter-spacing:-.15px;color:#252525}.landing-origin-copy>span{font-size:11px;line-height:1.5;color:#858585}@container(max-width:700px){.landing-made-in{margin-top:18px;padding:9px 13px 9px 9px;gap:10px;border-radius:12px}.landing-origin-icon{width:36px;height:36px;border-radius:9px}.landing-origin-copy strong{font-size:12px}.landing-origin-copy>span{font-size:10px}}
+
+/* Calendar interactions keep the exact event geometry in every pointer state. */
+.calendar-appointment{box-sizing:border-box;min-height:0;max-height:100%;margin:0;transition:none;transform:none;filter:none;touch-action:pan-x pan-y}
+.calendar-appointment:focus-visible{outline:2px solid #252525;outline-offset:-2px}
+.calendar-free-slot{position:absolute;z-index:2;left:2px;width:calc(100% - 4px);box-sizing:border-box;min-height:0;padding:4px 6px;border:1px dashed transparent;border-radius:7px;background:transparent;color:#595959;text-align:left;font-size:11px;line-height:1.3;touch-action:pan-x pan-y}
+.calendar-free-slot>span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;visibility:hidden}
+.calendar-free-slot:focus-visible,.calendar-free-slot.selected{border-color:#888;background:#f4f4f4;outline:0}
+.calendar-free-slot:focus-visible>span,.calendar-free-slot.selected>span{visibility:visible}
+@media(hover:hover) and (pointer:fine){.calendar-free-slot:hover{border-color:#999;background:#f7f7f7}.calendar-free-slot:hover>span{visibility:visible}}
+@media(hover:none){.calendar-free-slot{border-color:#dedede}.calendar-free-slot>span{visibility:visible;color:#888}.calendar-free-slot.selected{border-color:#555;background:#ededed}.calendar-free-slot.selected>span{color:#252525}}
+.appointment-calendar{min-width:0;container-type:inline-size}
+.time-calendar-scroll{overflow-x:auto;overscroll-behavior-x:contain}
+@container(max-width:619px){.time-calendar.week{min-width:790px}.calendar-toolbar{gap:12px}.calendar-toolbar h3{font-size:14px}.calendar-legend{flex-wrap:wrap}.calendar-appointment{font-size:11px}.calendar-appointment strong{font-size:12px}}
+@media(hover:none){.calendar-appointment:hover{box-shadow:none}}
+
+.calendar-appointment>span,.calendar-appointment>strong,.calendar-appointment>small{flex-shrink:0}
+.calendar-appointment.short{flex-direction:row;align-items:center;gap:4px}
+.calendar-appointment.short .calendar-appt-time{width:auto;flex:none}
+.calendar-appointment.short strong{width:auto;flex:1;min-width:0}
+.calendar-appointment.short .calendar-appt-phone{display:none}
+.calendar-break-time{position:absolute;left:0;right:0;z-index:1;pointer-events:none;background:repeating-linear-gradient(-45deg,#f1f1f1 0,#f1f1f1 5px,#f7f7f7 5px,#f7f7f7 10px);color:#888;font-size:10px;padding:5px 6px;overflow:hidden}
+
+.calendar-touch-hint{display:none}
+@media(hover:none){.calendar-touch-hint{display:block}}
