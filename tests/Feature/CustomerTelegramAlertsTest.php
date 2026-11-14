@@ -111,7 +111,7 @@ class CustomerTelegramAlertsTest extends TestCase
         $this->assertSame('pending_manual', $alert->delivery_status);
         $this->get('/appointments/'.$appointment->id.'/client-alert')->assertOk()->assertJsonPath('id', $alert->id);
         $other = User::factory()->create();
-        MasterProfile::create(['user_id' => $other->id, 'slug' => 'another-master']);
+        MasterProfile::create(['user_id' => $other->id, 'slug' => 'another-master', 'display_name' => 'Другой мастер']);
         $this->actingAs($other)->get('/appointments/'.$appointment->id.'/client-alert')->assertNotFound();
         $this->post('/appointments/'.$appointment->id.'/client-alert/'.$alert->id.'/manual')->assertNotFound();
         $this->actingAs($user)->post('/appointments/'.$appointment->id.'/client-alert/'.$alert->id.'/manual')->assertRedirect();
