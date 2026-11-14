@@ -144,6 +144,9 @@ export default function Dashboard({
     calendarAppointments,
     calendarBlocks,
     hotOffers,
+    masterAlerts,
+    telegramConfigured,
+    telegramConnected,
 }: {
     master: Master;
     security: SecurityStatus;
@@ -164,6 +167,9 @@ export default function Dashboard({
         reason: string | null;
     }[];
     hotOffers: HotOffer[];
+    masterAlerts: {id:number;kind:string;title:string;message:string;read_at:string|null;created_at:string}[];
+    telegramConfigured: boolean;
+    telegramConnected: boolean;
 }) {
     const { t: tr, locale } = useI18n();
     const [paymentStates, setPaymentStates] = useState<Record<number, string>>({});
@@ -601,6 +607,9 @@ export default function Dashboard({
                             {notificationsOpen && (
                                 <div id="master-notification-panel" className="dashboard-notification-panel">
                                     <div className="dashboard-notification-heading">{tr("Уведомления")}</div>
+                                    {masterAlerts.slice(0,5).map(alert => <div key={alert.id} style={{padding:"8px 12px",borderBottom:"1px solid var(--border-color, #ddd)"}}><strong>{alert.title}</strong><p style={{whiteSpace:"pre-line",fontSize:12}}>{alert.message}</p></div>)}
+                                    {masterAlerts.length === 0 && <p>{tr("Новых событий пока нет")}</p>}
+                                    {masterAlerts.some(a => !a.read_at) && <button type="button" onClick={() => router.post("/alerts/read", {}, {preserveScroll:true})}>{tr("Отметить прочитанными")}</button>}
                                     <button type="button" onClick={() => showNotificationAppointments("upcoming")}>
                                         <span>{tr("Предстоящие записи")}</span><strong>{upcoming.length}</strong>
                                     </button>
@@ -886,7 +895,7 @@ export default function Dashboard({
                             <ProfileSettings master={master} />
                         </>
                     )}
-                    {tab === "settings" && <AccountSecurity status={security} />}
+                    {tab === "settings" && <><div className="panel" style={{marginBottom:20}}><h3>{tr("Уведомления о записях")}</h3><p>{telegramConnected ? tr("Telegram подключён") : tr("Получайте новые записи, отмены и переносы в Telegram.")}</p>{telegramConfigured ? (telegramConnected ? <><label><input type="checkbox" checked={master.telegram_alerts_enabled !== false} onChange={e => router.post("/telegram/toggle",{enabled:e.target.checked})} /> {tr("Отправлять уведомления")}</label><button type="button" onClick={() => router.post("/telegram/disconnect")}>{tr("Отключить Telegram")}</button></> : <a className="primary" href="/telegram/connect">{tr("Подключить Telegram")}</a>) : <p>{tr("Подключение Telegram скоро будет доступно.")}</p>}</div><AccountSecurity status={security} /></>}
                 </section>
             </main>
             <FeedbackDrawer />

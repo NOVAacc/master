@@ -27,7 +27,15 @@ Route::middleware('guest')->group(function () {
     Route::get('/reset-password/{token}', [AccountSecurityController::class, 'resetPage'])->name('password.reset');
     Route::post('/reset-password', [AccountSecurityController::class, 'reset'])->middleware('throttle:5,10')->name('password.update');
 });
+Route::post('/telegram/webhook', [\App\Http\Controllers\TelegramMasterController::class, 'webhook'])->middleware('throttle:120,1');
 Route::middleware('auth')->group(function () {
+    Route::get('/telegram/connect', [\App\Http\Controllers\TelegramMasterController::class, 'connect'])->middleware('throttle:5,1');
+    Route::post('/telegram/disconnect', [\App\Http\Controllers\TelegramMasterController::class, 'disconnect'])->middleware('throttle:5,1');
+    Route::post('/telegram/toggle', [\App\Http\Controllers\TelegramMasterController::class, 'toggle'])->middleware('throttle:10,1');
+    Route::post('/alerts/read', function (\Illuminate\Http\Request $request) {
+        \Illuminate\Support\Facades\DB::table('master_alerts')->where('master_profile_id', \App\Models\MasterProfile::where('user_id', $request->user()->id)->value('id'))->whereNull('read_at')->update(['read_at' => now()]);
+        return back();
+    })->middleware('throttle:30,1');
     Route::delete('/account', [AccountSecurityController::class, 'destroy'])->middleware('throttle:5,10')->name('account.destroy');
     Route::post('/feedback', [\App\Http\Controllers\FeedbackController::class, 'store'])->middleware('throttle:5,10')->name('feedback.store');
     Route::get('/appointments/clients', [\App\Http\Controllers\ManualBookingController::class, 'clients'])->middleware('throttle:120,1');
