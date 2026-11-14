@@ -622,7 +622,7 @@ export default function Dashboard({
                     </div>
                 )}
                 <section className="panel">
-                    <div className="row between">
+                    <div className={`row between${tab === "appointments" ? " appointments-heading" : ""}`}>
                         <h2>
                             {
                                 {
@@ -641,12 +641,14 @@ export default function Dashboard({
                                 <button type="button" className="primary" onClick={() => { setBookingSlot(null); setQuickBooking(true); }} disabled={!services.some(s => s.is_active)}>{tr("+ Записать клиента")}</button>
                                 <button type="button" className="ghost" onClick={() => setStorySeed({})} disabled={!services.some(s => s.is_active)}>{tr("Создать сторис")}</button>
                                 <div
-                                    className="display-switch text-switch"
+                                    className="display-switch text-switch appointment-view-switch"
                                     role="group"
                                     aria-label={tr("Вид записей")}
                                 >
                                     <button
                                         type="button"
+                                        aria-label={tr("Календарь")}
+                                        title={tr("Календарь")}
                                         aria-pressed={
                                             appointmentView === "calendar"
                                         }
@@ -655,9 +657,11 @@ export default function Dashboard({
                                             setAppointmentFilter("all");
                                         }}
                                     >
-                                        {tr("Календарь")}{" "}</button>
+                                        <Icon name="calendar" /><span>{tr("Календарь")}</span></button>
                                     <button
                                         type="button"
+                                        aria-label={tr("Список")}
+                                        title={tr("Список")}
                                         aria-pressed={
                                             appointmentView === "list"
                                         }
@@ -666,7 +670,7 @@ export default function Dashboard({
                                             setAppointmentFilter("all");
                                         }}
                                     >
-                                        {tr("Список")}{" "}</button>
+                                        <Icon name="list" /><span>{tr("Список")}</span></button>
                                 </div>
                             </div>
                         )}

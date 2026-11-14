@@ -173,7 +173,7 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
     return (
         <div className="appointment-calendar" ref={root}>
             <div className="calendar-toolbar">
-                <div className="row wrap">
+                <div className="row calendar-date-navigation">
                     <button
                         type="button"
                         className="calendar-nav"
