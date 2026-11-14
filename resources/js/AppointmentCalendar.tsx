@@ -14,7 +14,7 @@ import {
     freeCalendarSlots,
 } from "./calendar";
 
-type TimeBlock = {
+export type TimeBlock = {
     id: number;
     starts_at: string;
     ends_at: string;
@@ -40,6 +40,8 @@ export default function AppointmentCalendar({
     onNavigate,
     renderDetails,
     onCreateBooking,
+    onCloseTime,
+    onOpenClosedTime,
 }: {
     appointments: Appointment[];
     blocks: TimeBlock[];
@@ -50,6 +52,8 @@ export default function AppointmentCalendar({
     onNavigate: (date: string) => void;
     renderDetails: (appointment: Appointment) => ReactNode;
     onCreateBooking?: (date: string, time: string) => void;
+    onCloseTime?: (date: string, start: string, end: string) => void;
+    onOpenClosedTime?: (block: TimeBlock) => void;
 }) {
     const { t: tr, locale } = useI18n();
 const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
@@ -61,6 +65,11 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
     const root = useRef<HTMLDivElement>(null);
     const detail = useRef<HTMLDialogElement>(null);
     const [detailPosition, setDetailPosition] = useState({left: 16, top: 16});
+    const [closingTime, setClosingTime] = useState(false);
+    const [rangeStart, setRangeStart] = useState<{day: string; minute: number} | null>(null);
+    const [rangeHover, setRangeHover] = useState<number | null>(null);
+    const [rangeError, setRangeError] = useState("");
+    useEffect(() => {setRangeStart(null); setRangeHover(null); setRangeError("");}, [date]);
     const [activeSlot, setActiveSlot] = useState<string | null>(null);
     const pointerKind = useRef("mouse");
     const [compact, setCompact] = useState(false);
@@ -231,7 +240,20 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
                         {tr("Неделя")}{" "}</button>
                 </div>
             </div>
-            {onCreateBooking && <p className="calendar-touch-hint muted small">{tr("Коснитесь свободного времени, затем нажмите ещё раз, чтобы добавить запись.")}</p>}
+            {onCloseTime && <div className="calendar-close-controls">
+                <button type="button" className={`ghost calendar-close-mode${closingTime ? " active" : ""}`}
+                    aria-pressed={closingTime} disabled={loading} onClick={() => {
+                        setClosingTime(!closingTime); setRangeStart(null); setRangeHover(null); setRangeError(""); setActiveSlot(null);
+                    }}>{closingTime ? tr("Отменить выделение") : tr("Закрыть время")}</button>
+                {closingTime && <button type="button" className="ghost" disabled={loading} onClick={() => {
+                    setClosingTime(false); setRangeStart(null); setRangeHover(null); onCloseTime(date, "09:00", "09:30");
+                }}>{tr("Указать интервал вручную")}</button>}
+            </div>}
+            {closingTime && <p role="status" className="calendar-range-hint">{rangeStart
+                ? tr("Теперь нажмите на конец интервала. Повторное нажатие на начало закроет 30 минут.")
+                : tr("Выберите начало свободного интервала в календаре, затем его конец.")}</p>}
+            {rangeError && <p role="alert" className="errors">{tr(rangeError)}</p>}
+            {onCreateBooking && !closingTime && <p className="calendar-touch-hint muted small">{tr("Коснитесь свободного времени, затем нажмите ещё раз, чтобы добавить запись.")}</p>}
             {compact && view === "week" && <p className="muted small">{tr("Листайте календарь влево и вправо, чтобы увидеть остальные дни.")}</p>}
             {loading && (
                 <p role="status" className="muted small">
@@ -301,6 +323,7 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
                                     key={day}
                                     className={`time-day-column${view === "week" && day === today ? " today" : ""}`}
                                     style={{ height }}
+                                    onPointerLeave={() => {if (rangeStart?.day === day) setRangeHover(null);}}
                                     aria-label={dayLabel(day, {
                                         day: "numeric",
                                         month: "long",
@@ -328,17 +351,35 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
                                     {work.filter(h => h.break_starts_at && h.break_ends_at).map((h, i) => <div key={`break-${i}`}
                                         className="calendar-break-time" style={{top: (clockMinutes(h.break_starts_at!) - start) * 1.4,
                                         height: (clockMinutes(h.break_ends_at!) - clockMinutes(h.break_starts_at!)) * 1.4}}>{tr("Перерыв")}</div>)}
-                                    {onCreateBooking && freeCalendarSlots(work, items, start, end).map(minute => {
+                                    {closingTime && rangeStart?.day === day && <div className="calendar-range-preview"
+                                        style={{top:(Math.min(rangeStart.minute, rangeHover ?? rangeStart.minute) - start) * 1.4,
+                                            height:(Math.abs((rangeHover ?? rangeStart.minute) - rangeStart.minute) + 30) * 1.4}} />}
+                                    {(onCreateBooking || (closingTime && onCloseTime)) && freeCalendarSlots(work, items, start, end).map(minute => {
                                         const key = `${day}-${minute}`;
                                         const label = minuteLabel(minute);
                                         return <button key={key} type="button"
-                                            className={`calendar-free-slot${activeSlot === key ? " selected" : ""}`}
+                                            className={`calendar-free-slot${closingTime ? " closing-time" : ""}${activeSlot === key || (closingTime && rangeStart?.day === day && rangeStart.minute === minute) ? " selected" : ""}`}
                                             style={{top: (minute - start) * 1.4, height: 42}}
                                             disabled={loading}
-                                            aria-label={tr("Добавить запись на {0}", [dayLabel(day, {day: "numeric", month: "long"}) + ", " + label])}
-                                            aria-pressed={activeSlot === key}
+                                            aria-label={tr(closingTime ? "Выбрать время {0}" : "Добавить запись на {0}", [dayLabel(day, {day: "numeric", month: "long"}) + ", " + label])}
+                                            aria-pressed={activeSlot === key || (closingTime && rangeStart?.day === day && rangeStart.minute === minute)}
+                                            onPointerEnter={event => {if (event.pointerType === "mouse" && closingTime && rangeStart?.day === day) setRangeHover(minute);}}
                                             onPointerDown={event => { pointerKind.current = event.pointerType; }}
                                             onClick={event => {
+                                                if (closingTime && onCloseTime) {
+                                                    setRangeError("");
+                                                    if (!rangeStart || rangeStart.day !== day) {
+                                                        setRangeStart({day, minute}); setRangeHover(null); return;
+                                                    }
+                                                    const from = Math.min(rangeStart.minute, minute);
+                                                    const to = Math.max(rangeStart.minute, minute) + 30;
+                                                    if (items.some(item => item.start < to && item.end > from)) {
+                                                        setRangeError("В выделенном интервале есть занятое время. Выберите другой конец интервала."); return;
+                                                    }
+                                                    setClosingTime(false); setRangeStart(null); setRangeHover(null);
+                                                    onCloseTime(day, minuteLabel(from), minuteLabel(to)); return;
+                                                }
+                                                if (!onCreateBooking) return;
                                                 if (event.detail !== 0 && pointerKind.current !== "mouse" && activeSlot !== key) {
                                                     setActiveSlot(key);
                                                     return;
@@ -346,7 +387,7 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
                                                 setActiveSlot(null);
                                                 onCreateBooking(day, label);
                                             }}>
-                                            <span>+ {label} · {tr("Добавить запись")}</span>
+                                            <span>{closingTime ? "−" : "+"} {closingTime ? `${label}–${minuteLabel(minute + 30)}` : label} · {tr(closingTime ? "Закрыть время" : "Добавить запись")}</span>
                                         </button>;
                                     })}
                                     {items.map((item) => {
@@ -361,18 +402,20 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
                                         };
                                         if (item.block)
                                             return (
-                                                <div
+                                                <button type="button" disabled={!onOpenClosedTime || loading}
+                                                    onClick={() => onOpenClosedTime?.(item.block!)}
+                                                    aria-label={tr("Закрытое время: {0}", [`${minuteLabel(item.start)}–${minuteLabel(item.end)}`])}
                                                     key={item.id}
                                                     className="calendar-time-block"
                                                     style={style}
-                                                    title={`${minuteLabel(item.start)}–${minuteLabel(item.end)} · ${item.block.reason || tr("Время закрыто")}`}
+                                                    title={`${minuteLabel(item.start)}–${minuteLabel(item.end)} · ${item.block.reason || tr("Время закрыто")} · ${tr("Нажмите, чтобы открыть время")}`}
                                                 >
                                                     {minuteLabel(item.start)}–
                                                     {minuteLabel(item.end)}
                                                     <br />
                                                     {item.block.reason ||
                                                         tr("Время закрыто")}
-                                                </div>
+                                                </button>
                                             );
                                         const a = item.appointment!;
                                         const past = new Date(a.ends_at).getTime() <= now;
@@ -430,6 +473,7 @@ const dayLabel = (day: string, options: Intl.DateTimeFormatOptions) =>
             </div>
             : <p className="muted small">{tr("На выбранный период рабочие часы не настроены.")}</p>}
             <div className="calendar-legend">
+                {(onCloseTime || blocks.length > 0) && <span className="badge calendar-closed-legend">{tr("Закрыто для записи")}</span>}
                 <span className="badge pending">{tr("Ожидает")}</span>
                 <span className="badge confirmed">{tr("Подтверждена")}</span>
                 <span className="badge completed" title={tr("Мастер отметил, что приём состоялся")}>{tr("Завершена")}</span>

@@ -1,3 +1,5 @@
+import TimeBlockEditor, { type ClosedRange } from "../TimeBlockEditor";
+import type { TimeBlock } from "../AppointmentCalendar";
 import PaymentToggle from "../PaymentToggle";
 import { localizedDateTimeFormat } from "../localized-date";
 import LanguageSwitch from "../i18n";
@@ -186,6 +188,7 @@ export default function Dashboard({
             setAppointmentView("calendar");
         }
     };
+    const [closedTime, setClosedTime] = useState<{range?: ClosedRange; block?: TimeBlock} | null>(null);
     const [quickBooking, setQuickBooking] = useState(false);
     const [bookingSlot, setBookingSlot] = useState<{date: string; time: string} | null>(null);
     const [storySeed, setStorySeed] = useState<{date?: string; time?: string; service?: number; offer?: {url:string;special_price_som:number|null;story_template:"white"|"black"|"red";slots:{date:string;time:string}[]}} | null>(null);
@@ -680,6 +683,8 @@ export default function Dashboard({
                                     loading={calendarLoading}
                                     onNavigate={navigateCalendar}
                                     renderDetails={renderAppointment}
+                                    onCloseTime={(date, start, end) => setClosedTime({range:{date, start, end}})}
+                                    onOpenClosedTime={block => setClosedTime({block})}
                                     onCreateBooking={services.some(service => service.is_active) ? (date, time) => { setBookingClient(null); setBookingSlot({date, time}); setQuickBooking(true); } : undefined}
                                 />
                             ) : (
@@ -887,6 +892,7 @@ export default function Dashboard({
                 onChanged={() => { setSelectedClient(null); setClientSearchRevision(n => n + 1); router.reload({ only: ["clients", "appointments", "calendarAppointments"] }); }}
                 onBook={target => { setBookingClient(target); setBookingSlot(null); setSelectedClient(null); setQuickBooking(true); }} />}
             {storySeed && <StoryCreator master={master} services={services} initialDate={storySeed.date} initialTime={storySeed.time} initialService={storySeed.service} initialOffer={storySeed.offer} onClose={() => setStorySeed(null)} />}
+            {closedTime && <TimeBlockEditor {...closedTime} timezone={master.timezone} onClose={() => setClosedTime(null)} />}
             {quickBooking && <QuickBooking services={services} timezone={master.timezone} date={bookingSlot?.date ?? calendarDate}
                 initialTime={bookingSlot?.time} initialClient={bookingClient} onClose={() => { setQuickBooking(false); setBookingClient(null); setBookingSlot(null); }} />}
         </div>

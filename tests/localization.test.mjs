@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 
 const dictionary = JSON.parse(readFileSync(new URL('../resources/js/locales/ky.json', import.meta.url), 'utf8'));
-const files = ["Pages/Home.tsx", "Pages/Auth.tsx", "Pages/PasswordRecovery.tsx", "PasswordHints.tsx", "PhoneInput.tsx", "Shared.tsx", "DisplayMode.tsx", "Pages/Dashboard.tsx", "Pages/Booking.tsx", "Pages/ClientDetails.tsx", "Pages/ManageBooking.tsx", "AccountSecurity.tsx", "PaymentToggle.tsx", "DeleteAccount.tsx", "AppointmentCalendar.tsx", "BookingCalendar.tsx", "ClientCard.tsx", "CloseButton.tsx", "EditAppointmentForm.tsx", "FeedbackDrawer.tsx", "FirstIndustryChoice.tsx", "MasterModeSwitch.tsx", "ProfileIdentity.tsx", "ProfileSettings.tsx", "QuickBooking.tsx", "ServicesPanel.tsx", "ShareProfile.tsx", "StoryCreator.tsx"];
+const files = ["Pages/Home.tsx", "Pages/Auth.tsx", "Pages/PasswordRecovery.tsx", "PasswordHints.tsx", "PhoneInput.tsx", "Shared.tsx", "DisplayMode.tsx", "Pages/Dashboard.tsx", "Pages/Booking.tsx", "Pages/ClientDetails.tsx", "Pages/ManageBooking.tsx", "AccountSecurity.tsx", "PaymentToggle.tsx", "TimeBlockEditor.tsx", "DeleteAccount.tsx", "AppointmentCalendar.tsx", "BookingCalendar.tsx", "ClientCard.tsx", "CloseButton.tsx", "EditAppointmentForm.tsx", "FeedbackDrawer.tsx", "FirstIndustryChoice.tsx", "MasterModeSwitch.tsx", "ProfileIdentity.tsx", "ProfileSettings.tsx", "QuickBooking.tsx", "ServicesPanel.tsx", "ShareProfile.tsx", "StoryCreator.tsx"];
 test('Kyrgyz dictionary covers all source phrases in the localized public and master interfaces', () => {
     const missing = new Set();
     for (const file of files) {

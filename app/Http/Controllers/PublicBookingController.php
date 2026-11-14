@@ -55,9 +55,10 @@ class PublicBookingController extends Controller
                 if ($start->lessThanOrEqualTo(CarbonImmutable::now('UTC')) || ! $hours->contains($master, $start, $end)) {
                     continue;
                 }
-                $overlap = $busy->contains(fn ($a) => $a->starts_at->lt($end) && $a->ends_at->gt($start)) ||
-                    $blocks->contains(fn ($b) => CarbonImmutable::parse($b->starts_at, 'UTC')->lt($end) &&
-                        CarbonImmutable::parse($b->ends_at, 'UTC')->gt($start));
+                // Personal closed time is hidden even when busy appointments are shown.
+                if ($blocks->contains(fn ($b) => CarbonImmutable::parse($b->starts_at, 'UTC')->lt($end) &&
+                    CarbonImmutable::parse($b->ends_at, 'UTC')->gt($start))) continue;
+                $overlap = $busy->contains(fn ($a) => $a->starts_at->lt($end) && $a->ends_at->gt($start));
                 $groupOverlap = $groupBlocks->contains(fn ($g) => CarbonImmutable::parse($g->starts_at, 'UTC')->lt($end)
                     && CarbonImmutable::parse($g->ends_at, 'UTC')->gt($start));
                 $available = ! $overlap && ! $groupOverlap;

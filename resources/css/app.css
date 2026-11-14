@@ -3651,3 +3651,24 @@ html:has(.landing) { scroll-behavior: auto; }
 
 .calendar-touch-hint{display:none}
 @media(hover:none){.calendar-touch-hint{display:block}}
+
+/* Closing time uses the same two-tap selection on desktop and touch screens. */
+.calendar-close-controls{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.calendar-close-mode{display:inline-flex;align-items:center;gap:8px}
+.calendar-close-mode::before{content:"";width:13px;height:13px;border:1.5px solid currentColor;border-radius:4px;background:repeating-linear-gradient(-45deg,transparent 0,transparent 3px,currentColor 3px,currentColor 4px)}
+.calendar-close-mode.active{background:#252525;color:#fff;border-color:#252525}
+.calendar-range-hint{padding:10px 12px;border:1px dashed #aaa;border-radius:10px;background:#f6f6f6;font-size:12px}
+.calendar-range-preview{position:absolute;left:2px;right:2px;z-index:2;pointer-events:none;border:2px dashed #555;border-radius:7px;background:#25252512}
+.calendar-free-slot.closing-time{border-color:#c7c7c7}
+.calendar-free-slot.closing-time>span{visibility:visible}
+.calendar-time-block{box-sizing:border-box;min-height:0;transition:none;transform:none;cursor:pointer}
+.calendar-time-block:disabled{opacity:1;cursor:default}
+.calendar-time-block:focus-visible{outline-offset:-2px}
+.time-block-dialog{width:min(480px,calc(100% - 24px))}
+.time-block-form{padding:4px 24px 24px}
+.time-block-form input{max-width:100%;min-width:0}
+.time-block-period{font-weight:650}
+.time-block-actions{justify-content:flex-end;margin-top:24px}
+@media(max-width:600px){.time-block-form{padding:4px 16px 20px}.time-block-dialog{max-height:90dvh}.time-block-actions>button{flex:1}.calendar-close-controls button{min-height:44px}}
+
+.calendar-closed-legend{background:repeating-linear-gradient(-45deg,#eaeaea 0,#eaeaea 4px,#f7f7f7 4px,#f7f7f7 8px);color:#666;border:1px solid #ddd}
