@@ -8,8 +8,8 @@ import { addDays, localDay } from "./calendar";
 import type { TimeBlock } from "./AppointmentCalendar";
 
 export type ClosedRange = {date: string; start: string; end: string};
-export default function TimeBlockEditor({range, block, timezone, onClose}: {
-    range?: ClosedRange; block?: TimeBlock; timezone: string; onClose: () => void;
+export default function TimeBlockEditor({range, block, timezone, onClose, onSaved}: {
+    range?: ClosedRange; block?: TimeBlock; timezone: string; onClose: () => void; onSaved?: (date: string) => void;
 }) {
     const { t: tr, locale } = useI18n();
     const dialog = useRef<HTMLDialogElement>(null);
@@ -27,7 +27,7 @@ export default function TimeBlockEditor({range, block, timezone, onClose}: {
             e.preventDefault(); if (submitting.current || f.processing) return;
             submitting.current = true;
             f.post(block ? `/time-blocks/${block.id}/remove` : "/time-blocks", {
-                preserveScroll:true, onSuccess:onClose, onFinish:() => {submitting.current = false;},
+                preserveScroll:true, onSuccess:() => {if (onSaved) onSaved(block ? localDay(block.starts_at, timezone) : f.data.starts_at_local.slice(0,10)); else onClose();}, onFinish:() => {submitting.current = false;},
             });
         }}>
             <Errors errors={f.errors} />

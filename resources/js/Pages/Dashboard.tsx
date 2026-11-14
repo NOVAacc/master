@@ -892,7 +892,8 @@ export default function Dashboard({
                 onChanged={() => { setSelectedClient(null); setClientSearchRevision(n => n + 1); router.reload({ only: ["clients", "appointments", "calendarAppointments"] }); }}
                 onBook={target => { setBookingClient(target); setBookingSlot(null); setSelectedClient(null); setQuickBooking(true); }} />}
             {storySeed && <StoryCreator master={master} services={services} initialDate={storySeed.date} initialTime={storySeed.time} initialService={storySeed.service} initialOffer={storySeed.offer} onClose={() => setStorySeed(null)} />}
-            {closedTime && <TimeBlockEditor {...closedTime} timezone={master.timezone} onClose={() => setClosedTime(null)} />}
+            {closedTime && <TimeBlockEditor {...closedTime} timezone={master.timezone} onClose={() => setClosedTime(null)}
+                onSaved={day => {setClosedTime(null); if (day !== calendarDate) navigateCalendar(day);}} />}
             {quickBooking && <QuickBooking services={services} timezone={master.timezone} date={bookingSlot?.date ?? calendarDate}
                 initialTime={bookingSlot?.time} initialClient={bookingClient} onClose={() => { setQuickBooking(false); setBookingClient(null); setBookingSlot(null); }} />}
         </div>

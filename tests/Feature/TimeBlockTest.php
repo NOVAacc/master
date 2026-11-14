@@ -47,8 +47,8 @@ class TimeBlockTest extends TestCase
             ->where('slots',fn ($slots) => collect($slots)->pluck('label')->contains('09:00')
                 && !collect($slots)->pluck('label')->contains('09:30') && !collect($slots)->pluck('label')->contains('10:00')
                 && !collect($slots)->pluck('label')->contains('10:30') && collect($slots)->pluck('label')->contains('11:00')));
-        $this->postJson('/m/'.$master->slug.'/book', ['service_id'=>$service->id, 'starts_at'=>'2026-11-14T04:00:00Z',
-            'client_name'=>'Client','client_phone'=>'996555000000','consent'=>true])->assertUnprocessable()->assertJsonValidationErrors('starts_at');
+        $this->postJson('/m/'.$master->slug.'/book', ['service_id'=>$service->id, 'starts_at'=>'2026-11-14T04:00:00+00:00',
+            'client_name'=>'Client','client_phone'=>'996555000000','consent'=>true])->assertUnprocessable()->assertJsonValidationErrors('starts_at')->assertJsonPath('errors.starts_at.0', 'Это время уже занято.');
         $this->post('/time-blocks/'.$block->id.'/remove')->assertSessionHasNoErrors();
         $this->assertDatabaseMissing('master_time_blocks',['id'=>$block->id]);
         $this->get('/m/'.$master->slug.'?date=2026-11-14')->assertInertia(fn (Assert $page) => $page
