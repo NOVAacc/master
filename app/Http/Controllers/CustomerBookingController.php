@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\MasterAppointment;
 use App\Models\MasterProfile;
-use App\Services\WhatsApp;
 use App\Services\WorkingHours;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -106,10 +105,6 @@ final class CustomerBookingController extends Controller
         }, 3);
 
         app(\App\Services\MasterAlerts::class)->record($changed, $data['action'] === 'cancel' ? 'cancelled' : 'rescheduled');
-        // Never send a new confirmation for a cancelled booking.
-        if ($changed->status === 'confirmed') {
-            app(WhatsApp::class)->confirmed($changed);
-        }
         $freshLink = URL::temporarySignedRoute('booking.manage', now()->addDays(30), [
             'appointment' => $changed->id,
             'revision' => $changed->revision,
