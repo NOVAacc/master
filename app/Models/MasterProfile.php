@@ -12,7 +12,7 @@ class MasterProfile extends Model
 
     protected $casts = ['is_demo' => 'boolean', 'booking_enabled' => 'boolean', 'onboarding_industry_done' => 'boolean', 'onboarding_restart_step' => 'integer', 'show_busy_slots' => 'boolean', 'auto_confirm' => 'boolean', 'whatsapp_notifications' => 'boolean'];
 
-    protected $hidden = ['avatar_path', 'cover_path', 'work1_path', 'work2_path', 'work3_path'];
+    protected $hidden = ['telegram_chat_id', 'telegram_link_hash', 'telegram_link_expires_at', 'avatar_path', 'cover_path', 'work1_path', 'work2_path', 'work3_path'];
 
     protected $appends = ['avatar_url', 'cover_url', 'instagram_url', ];
 
