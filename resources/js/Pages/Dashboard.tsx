@@ -139,7 +139,6 @@ export default function Dashboard({
     appointments,
     publicUrl,
     onboardingCompleted,
-    whatsappAutomatic,
     calendarDate,
     calendarAppointments,
     calendarBlocks,
@@ -157,7 +156,6 @@ export default function Dashboard({
     appointments: Appointment[];
     publicUrl: string;
     onboardingCompleted: boolean;
-    whatsappAutomatic: boolean;
     calendarDate: string;
     calendarAppointments: Appointment[];
     calendarBlocks: {
@@ -346,56 +344,6 @@ export default function Dashboard({
                         {tr(statuses[a.status] ?? a.status)}
                     </span>
                     {a.status === "cancelled" && new Date(a.starts_at) > new Date() && <button type="button" className="ghost" onClick={() => openStoryFromAppointment(a)}>{tr("Создать сторис об освободившемся времени")}</button>}
-                    {a.status === "confirmed" && a.whatsapp_link && (
-                        <a
-                            className="ghost"
-                            href={a.whatsapp_link}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            {a.notification_revision > 1
-                                ? tr("Сообщить об изменениях в WhatsApp ↗")
-                                : tr("Сообщить клиенту в WhatsApp ↗")}
-                        </a>
-                    )}
-                    {a.notifications?.map((n) => (
-                        <small key={n.id}>
-                            WhatsApp{" "}
-                            {n.recipient === "client" ? tr("клиенту") : tr("мастеру")}:{" "}
-                            {(
-                                {
-                                    recipient_changed:
-                                        tr("номер изменён — отправка остановлена"),
-                                    accepted: tr("принято сервисом"),
-                                    not_configured: tr("отправка не подключена"),
-                                    failed: tr("ошибка отправки"),
-                                    unknown:
-                                        tr("результат неизвестен — проверьте перед повтором"),
-                                    sending: tr("передаётся сервису"),
-                                } as Record<string, string>
-                            )[n.status] || n.status}
-                        </small>
-                    ))}
-                    {whatsappAutomatic &&
-                        a.status === "confirmed" &&
-                        a.notifications?.some((n) =>
-                            ["failed", "not_configured"].includes(n.status),
-                        ) && (
-                            <button
-                                type="button"
-                                className="ghost"
-                                onClick={() =>
-                                    router.post(
-                                        `/appointments/${a.id}/whatsapp`,
-                                        {},
-                                        {
-                                            preserveScroll: true,
-                                        },
-                                    )
-                                }
-                            >
-                                {tr("Повторить автоматическую отправку")}{" "}</button>
-                        )}
                     {["pending", "confirmed"].includes(a.status) && (
                         <div className="row wrap">
                             <button
