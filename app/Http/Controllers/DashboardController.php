@@ -35,15 +35,6 @@ class DashboardController extends Controller
         $calendarDate = $data['calendar_date'] ?? $today->toDateString();
         $calendarStart = CarbonImmutable::parse($calendarDate, $master->timezone)->startOfWeek();
         $calendarEnd = $calendarStart->addWeek();
-        $presentAppointment = function ($appointment) use ($master) {
-            $appointment->setRelation('masterProfile', $master);
-            $appointment->setAttribute('whatsapp_link', app(WhatsApp::class)->link($appointment->client_phone, app(WhatsApp::class)->message($appointment, 'client')));
-            $appointment->unsetRelation('masterProfile');
-            $appointment->setRelation('notifications', $appointment->notifications->filter(fn ($n) => (int) $n->revision === (int) $appointment->notification_revision)->values());
-
-            return $appointment;
-        };
-
         return Inertia::render('Dashboard', [
             'industries' => config('industries'),
             'onboardingCompleted' => (bool) $request->session()->get('onboarding_completed', false),
@@ -55,7 +46,7 @@ class DashboardController extends Controller
             'calendarDate' => $calendarDate,
             'calendarAppointments' => fn () => $master->appointments()->where('starts_at', '<', $calendarEnd->utc())
                 ->where('ends_at', '>', $calendarStart->utc())
-                ->with(['notifications:id,master_appointment_id,recipient,status,error_code,revision', 'changes'])->orderBy('starts_at')->get()->map($presentAppointment),
+                ->with('changes')->orderBy('starts_at')->get(),
             'calendarBlocks' => fn () => DB::table('master_time_blocks')->where('master_profile_id', $master->id)
                 ->where('starts_at', '<', $calendarEnd->utc())->where('ends_at', '>', $calendarStart->utc())->get()
                 ->map(fn ($block) => ['id' => $block->id, 'starts_at' => CarbonImmutable::parse($block->starts_at, 'UTC')->toIso8601String(),
@@ -110,8 +101,7 @@ class DashboardController extends Controller
                     'break_ends_at' => $hour->break_ends_at ? substr($hour->break_ends_at, 0, 5) : null,
                 ]),
             'appointments' => fn () => $master->appointments()->where('ends_at', '>=', now('UTC')->subDays(30))
-                ->with(['notifications:id,master_appointment_id,recipient,status,error_code,revision', 'changes'])->orderBy('starts_at')->limit(200)->get()->map($presentAppointment),
-            'whatsappAutomatic' => app(WhatsApp::class)->configured(),
+                ->with('changes')->orderBy('starts_at')->limit(200)->get(),
             'publicUrl' => route('public.master', $master->slug),
             'hotOffers' => fn () => $master->hotSlotOffers()->with(['service:id,name,price_som', 'slots:id,hot_slot_offer_id,starts_at,master_appointment_id'])
                 ->latest()->limit(50)->get()->map(function ($offer) use ($master) {
@@ -197,13 +187,9 @@ class DashboardController extends Controller
             'booking_enabled' => ['required', 'boolean'],
             'show_busy_slots' => ['sometimes', 'boolean'],
             'auto_confirm' => ['required', 'boolean'],
-            'whatsapp_notifications' => ['sometimes', 'boolean'],
         ]);
         if (array_key_exists('industry', $data) && $data['industry'] !== $master->industry && ! array_key_exists('activity', $data)) {
             $data['activity'] = null;
-        }
-        if (($data['whatsapp_notifications'] ?? false) && ! WhatsApp::phone($data['phone'] ?? null)) {
-            throw ValidationException::withMessages(['phone' => 'Укажите номер WhatsApp с кодом страны.']);
         }
         $disk = Storage::disk('local');
         $uploaded = [];
@@ -349,17 +335,6 @@ class DashboardController extends Controller
         return redirect()->route('dashboard', ['calendar_date' => substr($data['starts_at_local'], 0, 10)])->with('success', 'Изменения сохранены. Проверьте, что клиент знает новое время и стоимость.');
     }
 
-    public function retryWhatsApp(Request $request, MasterAppointment $appointment)
-    {
-        abort_unless($appointment->master_profile_id === $this->master($request)->id, 404);
-        abort_unless($appointment->status === 'confirmed', 422);
-        foreach ($appointment->notifications as $notification) {
-            app(WhatsApp::class)->send($notification);
-        }
-
-        return back()->with('success', 'Статусы WhatsApp обновлены. Проверьте результат в записи.');
-    }
-
     public function payment(Request $request, MasterAppointment $appointment)
     {
         $master = $this->master($request);
@@ -403,7 +378,6 @@ class DashboardController extends Controller
         $fresh = $appointment->fresh();
         if ($data['status'] === 'cancelled') app(\App\Services\MasterAlerts::class)->record($fresh, 'cancelled');
         if ($data['status'] === 'confirmed') app(\App\Services\MasterAlerts::class)->record($fresh, 'confirmed');
-        app(WhatsApp::class)->confirmed($fresh);
 
         return back()->with('success', 'Статус записи изменён.');
     }
