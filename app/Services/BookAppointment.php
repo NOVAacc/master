@@ -164,7 +164,6 @@ final class BookAppointment
         }, 3);
         if (! $manual) {
             app(MasterAlerts::class)->record($appointment, 'new');
-            app(WhatsApp::class)->confirmed($appointment);
         }
 
         return $appointment;
