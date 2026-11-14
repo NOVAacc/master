@@ -1,5 +1,6 @@
 <?php
 return [
+    'telegram' => ['bot_token' => env('TELEGRAM_BOT_TOKEN'), 'bot_username' => env('TELEGRAM_BOT_USERNAME'), 'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET')],
     'turnstile' => [
         'site_key' => env('TURNSTILE_SITE_KEY'),
         'secret_key' => env('TURNSTILE_SECRET_KEY'),

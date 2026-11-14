@@ -7,6 +7,7 @@ export type Service = {
     is_active: boolean;
 };
 export type Master = {
+    telegram_alerts_enabled?: boolean;
     id: number;
     slug: string;
     display_name: string;

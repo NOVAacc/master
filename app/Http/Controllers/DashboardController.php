@@ -61,6 +61,9 @@ class DashboardController extends Controller
                 ->map(fn ($block) => ['id' => $block->id, 'starts_at' => CarbonImmutable::parse($block->starts_at, 'UTC')->toIso8601String(),
                     'ends_at' => CarbonImmutable::parse($block->ends_at, 'UTC')->toIso8601String(), 'reason' => $block->reason]),
             'master' => $master,
+            'masterAlerts' => fn () => DB::table('master_alerts')->where('master_profile_id', $master->id)->latest()->limit(30)->get(['id','kind','title','message','read_at','created_at']),
+            'telegramConfigured' => (bool) (config('services.telegram.bot_token') && config('services.telegram.bot_username')),
+            'telegramConnected' => (bool) $master->telegram_chat_id,
             'security' => [
                 'email' => $request->user()->email,
                 'emailVerified' => $request->user()->email_verified_at !== null,
@@ -397,7 +400,10 @@ class DashboardController extends Controller
             $appointment->fill($data + ['attendance_status' => $attendance])->save();
         });
 
-        app(WhatsApp::class)->confirmed($appointment->fresh());
+        $fresh = $appointment->fresh();
+        if ($data['status'] === 'cancelled') app(\App\Services\MasterAlerts::class)->record($fresh, 'cancelled');
+        if ($data['status'] === 'confirmed') app(\App\Services\MasterAlerts::class)->record($fresh, 'confirmed');
+        app(WhatsApp::class)->confirmed($fresh);
 
         return back()->with('success', 'Статус записи изменён.');
     }

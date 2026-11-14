@@ -105,6 +105,7 @@ final class CustomerBookingController extends Controller
             return $a;
         }, 3);
 
+        app(\App\Services\MasterAlerts::class)->record($changed, $data['action'] === 'cancel' ? 'cancelled' : 'rescheduled');
         // Never send a new confirmation for a cancelled booking.
         if ($changed->status === 'confirmed') {
             app(WhatsApp::class)->confirmed($changed);

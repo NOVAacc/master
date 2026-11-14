@@ -110,6 +110,7 @@ final class EditAppointment
             return $a;
         }, 3);
         if ($notify) {
+            app(MasterAlerts::class)->record($result, 'rescheduled');
             app(WhatsApp::class)->confirmed($result);
         }
 
