@@ -12,6 +12,13 @@ class MasterAppointment extends Model
 
     protected $fillable = ['master_profile_id', 'master_client_id', 'master_service_id', 'client_name', 'client_phone', 'client_comment', 'starts_at', 'ends_at', 'price_som', 'service_name_snapshot', 'services_snapshot', 'whatsapp_consent', 'status', 'attendance_status', 'payment_status'];
 
+    protected $hidden = ['client_telegram_chat_id', 'client_telegram_link_hash', 'client_telegram_link_expires_at'];
+
+    public function clientAlerts(): HasMany
+    {
+        return $this->hasMany(\App\Models\ClientBookingAlert::class, 'master_appointment_id')->orderByDesc('id');
+    }
+
     protected $casts = ['starts_at' => 'datetime', 'ends_at' => 'datetime', 'price_som' => 'integer', 'services_snapshot' => 'array', 'whatsapp_consent' => 'boolean', 'revision' => 'integer', 'notification_revision' => 'integer'];
 
     public function changes(): HasMany

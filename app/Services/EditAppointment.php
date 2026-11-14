@@ -13,7 +13,8 @@ final class EditAppointment
     public function update(MasterProfile $master, MasterAppointment $appointment, array $data, int $userId): MasterAppointment
     {
         $notify = false;
-        $result = DB::transaction(function () use ($master, $appointment, $data, $userId, &$notify) {
+        $previousStart = null;
+        $result = DB::transaction(function () use ($master, $appointment, $data, $userId, &$notify, &$previousStart) {
             $lockedMaster = MasterProfile::whereKey($master->id)->lockForUpdate()->firstOrFail();
             $a = MasterAppointment::whereKey($appointment->id)->where('master_profile_id', $lockedMaster->id)->lockForUpdate()->firstOrFail();
             if (! in_array($a->status, ['pending', 'confirmed'])) {
@@ -35,6 +36,7 @@ final class EditAppointment
                 throw ValidationException::withMessages(['starts_at_local' => 'Выберите дату в пределах пяти лет.']);
             }
             $timeChanged = ! $start->equalTo($a->starts_at) || ! $end->equalTo($a->ends_at);
+            $previousStart = $a->starts_at->toIso8601String();
             if ($timeChanged) {
                 if (! (new WorkingHours)->contains($lockedMaster, $start, $end)) {
                     throw ValidationException::withMessages(['starts_at_local' => 'Весь интервал должен попадать в рабочее расписание. Сначала измените расписание, если мастер готов принять в другое время.']);
@@ -99,6 +101,9 @@ final class EditAppointment
                     'created_at' => now(), 'updated_at' => now(),
                 ]);
                 $a->whatsapp_consent = false;
+                $a->client_telegram_chat_id = null;
+                $a->client_telegram_link_hash = null;
+                $a->client_telegram_link_expires_at = null;
             }
             $a->revision++;
             if ($notify) {
@@ -111,6 +116,7 @@ final class EditAppointment
         }, 3);
         if ($notify) {
             app(MasterAlerts::class)->record($result, 'rescheduled');
+            app(ClientBookingAlerts::class)->record($result, 'rescheduled', $previousStart);
         }
 
         return $result;

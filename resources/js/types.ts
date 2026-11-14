@@ -63,6 +63,7 @@ export type Appointment = {
         before: AppointmentSnapshot;
         after: AppointmentSnapshot;
     }[];
+    client_alerts?: {id:number;revision:number;kind:string;delivery_status:string;sent_at:string|null;manual_at:string|null}[];
     whatsapp_link?: string | null;
     notifications?: {
         id: number;

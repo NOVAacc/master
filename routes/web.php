@@ -43,6 +43,22 @@ Route::middleware('auth')->group(function () {
     Route::post('/appointments', [\App\Http\Controllers\ManualBookingController::class, 'create'])->middleware('throttle:30,1');
     Route::post('/appointments/{appointment}/payment', [DashboardController::class, 'payment'])->whereNumber('appointment')->middleware('throttle:60,1');
     Route::post('/appointments/{appointment}/edit', [DashboardController::class, 'editAppointment']);
+    Route::get('/appointments/{appointment}/client-alert', function (\Illuminate\Http\Request $request, \App\Models\MasterAppointment $appointment) {
+        abort_unless((int) $appointment->masterProfile->user_id === (int) $request->user()->id, 404);
+        $alert = \Illuminate\Support\Facades\DB::table('client_booking_alerts')->where('master_appointment_id', $appointment->id)->latest('id')->first();
+        abort_unless($alert && (int) $alert->revision === (int) $appointment->revision, 404);
+        return response()->json(['id' => $alert->id, 'message' => $alert->message, 'status' => $alert->delivery_status])
+            ->header('Cache-Control', 'private, no-store');
+    })->middleware('throttle:60,1');
+    Route::post('/appointments/{appointment}/client-alert/{alert}/manual', function (\Illuminate\Http\Request $request, \App\Models\MasterAppointment $appointment, int $alert) {
+        abort_unless((int) $appointment->masterProfile->user_id === (int) $request->user()->id, 404);
+        \Illuminate\Support\Facades\DB::table('client_booking_alerts')
+            ->where('id', $alert)->where('master_appointment_id', $appointment->id)
+            ->where('revision', $appointment->revision)
+            ->whereIn('delivery_status', ['pending_manual', 'failed'])
+            ->update(['delivery_status' => 'manual_done', 'manual_at' => now(), 'updated_at' => now()]);
+        return back();
+    })->middleware('throttle:30,1');
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/time-blocks', [\App\Http\Controllers\TimeBlockController::class, 'store'])->middleware('throttle:30,1');
     Route::post('/time-blocks/{block}/remove', [\App\Http\Controllers\TimeBlockController::class, 'destroy'])->whereNumber('block')->middleware('throttle:30,1');

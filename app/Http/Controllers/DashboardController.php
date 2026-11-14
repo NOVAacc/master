@@ -46,7 +46,7 @@ class DashboardController extends Controller
             'calendarDate' => $calendarDate,
             'calendarAppointments' => fn () => $master->appointments()->where('starts_at', '<', $calendarEnd->utc())
                 ->where('ends_at', '>', $calendarStart->utc())
-                ->with('changes')->orderBy('starts_at')->get(),
+                ->with(['changes', 'clientAlerts'])->orderBy('starts_at')->get(),
             'calendarBlocks' => fn () => DB::table('master_time_blocks')->where('master_profile_id', $master->id)
                 ->where('starts_at', '<', $calendarEnd->utc())->where('ends_at', '>', $calendarStart->utc())->get()
                 ->map(fn ($block) => ['id' => $block->id, 'starts_at' => CarbonImmutable::parse($block->starts_at, 'UTC')->toIso8601String(),
@@ -101,7 +101,7 @@ class DashboardController extends Controller
                     'break_ends_at' => $hour->break_ends_at ? substr($hour->break_ends_at, 0, 5) : null,
                 ]),
             'appointments' => fn () => $master->appointments()->where('ends_at', '>=', now('UTC')->subDays(30))
-                ->with('changes')->orderBy('starts_at')->limit(200)->get(),
+                ->with(['changes', 'clientAlerts'])->orderBy('starts_at')->limit(200)->get(),
             'publicUrl' => route('public.master', $master->slug),
             'hotOffers' => fn () => $master->hotSlotOffers()->with(['service:id,name,price_som', 'slots:id,hot_slot_offer_id,starts_at,master_appointment_id'])
                 ->latest()->limit(50)->get()->map(function ($offer) use ($master) {
@@ -376,8 +376,14 @@ class DashboardController extends Controller
         });
 
         $fresh = $appointment->fresh();
-        if ($data['status'] === 'cancelled') app(\App\Services\MasterAlerts::class)->record($fresh, 'cancelled');
-        if ($data['status'] === 'confirmed') app(\App\Services\MasterAlerts::class)->record($fresh, 'confirmed');
+        if ($data['status'] === 'cancelled') {
+            app(\App\Services\MasterAlerts::class)->record($fresh, 'cancelled');
+            app(\App\Services\ClientBookingAlerts::class)->record($fresh, 'cancelled');
+        }
+        if ($data['status'] === 'confirmed') {
+            app(\App\Services\MasterAlerts::class)->record($fresh, 'confirmed');
+            app(\App\Services\ClientBookingAlerts::class)->record($fresh, 'confirmed');
+        }
 
         return back()->with('success', 'Статус записи изменён.');
     }

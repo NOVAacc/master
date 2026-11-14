@@ -10,6 +10,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class PublicBookingController extends Controller
@@ -142,7 +143,19 @@ class PublicBookingController extends Controller
             $data['client_name'], $data['client_phone'], $data['client_comment'] ?? null, false,
             false, $offerSlot, $specialPrice);
 
+        $clientTelegramUrl = null;
+        $username = config('services.telegram.bot_username');
+        if ($username && config('services.telegram.bot_token') && preg_match('/^[A-Za-z0-9_]{5,32}$/D', $username)) {
+            $token = Str::random(40);
+            $appointment->forceFill([
+                'client_telegram_link_hash' => hash('sha256', $token),
+                'client_telegram_link_expires_at' => now()->addDays(7),
+            ])->save();
+            $clientTelegramUrl = 'https://t.me/'.$username.'?start=c'.$token;
+        }
+
         return redirect()->route('public.master', $master->slug)->with('booking_receipt', [
+            'clientTelegramUrl' => $clientTelegramUrl,
             'master_slug' => $master->slug,
             'status' => $appointment->status,
             'details' => [
