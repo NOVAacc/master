@@ -1,3 +1,4 @@
+import LanguageSwitch from "./i18n";
 import { useI18n } from "./i18n";
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
@@ -100,6 +101,7 @@ export default function DisplayModeFooter({ initialInstagramUsername }: { initia
                     </button>
                 ))}
             </div>
+            <div className="mobile-site-tools"><div id="mobile-master-mode" /><LanguageSwitch mobileFooter /></div>
         </footer>
     );
 }

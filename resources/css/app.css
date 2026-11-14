@@ -3672,3 +3672,19 @@ html:has(.landing) { scroll-behavior: auto; }
 @media(max-width:600px){.time-block-form{padding:4px 16px 20px}.time-block-dialog{max-height:90dvh}.time-block-actions>button{flex:1}.calendar-close-controls button{min-height:44px}}
 
 .calendar-closed-legend{background:repeating-linear-gradient(-45deg,#eaeaea 0,#eaeaea 4px,#f7f7f7 4px,#f7f7f7 8px);color:#666;border:1px solid #ddd}
+
+/* Compact mobile controls live at the very end of the shared footer. */
+.master-mode-switch .icon,.language-flag{display:none}
+.mobile-master-mode-switch,.mobile-site-tools{display:none}
+@container(max-width:700px){
+    .master-mode-switch:not(.mobile-master-mode-switch),.language-switch:not(.mobile-footer-language),.master-page-tools,.public-page-tools{display:none}
+    .mobile-site-tools{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;width:100%;flex-basis:100%;order:20;padding-top:18px;margin-top:4px;border-top:1px solid #e7e7e7}
+    #mobile-master-mode:empty{display:none}
+    .mobile-master-mode-switch{display:flex;width:auto;margin:0;gap:3px;padding:4px}
+    .mobile-master-mode-switch a{flex:0 0 44px;width:44px;min-width:44px;min-height:44px;padding:10px}
+    .mobile-master-mode-switch a>span,.mobile-footer-language .language-code{display:none}
+    .mobile-master-mode-switch .icon{display:block;width:21px;height:21px}
+    .mobile-footer-language{display:inline-flex;gap:3px;padding:4px}
+    .mobile-footer-language button{min-width:44px;min-height:44px;padding:9px}
+    .mobile-footer-language .language-flag{display:block;width:26px;height:18px;border-radius:3px;object-fit:cover;box-shadow:0 0 0 1px #00000015}
+}

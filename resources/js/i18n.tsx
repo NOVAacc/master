@@ -1,3 +1,4 @@
+import kyrgyzFlag from "../../public/brand/kyrgyzstan-flag.svg?url";
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import kyrgyz from './locales/ky.json';
 export type Locale = 'ru' | 'ky';
@@ -29,10 +30,10 @@ export function useI18n() {
     const context = useContext(LocaleContext);
     return { ...context, t: (text: string, values?: readonly unknown[]) => translate(text, context.locale, values) };
 }
-export default function LanguageSwitch() {
+export default function LanguageSwitch({ mobileFooter = false }: { mobileFooter?: boolean }) {
     const { locale, setLocale } = useI18n();
-    return <div className="language-switch" role="group" aria-label={locale === 'ky' ? 'Тилди тандоо' : 'Выбор языка'}>
-        <button type="button" lang="ru" aria-label="Русский" aria-pressed={locale === 'ru'} onClick={() => setLocale('ru')}>RU</button>
-        <button type="button" lang="ky" aria-label="Кыргызча" aria-pressed={locale === 'ky'} onClick={() => setLocale('ky')}>KY</button>
+    return <div className={`language-switch${mobileFooter ? " mobile-footer-language" : ""}`} role="group" aria-label={locale === 'ky' ? 'Тилди тандоо' : 'Выбор языка'}>
+        <button type="button" lang="ru" aria-label="Русский" aria-pressed={locale === 'ru'} title="Русский" onClick={() => setLocale('ru')}><span className="language-code">RU</span><svg className="language-flag" viewBox="0 0 30 20" aria-hidden="true"><path fill="#fff" d="M0 0h30v20H0z"/><path fill="#0039a6" d="M0 6.67h30v6.66H0z"/><path fill="#d52b1e" d="M0 13.33h30V20H0z"/></svg></button>
+        <button type="button" lang="ky" aria-label="Кыргызча" aria-pressed={locale === 'ky'} title="Кыргызча" onClick={() => setLocale('ky')}><span className="language-code">KY</span><img className="language-flag" src={kyrgyzFlag} alt="" aria-hidden="true" /></button>
     </div>;
 }
