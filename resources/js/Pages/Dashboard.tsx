@@ -268,6 +268,25 @@ export default function Dashboard({
     const [message, setMessage] = useState("");
     const [editingId, setEditingId] = useState<number | null>(null);
     const [pending, setPending] = useState<number | null>(null);
+    const [manualText, setManualText] = useState<Record<number,string>>({});
+    const [copyingAlert, setCopyingAlert] = useState<number | null>(null);
+    const copyClientAlert = async (appointmentId:number) => {
+        setCopyingAlert(appointmentId);
+        try {
+            const {data} = await axios.get<{message:string}>(`/appointments/${appointmentId}/client-alert`);
+            setManualText(previous => ({...previous,[appointmentId]:data.message}));
+            try {
+                await navigator.clipboard.writeText(data.message);
+                setMessage(tr("Текст для клиента скопирован."));
+            } catch {
+                setMessage(tr("Выделите и скопируйте текст сообщения ниже."));
+            }
+        } catch {
+            setMessage(tr("Не удалось получить текст сообщения."));
+        } finally {
+            setCopyingAlert(null);
+        }
+    };
     const date = (s: string) =>
         localizedDateTimeFormat(locale, {
             timeZone: master.timezone,
@@ -344,6 +363,24 @@ export default function Dashboard({
                         {tr(statuses[a.status] ?? a.status)}
                     </span>
                     {a.status === "cancelled" && new Date(a.starts_at) > new Date() && <button type="button" className="ghost" onClick={() => openStoryFromAppointment(a)}>{tr("Создать сторис об освободившемся времени")}</button>}
+                    {(() => {
+                        const alert = a.client_alerts?.find(item => item.revision === a.revision);
+                        if (!alert) return null;
+                        if (alert.delivery_status === "sent") return <p className="muted small">{tr("Клиенту отправлено уведомление в Telegram")}</p>;
+                        if (alert.delivery_status === "manual_done") return <p className="muted small">{tr("Клиент уведомлён вручную")}</p>;
+                        return <div style={{width:"100%",display:"grid",gap:8}}>
+                            <p className="muted small" role="status">{tr("Клиент ещё не уведомлён об изменении записи")}</p>
+                            <div className="row wrap">
+                                <button type="button" className="ghost" disabled={copyingAlert === a.id} onClick={() => void copyClientAlert(a.id)}>
+                                    {tr("Скопировать сообщение клиенту")}
+                                </button>
+                                <button type="button" className="ghost" onClick={() => router.post(`/appointments/${a.id}/client-alert/${alert.id}/manual`,{}, {preserveScroll:true})}>
+                                    {tr("Отметить как уведомлённого")}
+                                </button>
+                            </div>
+                            {manualText[a.id] && <textarea readOnly aria-label={tr("Сообщение для клиента")} value={manualText[a.id]} rows={5} style={{width:"100%"}} onFocus={event => event.currentTarget.select()} />}
+                        </div>;
+                    })()}
                     {["pending", "confirmed"].includes(a.status) && (
                         <div className="row wrap">
                             <button

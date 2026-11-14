@@ -27,6 +27,7 @@ type Props = {
         status: string;
         details?: { id: number; client_name: string; services: string; starts_at: string; ends_at: string; price_som: number };
         manageUrl: string;
+        clientTelegramUrl?: string | null;
     } | null;
 };
 export default function Booking(p: Props) {
@@ -142,6 +143,16 @@ export default function Booking(p: Props) {
                             {p.bookingReceipt.status !== "confirmed" && (
                                 <p className="muted small">
                                     {tr("Запись пока ожидает подтверждения мастера.")}{" "}</p>
+                            )}
+                            {p.bookingReceipt.clientTelegramUrl && (
+                                <div style={{margin:"16px 0",padding:"16px",border:"1px solid var(--border, #ddd)",borderRadius:12}}>
+                                    <strong>{tr("Получайте изменения записи в Telegram")}</strong>
+                                    <p className="muted small">{tr("Подключите уведомления бесплатно, чтобы узнавать о переносе или отмене записи. Регистрация не нужна.")}</p>
+                                    <a className="primary" href={p.bookingReceipt.clientTelegramUrl} target="_blank" rel="noreferrer">
+                                        {tr("Подключить Telegram")}
+                                    </a>
+                                    <p className="muted small">{tr("Нажмите Start в открывшемся боте. Подключение необязательно.")}</p>
+                                </div>
                             )}
                             <button type="button" className="button small" onClick={() => router.get(`/m/${p.master.slug}`, {}, { replace: true })}>
                                 {tr("Записаться ещё раз")}{" "}</button>
