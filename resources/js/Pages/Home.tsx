@@ -95,7 +95,10 @@ export default function Home() {
                         <p className="landing-lead">{t("Создайте страницу с услугами и свободным временем. Клиенты выберут удобный час, а вы увидите запись в календаре.")}</p>
                         <div className="landing-hero-actions"><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link><Link className="landing-text-link" href="/demo">{t("Посмотреть демо")}<Icon name="arrow" /></Link></div>
                         <p className="landing-hero-note">{t("Бесплатно · Работает в браузере")}</p>
-                        <div className="landing-made-in"><img className="landing-kg-flag" src="/brand/kyrgyzstan-flag.svg" alt={t("Флаг Кыргызстана")} width="1000" height="600" /><div><strong>{t("Сделано в Кыргызстане")}</strong><span>{t("Для вашего дела. Для наших людей.")}</span></div></div>
+                        <div className="landing-made-in">
+                            <span className="landing-origin-icon"><img src="/brand/kyrgyzstan-flag.svg" alt={t("Флаг Кыргызстана")} width="30" height="18" /></span>
+                            <div className="landing-origin-copy"><strong>{t("Сделано в Кыргызстане")}</strong><span>{t("Для вашего дела. Для наших людей.")}</span></div>
+                        </div>
                     </div>
                     <BookingExample />
                 </section>
