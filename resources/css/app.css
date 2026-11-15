@@ -3716,3 +3716,30 @@ html:has(.landing) { scroll-behavior: auto; }
     .calendar-close-controls>.calendar-close-mode.active{background:#252525;color:#fff;border-color:#252525}
 }
 @container(max-width:360px){.appointments-heading>h2{font-size:18px}.appointments-heading .appointment-view-controls>.primary,.appointments-heading .appointment-view-controls>.ghost{font-size:11px;padding:10px}.calendar-date-navigation .ghost{padding-inline:8px}.calendar-toolbar>.display-switch button{min-width:44px;padding-inline:7px}}
+
+
+/* Three-step guided setup */
+.industry-onboarding{width:min(100%,510px);padding:28px 30px;border-radius:24px;max-height:min(92dvh,850px);scrollbar-gutter:stable}
+.industry-onboarding-backdrop{background:rgba(14,18,28,.58);backdrop-filter:blur(8px)}
+.onboarding-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.onboarding-header .eyebrow{margin:0}
+.onboarding-step-heading{display:flex;align-items:center;gap:12px;margin-top:20px}
+.onboarding-step-index{height:48px;width:48px;flex:none;display:grid;place-items:center;border-radius:15px;background:#17191f;color:#fff;font-size:20px;font-weight:750;letter-spacing:-.04em}
+.onboarding-step-heading strong{font-size:15px;font-weight:750}
+.onboarding-step-heading p{font-size:13px;color:#71717a;margin:3px 0 0}
+.onboarding-step-percent{margin-left:auto;color:#71717a;font-size:13px;font-variant-numeric:tabular-nums}
+.industry-onboarding .onboarding-progress{height:7px;gap:6px;margin:18px 0 24px}
+.industry-onboarding .onboarding-progress span{height:7px;border-radius:99px;transition:background .2s}
+.industry-onboarding .onboarding-progress span.active{background:#d92b35}
+.industry-onboarding h2{font-size:27px;line-height:1.15;letter-spacing:-.045em}
+.industry-onboarding .onboarding-weekdays button{border-radius:12px;padding:14px 0;font-weight:650;transition:background .15s,border-color .15s}
+.industry-onboarding .onboarding-weekdays button.selected{background:#191b21;border-color:#191b21}
+.industry-onboarding .onboarding-suggestions button{border-radius:99px}
+.onboarding-telegram-card{padding:18px;border:1px solid #e5e6ea;border-radius:18px;background:#fafafb;margin-top:22px}
+.onboarding-telegram-title{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.onboarding-telegram-title strong{font-size:15px}
+.onboarding-telegram-title p{margin:4px 0 0}
+.onboarding-telegram-mark{width:40px;height:40px;border-radius:13px;background:#e5f3ff;color:#1982d2;display:grid;place-items:center;font-size:22px;flex:none}
+.onboarding-connected,.onboarding-saved{color:#19754c;font-weight:650;font-size:14px;margin:14px 0}
+.onboarding-telegram-card .button.wide{width:100%;margin-top:10px}
+@media(max-width:600px){.industry-onboarding-backdrop{padding:8px;align-items:center}.industry-onboarding{padding:22px 18px;border-radius:20px;max-height:94dvh;width:100%;scrollbar-gutter:auto}.industry-onboarding h2{font-size:24px}.onboarding-step-index{height:42px;width:42px;font-size:18px}.onboarding-telegram-card{padding:15px}.industry-onboarding .onboarding-weekdays{gap:4px}.industry-onboarding .onboarding-weekdays button{font-size:11px;padding:12px 0}}
