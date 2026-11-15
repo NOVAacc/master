@@ -93,6 +93,16 @@ class PersistentClientIdentityTest extends TestCase
         );
         $this->post('/my-bookings/notifications', ['enabled' => false])->assertRedirect();
         $this->assertDatabaseHas('client_accounts', ['id' => $accountId, 'notifications_enabled' => false]);
+        $this->actingAs($master->user)->post('/appointments/'.$first->id.'/edit', [
+            'revision' => 1, 'starts_at_local' => '2026-10-19T11:00',
+            'duration_minutes' => 60, 'price_som' => 500,
+            'service_ids' => [$service->id], 'client_name' => 'Клиент',
+            'client_phone' => '+996700333444',
+        ])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('client_booking_alerts', [
+            'master_appointment_id' => $first->id, 'revision' => 2,
+            'kind' => 'rescheduled', 'delivery_status' => 'pending_manual',
+        ]);
         $this->post('/my-bookings/notifications', ['enabled' => true])->assertRedirect();
         $this->assertDatabaseHas('client_accounts', ['id' => $accountId, 'notifications_enabled' => true]);
         $this->post('/my-bookings/logout')->assertRedirect('/');
@@ -107,6 +117,31 @@ class PersistentClientIdentityTest extends TestCase
         $this->get('/my-bookings')->assertForbidden();
         $this->post('/my-bookings/notifications', ['enabled' => false])->assertForbidden();
         $this->assertDatabaseCount('client_account_sessions', 0);
+    }
+
+    public function test_client_can_revoke_identity_without_erasing_master_history(): void
+    {
+        [$master, $service] = $this->master('revoke-master');
+        $booking = app(BookAppointment::class)->create(
+            $master, $service, CarbonImmutable::parse('2026-10-19 04:00:00', 'UTC'),
+            'Клиент', '+996700333444'
+        );
+        $accountId = DB::table('client_accounts')->insertGetId([
+            'telegram_chat_id' => '987654321', 'notifications_enabled' => true,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $booking->forceFill(['client_account_id' => $accountId, 'client_telegram_chat_id' => '987654321'])->save();
+        $token = bin2hex(random_bytes(32));
+        DB::table('client_account_sessions')->insert([
+            'client_account_id' => $accountId, 'token_hash' => hash('sha256', $token),
+            'expires_at' => now()->addYear(), 'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $this->withCookie('bosh_client_session', $token)->get('/my-bookings')->assertOk();
+        $this->post('/my-bookings/disconnect')->assertRedirect('/');
+        $this->assertDatabaseCount('client_accounts', 0);
+        $this->assertDatabaseCount('client_account_sessions', 0);
+        $this->assertDatabaseHas('master_appointments', ['id' => $booking->id, 'client_account_id' => null, 'client_telegram_chat_id' => null]);
+        $this->get('/my-bookings')->assertForbidden();
     }
 
     public function test_telegram_webhook_cannot_be_replayed_or_used_without_secret(): void
