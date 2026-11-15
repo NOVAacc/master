@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MasterProfile;
 use App\Models\HotSlotOffer;
 use App\Services\BookAppointment;
+use App\Services\ClientIdentity;
 use App\Services\WorkingHours;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class PublicBookingController extends Controller
 {
     public function show(Request $request, MasterProfile $master, WorkingHours $hours)
     {
+        app(ClientIdentity::class)->claimBrowser($request);
         $today = CarbonImmutable::now($master->timezone)->startOfDay();
         $data = $request->validate([
             'offer' => ['nullable', 'string', 'size:40', 'regex:/^[A-Za-z0-9]+$/'],
@@ -99,6 +101,8 @@ class PublicBookingController extends Controller
             'date' => $date, 'minDate' => $today->toDateString(),
             'maxDate' => $today->addDays(90)->toDateString(), 'slots' => $slots,
             'bookingReceipt' => $request->session()->get('booking_receipt.master_slug') === $master->slug ? $request->session()->get('booking_receipt') : null,
+            'clientConnected' => app(ClientIdentity::class)->account($request) !== null
+                || (bool) $request->session()->get('client_telegram_verified', false),
         ]);
     }
 
@@ -144,18 +148,30 @@ class PublicBookingController extends Controller
             false, $offerSlot, $specialPrice);
 
         $clientTelegramUrl = null;
+        $clientAccount = app(ClientIdentity::class)->account($request);
+        if ($clientAccount) {
+            $appointment->forceFill([
+                'client_account_id' => $clientAccount->id,
+                'client_telegram_chat_id' => $clientAccount->notifications_enabled ? $clientAccount->telegram_chat_id : null,
+            ])->save();
+        }
         $username = config('services.telegram.bot_username');
-        if ($username && config('services.telegram.bot_token') && preg_match('/^[A-Za-z0-9_]{5,32}$/D', $username)) {
+        if (!$clientAccount && $username && config('services.telegram.bot_token') && preg_match('/^[A-Za-z0-9_]{5,32}$/D', $username)) {
             $token = Str::random(40);
             $appointment->forceFill([
                 'client_telegram_link_hash' => hash('sha256', $token),
                 'client_telegram_link_expires_at' => now()->addDays(7),
             ])->save();
             $clientTelegramUrl = 'https://t.me/'.$username.'?start=c'.$token;
+            $pending = $request->session()->get('client_telegram_pending', []);
+            if (!is_array($pending)) $pending = [];
+            $pending[$appointment->id] = $token;
+            $request->session()->put('client_telegram_pending', array_slice($pending, -5, null, true));
         }
 
         return redirect()->route('public.master', $master->slug)->with('booking_receipt', [
             'clientTelegramUrl' => $clientTelegramUrl,
+            'clientConnected' => (bool) $clientAccount,
             'master_slug' => $master->slug,
             'status' => $appointment->status,
             'details' => [

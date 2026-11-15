@@ -12,7 +12,7 @@ class MasterAppointment extends Model
 
     protected $fillable = ['master_profile_id', 'master_client_id', 'master_service_id', 'client_name', 'client_phone', 'client_comment', 'starts_at', 'ends_at', 'price_som', 'service_name_snapshot', 'services_snapshot', 'whatsapp_consent', 'status', 'attendance_status', 'payment_status'];
 
-    protected $hidden = ['client_telegram_chat_id', 'client_telegram_link_hash', 'client_telegram_link_expires_at'];
+    protected $hidden = ['client_account_id', 'client_telegram_chat_id', 'client_telegram_link_hash', 'client_telegram_link_expires_at', 'client_telegram_browser_claim_hash'];
 
     public function clientAlerts(): HasMany
     {

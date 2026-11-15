@@ -102,6 +102,8 @@ final class EditAppointment
                 ]);
                 $a->whatsapp_consent = false;
                 $a->client_telegram_chat_id = null;
+                $a->client_account_id = null;
+                $a->client_telegram_browser_claim_hash = null;
                 $a->client_telegram_link_hash = null;
                 $a->client_telegram_link_expires_at = null;
             }

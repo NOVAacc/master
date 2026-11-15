@@ -38,19 +38,24 @@ final class ClientBookingAlerts
             $text .= 'Стоимость: '.number_format((int) $appointment->price_som, 0, '.', ' ')." сом\n";
             $text .= "Актуальная ссылка на запись:\n".$this->manageUrl($appointment);
 
+            $clientChatId = $appointment->client_telegram_chat_id;
+            if ($appointment->client_account_id) {
+                $account = DB::table('client_accounts')->where('id', $appointment->client_account_id)->first();
+                $clientChatId = $account && $account->notifications_enabled ? $account->telegram_chat_id : null;
+            }
             $created = DB::table('client_booking_alerts')->insertOrIgnore([
                 'master_appointment_id' => $appointment->id, 'revision' => $appointment->revision,
                 'kind' => $kind, 'message' => $text, 'delivery_status' => 'pending_manual',
                 'created_at' => now(), 'updated_at' => now(),
             ]);
-            if (!$created || !$appointment->client_telegram_chat_id || !config('services.telegram.bot_token')) return;
+            if (!$created || !$clientChatId || !config('services.telegram.bot_token')) return;
             $alert = DB::table('client_booking_alerts')
                 ->where('master_appointment_id', $appointment->id)
                 ->where('revision', $appointment->revision)->where('kind', $kind)->first();
             try {
                 $response = Http::connectTimeout(2)->timeout(6)
                     ->post('https://api.telegram.org/bot'.config('services.telegram.bot_token').'/sendMessage', [
-                        'chat_id' => $appointment->client_telegram_chat_id,
+                        'chat_id' => $clientChatId,
                         'text' => $text, 'disable_web_page_preview' => true,
                     ]);
                 if ($response->successful() && $response->json('ok') === true) {
