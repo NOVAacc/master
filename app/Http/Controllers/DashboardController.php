@@ -40,6 +40,7 @@ class DashboardController extends Controller
             'onboardingCompleted' => (bool) $request->session()->get('onboarding_completed', false),
             'onboarding' => [
                 'restartStep' => $master->onboarding_restart_step,
+                'telegramRequired' => (bool) $master->onboarding_telegram_required,
                 'hoursCount' => DB::table('master_working_hours')->where('master_profile_id', $master->id)->count(),
                 'servicesCount' => $master->services()->count(),
             ],

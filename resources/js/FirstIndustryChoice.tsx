@@ -1,12 +1,12 @@
 import LanguageSwitch from "./i18n";
 import { useI18n } from "./i18n";
-import { useForm, usePage, useRemember } from "@inertiajs/react";
+import { router, useForm, usePage, useRemember } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import { Notice } from "./Shared";
 import ShareProfile from "./ShareProfile";
 import type { Industries, Master } from "./types";
 
-type Counts = { hoursCount: number; servicesCount: number; restartStep?: number | null };
+type Counts = { hoursCount: number; servicesCount: number; restartStep?: number | null; telegramRequired?: boolean };
 const weekdays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const starters: Record<string, string[]> = {
     nails: ["Маникюр", "Маникюр с покрытием"], barber: ["Мужская стрижка", "Оформление бороды"],
@@ -15,14 +15,15 @@ const starters: Record<string, string[]> = {
 };
 export default function FirstIndustryChoice({ master, publicUrl, completed }: { master: Master; publicUrl: string; completed: boolean }) {
     const { t: tr, locale } = useI18n();
-    const { industries, onboarding } = usePage<{ industries?: Industries; onboarding?: Counts }>().props;
+    const { industries, onboarding, telegramConnected, telegramConfigured } = usePage<{ industries?: Industries; onboarding?: Counts; telegramConnected?: boolean; telegramConfigured?: boolean }>().props;
     const catalog = industries ?? {};
     const counts = onboarding ?? { hoursCount: 0, servicesCount: 0 };
     const validCategory = !!master.industry && !!catalog[master.industry]?.activities?.[master.activity ?? ""];
     const needCategory = !validCategory;
     const needSchedule = counts.hoursCount === 0;
     const needServices = counts.servicesCount === 0;
-    const firstStep = counts.restartStep != null ? counts.restartStep : needCategory ? 0 : needSchedule ? 1 : needServices ? 2 : 3;
+    const telegramRequired = !!counts.telegramRequired;
+    const firstStep = counts.restartStep != null ? counts.restartStep : needCategory ? 0 : needSchedule ? 1 : needServices ? 2 : telegramRequired ? 3 : 4;
     const [days, setDays] = useRemember<number[]>([1, 2, 3, 4, 5, 6], `bosh-onboarding-${master.id}-days`);
     const [start, setStart] = useRemember("09:00", `bosh-onboarding-${master.id}-start`);
     const [end, setEnd] = useRemember("18:00", `bosh-onboarding-${master.id}-end`);
@@ -35,7 +36,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
     const [done, setDone] = useState(false);
     const [step, setStep] = useState(firstStep);
     useEffect(() => { setStep(firstStep); }, [firstStep]);
-    if (done || (step === 3 && !completed)) return null;
+    if (done || (step === 4 && !telegramRequired && !completed)) return null;
     const active = catalog[category.data.industry]?.activities ?? {};
     const suggested = starters[master.activity ?? ""] ?? [tr("Первая услуга")];
     const submitSchedule = () => {
@@ -56,10 +57,27 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
     return <div className="industry-onboarding-backdrop">
         <section className="industry-onboarding" role="dialog" aria-modal="true" aria-labelledby="industry-title">
             <LanguageSwitch /><p className="eyebrow">{tr("BOSH · БЫСТРЫЙ СТАРТ")}</p>
-            {step < 3 && <p className="muted small">{tr("Шаг")}{" "}{step + 1} {tr("из 3")}</p>}
-            {step < 3 && <div className="onboarding-progress">{[0, 1, 2].map(i => <span key={i} className={i <= step ? "active" : ""} />)}</div>}
+            {step < 4 && <p className="muted small">{tr("Шаг")}{" "}{step + 1} {tr("из 4")}</p>}
+            {step < 4 && <div className="onboarding-progress">{[0, 1, 2, 3].map(i => <span key={i} className={i <= step ? "active" : ""} />)}</div>}
             <Notice />
-            {step === 3 && <section className="onboarding-finish">
+            {step === 3 && <section className="onboarding-telegram-step">
+                <h2 id="industry-title">{tr("Подключите Telegram для уведомлений")}</h2>
+                <p>{tr("Это обязательный шаг. Бот BOSH будет сообщать вам о новых записях, переносах и отменах.")}</p>
+                <div className="panel" style={{padding:16,display:"grid",gap:12,margin:"16px 0"}}>
+                    <strong>{tr("Шаг 4 · Telegram")}</strong>
+                    {telegramConnected
+                        ? <p role="status">{tr("Telegram подключён. Можно завершить настройку.")}</p>
+                        : <p className="muted small">{tr("Нажмите «Подключить», затем Start в Telegram и вернитесь сюда.")}</p>}
+                    {!telegramConnected && telegramConfigured && <a className="primary wide" href="/telegram/connect" target="_blank" rel="noreferrer">{tr("Подключить @Boshkg_bot")}</a>}
+                    {!telegramConfigured && <p role="alert">{tr("Подключение Telegram сейчас недоступно. Обратитесь в поддержку BOSH.")}</p>}
+                    <button className="button wide" type="button" onClick={() => router.reload({only:["telegramConnected","onboarding"]})}>{tr("Проверить подключение")}</button>
+                </div>
+                <button className="primary wide" type="button" disabled={!telegramConnected} onClick={() => router.post("/onboarding/complete",{},{
+                    preserveScroll:true,
+                    onSuccess:()=>setStep(4),
+                })}>{tr("Продолжить")}</button>
+            </section>}
+            {step === 4 && <section className="onboarding-finish">
                 <h2 id="industry-title">{tr("Ваша страница готова!")}</h2>
                 <p className="muted small">{tr("Всё готово. Отправьте клиентам ссылку — они смогут выбрать услугу и время самостоятельно.")}</p>
                 <ShareProfile url={publicUrl} />
