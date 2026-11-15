@@ -103,6 +103,13 @@ def run(args):
             # An upgrade preserves the application key and persistent storage, and can roll back to its predecessor.
             (private / 'shared/storage/app/private/retained.txt').write_text('persistent data')
             # Inert test values: never contact Meta or use real credentials during installation tests.
+            # Telegram credentials must survive the next release verbatim.
+            first_env = first_env.replace('TELEGRAM_BOT_USERNAME=""', 'TELEGRAM_BOT_USERNAME="Boshkg_bot"')
+            first_env = first_env.replace('TELEGRAM_BOT_TOKEN=""', 'TELEGRAM_BOT_TOKEN="inert-test-telegram-token"')
+            first_env = first_env.replace('TELEGRAM_WEBHOOK_SECRET=""', 'TELEGRAM_WEBHOOK_SECRET="inert-test-webhook-secret"')
+            assert 'TELEGRAM_BOT_USERNAME="Boshkg_bot"' in first_env
+            assert 'TELEGRAM_BOT_TOKEN="inert-test-telegram-token"' in first_env
+            assert 'TELEGRAM_WEBHOOK_SECRET="inert-test-webhook-secret"' in first_env
             first_env = first_env.replace('WHATSAPP_TOKEN=""', 'WHATSAPP_TOKEN="test-token-keep-private"')
             first_env = first_env.replace('WHATSAPP_SENDER_NUMBER="996550512233"', 'WHATSAPP_SENDER_NUMBER="996555000001"')
             first_env = first_env.replace('WHATSAPP_CLIENT_TEMPLATE="bosh_booking_client"', 'WHATSAPP_CLIENT_TEMPLATE="custom_booking_client"')
