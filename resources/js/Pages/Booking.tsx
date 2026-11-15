@@ -96,7 +96,7 @@ export default function Booking(p: Props) {
     return (
         <main className="booking-wrap">
             <Head title={p.master.display_name} />
-            <div className="public-page-tools"><Brand /><LanguageSwitch /></div>
+            <div className="public-page-tools"><Brand /><div className="row wrap" style={{alignItems:"center",gap:12}}>{clientConnected && <a className="button small" href="/my-bookings">{tr("Мои записи")}</a>}<LanguageSwitch /></div></div>
             {p.isOwner && <MasterModeSwitch mode="page" publicUrl={`/m/${p.master.slug}`} />}
             <div className="booking-grid">
                 <aside className="panel profile-card">
