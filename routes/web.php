@@ -33,6 +33,7 @@ Route::get('/client/telegram/status', function (\Illuminate\Http\Request $reques
 })->middleware('throttle:30,1');
 Route::get('/my-bookings', [\App\Http\Controllers\ClientBookingsController::class, 'index'])->middleware('throttle:60,1')->name('client.bookings');
 Route::post('/my-bookings/notifications', [\App\Http\Controllers\ClientBookingsController::class, 'notifications'])->middleware('throttle:20,1');
+Route::post('/my-bookings/disconnect', [\App\Http\Controllers\ClientBookingsController::class, 'disconnect'])->middleware('throttle:5,10');
 Route::post('/my-bookings/logout', [\App\Http\Controllers\ClientBookingsController::class, 'logout'])->middleware('throttle:20,1');
 Route::post('/telegram/webhook', [\App\Http\Controllers\TelegramMasterController::class, 'webhook'])->middleware('throttle:120,1');
 Route::middleware('auth')->group(function () {

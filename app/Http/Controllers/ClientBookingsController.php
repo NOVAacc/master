@@ -54,6 +54,22 @@ final class ClientBookingsController extends Controller
         return back();
     }
 
+    public function disconnect(Request $request)
+    {
+        $account = $this->account($request);
+        DB::transaction(function () use ($account) {
+            // Do not erase legitimate master appointment history, only customer
+            // identity and the Telegram delivery address.
+            DB::table('master_appointments')->where('client_account_id', $account->id)->update([
+                'client_telegram_chat_id' => null, 'client_account_id' => null,
+                'client_telegram_browser_claim_hash' => null,
+            ]);
+            DB::table('client_accounts')->where('id', $account->id)->delete();
+        });
+        app(ClientIdentity::class)->logout($request);
+        return redirect('/');
+    }
+
     public function logout(Request $request)
     {
         app(ClientIdentity::class)->logout($request);

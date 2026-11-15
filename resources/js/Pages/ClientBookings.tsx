@@ -31,6 +31,11 @@ export default function ClientBookings({bookings,notificationsEnabled}: {booking
     {bookings.length===0 && <p className="muted">{tr("Записей пока нет.")}</p>}
    </section>
    <button type="button" className="ghost" onClick={()=>router.post("/my-bookings/logout")}>{tr("Отключить это устройство")}</button>
+   <button type="button" className="ghost" onClick={()=>{
+      if(window.confirm(tr("Удалить привязку Telegram? Вы перестанете получать уведомления, но записи у мастеров сохранятся."))) {
+        router.post("/my-bookings/disconnect");
+      }
+   }}>{tr("Удалить привязку Telegram")}</button>
   </main>
  </>;
 }
