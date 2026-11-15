@@ -19,7 +19,7 @@ final class ClientBookingAlerts
         ]);
     }
 
-    public function record(MasterAppointment $appointment, string $kind, ?string $previousStart = null): void
+    public function record(MasterAppointment $appointment, string $kind, ?string $previousStart = null, ?string $reason = null): void
     {
         try {
             $master = $appointment->masterProfile;
@@ -35,6 +35,9 @@ final class ClientBookingAlerts
             $text = "BOSH · {$label}\nМастер: {$master->display_name}\nУслуга: {$appointment->service_name_snapshot}\n";
             if ($old && $old !== $start) $text .= "Было: {$old}\n";
             $text .= ($kind === 'cancelled' ? "Дата отменённой записи: " : "Новое время: ").$start."\n";
+            if ($kind === 'rescheduled' && is_string($reason) && trim($reason) !== '') {
+                $text .= 'Причина изменения: '.trim(preg_replace('/[\\x00-\\x1F\\x7F]+/u', ' ', mb_substr($reason, 0, 500)))."\n";
+            }
             $text .= 'Стоимость: '.number_format((int) $appointment->price_som, 0, '.', ' ')." сом\n";
             $text .= "Актуальная ссылка на запись:\n".$this->manageUrl($appointment);
 
