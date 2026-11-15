@@ -46,6 +46,24 @@ class IndustryOnboardingTest extends TestCase
         $this->assertSame('Стрижка', $master->services()->orderBy('id')->first()->name);
     }
 
+    public function test_telegram_is_required_before_finishing_new_master_onboarding(): void
+    {
+        $user = User::factory()->create();
+        $master = MasterProfile::create([
+            'user_id' => $user->id, 'slug' => 'requiredtelegram', 'display_name' => 'Мастер',
+        ]);
+        $this->actingAs($user)->post('/onboarding/services', [
+            'services' => [['name' => 'Услуга', 'duration_minutes' => 60, 'price_som' => 1000]],
+        ])->assertRedirect('/dashboard');
+        $this->assertTrue((bool) $master->fresh()->onboarding_telegram_required);
+        $this->post('/onboarding/complete')->assertStatus(422);
+        $this->assertTrue((bool) $master->fresh()->onboarding_telegram_required);
+        // A Telegram webhook is the only flow that can set a connected chat.
+        $master->forceFill(['telegram_chat_id' => '123456'])->save();
+        $this->post('/onboarding/complete')->assertRedirect('/dashboard')->assertSessionHas('onboarding_completed', true);
+        $this->assertFalse((bool) $master->fresh()->onboarding_telegram_required);
+    }
+
     public function test_starter_services_validation_does_not_create_partial_data(): void
     {
         $user = User::factory()->create();
