@@ -74,7 +74,7 @@ class PersistentClientIdentityTest extends TestCase
         $cookie = collect($claim->headers->getCookies())->first(fn ($cookie) => $cookie->getName() === 'bosh_client_session');
         $this->assertNotNull($cookie);
         // Feature tests do not automatically keep response cookies across requests.
-        $this->withCookie('bosh_client_session', $cookie->getValue());
+        $this->withUnencryptedCookie('bosh_client_session', $cookie->getValue());
         $this->assertDatabaseCount('client_account_sessions', 1);
         $this->assertNull($first->fresh()->client_telegram_browser_claim_hash);
 
