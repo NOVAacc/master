@@ -15,7 +15,7 @@ const starters: Record<string, string[]> = {
 };
 export default function FirstIndustryChoice({ master, publicUrl, completed }: { master: Master; publicUrl: string; completed: boolean }) {
     const { t: tr, locale } = useI18n();
-    const { industries, onboarding, telegramConnected, telegramConfigured } = usePage<{ industries?: Industries; onboarding?: Counts; telegramConnected?: boolean; telegramConfigured?: boolean }>().props;
+    const { industries, onboarding, telegramConnected, telegramConfigured, onboardingPersisted } = usePage<{ industries?: Industries; onboarding?: Counts; telegramConnected?: boolean; telegramConfigured?: boolean; onboardingPersisted?: boolean }>().props;
     const catalog = industries ?? {};
     const counts = onboarding ?? { hoursCount: 0, servicesCount: 0 };
     const validCategory = !!master.industry && !!catalog[master.industry]?.activities?.[master.activity ?? ""];
@@ -41,7 +41,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
     const [checkingTelegram, setCheckingTelegram] = useState(false);
     const [step, setStep] = useState(firstStep);
     useEffect(() => { setStep(firstStep); }, [firstStep]);
-    if (done || (step === 3 && !showFinish)) return null;
+    if (done || (onboardingPersisted && !showFinish) || (step === 3 && !showFinish)) return null;
     const active = catalog[category.data.industry]?.activities ?? {};
     const suggested = starters[master.activity ?? ""] ?? [tr("Первая услуга")];
     const submitSchedule = () => {
