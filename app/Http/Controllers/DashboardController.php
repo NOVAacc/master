@@ -38,6 +38,7 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', [
             'industries' => config('industries'),
             'onboardingCompleted' => (bool) $request->session()->get('onboarding_completed', false),
+            'onboardingPersisted' => $master->onboarding_completed_at !== null && $master->onboarding_restart_step === null,
             'onboarding' => [
                 'restartStep' => $master->onboarding_restart_step,
                 'telegramRequired' => (bool) $master->onboarding_telegram_required,
