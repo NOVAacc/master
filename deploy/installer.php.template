@@ -213,7 +213,14 @@ try {
         'SESSION_SECURE_COOKIE' => DEPLOY['secure_cookies'] ? 'true' : 'false', 'CACHE_STORE' => 'file',
         'QUEUE_CONNECTION' => 'sync', 'LOG_CHANNEL' => 'single', 'LOG_LEVEL' => 'warning'];
     // Preserve only supported channel settings. Secrets stay in the private .env and backups.
-    $channelDefaults = ['WHATSAPP_ENABLED' => 'false', 'WHATSAPP_SENDER_NUMBER' => '996550512233',
+    $channelDefaults = [
+        // Telegram settings are supplied privately in shared/.env and MUST
+        // survive each deployment. Without this whitelist, the installer
+        // silently deletes the bot token, username, and webhook secret.
+        'TELEGRAM_BOT_USERNAME' => '',
+        'TELEGRAM_BOT_TOKEN' => '',
+        'TELEGRAM_WEBHOOK_SECRET' => '',
+        'WHATSAPP_ENABLED' => 'false', 'WHATSAPP_SENDER_NUMBER' => '996550512233',
         'WHATSAPP_TOKEN' => '', 'WHATSAPP_PHONE_NUMBER_ID' => '', 'WHATSAPP_API_VERSION' => '',
         'WHATSAPP_LANGUAGE' => 'ru', 'WHATSAPP_CLIENT_TEMPLATE' => 'bosh_booking_client',
         'WHATSAPP_MASTER_TEMPLATE' => 'bosh_booking_master'];
