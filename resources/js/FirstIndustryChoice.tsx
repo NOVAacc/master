@@ -23,7 +23,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
     const needSchedule = counts.hoursCount === 0;
     const needServices = counts.servicesCount === 0;
     const telegramRequired = !!counts.telegramRequired;
-    const firstStep = counts.restartStep != null ? counts.restartStep : needCategory ? 0 : needSchedule ? 1 : needServices ? 2 : telegramRequired && !telegramConnected ? 3 : 4;
+    const firstStep = counts.restartStep != null ? counts.restartStep : needCategory ? 0 : needSchedule ? 1 : needServices ? 2 : telegramRequired ? 3 : 4;
     const [days, setDays] = useRemember<number[]>([1, 2, 3, 4, 5, 6], `bosh-onboarding-${master.id}-days`);
     const [start, setStart] = useRemember("09:00", `bosh-onboarding-${master.id}-start`);
     const [end, setEnd] = useRemember("18:00", `bosh-onboarding-${master.id}-end`);
