@@ -199,6 +199,7 @@ export default function EditAppointmentForm({
                     value={f.data.reason}
                     onChange={(e) => f.setData("reason", e.target.value)}
                 />
+                <p className="muted small">{tr("Если указать причину, она будет включена в сообщение клиенту о переносе времени.")}</p>
             </Field>
             <p className="muted small">
                 {tr("При переносе клиент получит сообщение в Telegram, если подключил уведомления. Иначе в карточке записи появится текст для ручной отправки.")}{" "}</p>

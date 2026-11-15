@@ -118,7 +118,7 @@ final class EditAppointment
         }, 3);
         if ($notify) {
             app(MasterAlerts::class)->record($result, 'rescheduled');
-            app(ClientBookingAlerts::class)->record($result, 'rescheduled', $previousStart);
+            app(ClientBookingAlerts::class)->record($result, 'rescheduled', $previousStart, $data['reason'] ?? null);
         }
 
         return $result;
