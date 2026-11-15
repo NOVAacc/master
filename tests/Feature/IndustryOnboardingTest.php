@@ -62,6 +62,11 @@ class IndustryOnboardingTest extends TestCase
         $master->forceFill(['telegram_chat_id' => '123456'])->save();
         $this->post('/onboarding/complete')->assertRedirect('/dashboard')->assertSessionHas('onboarding_completed', true);
         $this->assertFalse((bool) $master->fresh()->onboarding_telegram_required);
+        $this->assertNotNull($master->fresh()->onboarding_completed_at);
+        $this->get('/dashboard')->assertInertia(fn (\\Inertia\\Testing\\AssertableInertia $page) => $page
+            ->where('onboardingPersisted', true));
+        $this->get('/dashboard')->assertInertia(fn (\\Inertia\\Testing\\AssertableInertia $page) => $page
+            ->where('onboardingPersisted', true));
     }
 
     public function test_starter_services_validation_does_not_create_partial_data(): void
