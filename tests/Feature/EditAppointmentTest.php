@@ -27,7 +27,7 @@ class EditAppointmentTest extends TestCase
     private function fixture(): array
     {
         $user = User::factory()->create();
-        $master = MasterProfile::create(['user_id' => $user->id, 'slug' => 'edit-master', 'display_name' => 'Айзада', 'timezone' => 'Asia/Bishkek', 'phone' => '+996555111222', 'auto_confirm' => true, 'whatsapp_notifications' => true]);
+        $master = MasterProfile::create(['user_id' => $user->id, 'slug' => 'edit-master', 'display_name' => 'Айзада', 'timezone' => 'Asia/Bishkek', 'phone' => '+996555111222', 'auto_confirm' => true, 'show_busy_slots' => false, 'whatsapp_notifications' => true]);
         $service = $master->services()->create(['name' => 'Ресницы', 'duration_minutes' => 60, 'price_som' => 1200, 'is_active' => true]);
         foreach ([1, 2] as $weekday) {
             DB::table('master_working_hours')->insert(['master_profile_id' => $master->id, 'weekday' => $weekday, 'starts_at' => '09:00', 'ends_at' => '18:00']);

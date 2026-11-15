@@ -33,7 +33,7 @@ class MasterTest extends TestCase
     {
         $user = User::factory()->create();
         $master = MasterProfile::create(['user_id' => $user->id, 'slug' => $slug,
-            'display_name' => 'Айзада', 'timezone' => 'Asia/Bishkek']);
+            'display_name' => 'Айзада', 'timezone' => 'Asia/Bishkek', 'auto_confirm' => false, 'show_busy_slots' => false]);
         $service = $master->services()->create(['name' => 'Стрижка', 'duration_minutes' => 60,
             'price_som' => 800, 'is_active' => true]);
         DB::table('master_working_hours')->insert(['master_profile_id' => $master->id,

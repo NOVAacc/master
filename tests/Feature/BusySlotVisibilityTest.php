@@ -20,7 +20,7 @@ class BusySlotVisibilityTest extends TestCase
         $master = MasterProfile::create([
             'user_id' => $user->id, 'slug' => 'busy-slot-test', 'display_name' => 'Test',
             'timezone' => 'Asia/Bishkek', 'booking_enabled' => true, 'auto_confirm' => true,
-            'is_demo' => false,
+            'is_demo' => false, 'show_busy_slots' => false,
         ]);
         $service = $master->services()->create([
             'name' => 'Test service', 'duration_minutes' => 30, 'price_som' => 500,
