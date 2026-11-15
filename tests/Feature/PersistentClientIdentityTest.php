@@ -83,10 +83,21 @@ class PersistentClientIdentityTest extends TestCase
         $second = $master->appointments()->orderByDesc('id')->firstOrFail();
         $this->assertSame($accountId, $second->client_account_id);
         $this->assertNull(session('booking_receipt')['clientTelegramUrl']);
+        [$otherMaster, $otherService] = $this->master('master-four');
+        $this->book($otherMaster, $otherService, '2026-10-19T04:00:00+00:00');
+        $third = $otherMaster->appointments()->firstOrFail();
+        $this->assertSame($accountId, $third->client_account_id);
         $this->get('/my-bookings')->assertOk()->assertInertia(
             fn (\Inertia\Testing\AssertableInertia $page) => $page
-                ->component('ClientBookings')->has('bookings', 2)->etc()
+                ->component('ClientBookings')->has('bookings', 3)->etc()
         );
+        $this->post('/my-bookings/notifications', ['enabled' => false])->assertRedirect();
+        $this->assertDatabaseHas('client_accounts', ['id' => $accountId, 'notifications_enabled' => false]);
+        $this->post('/my-bookings/notifications', ['enabled' => true])->assertRedirect();
+        $this->assertDatabaseHas('client_accounts', ['id' => $accountId, 'notifications_enabled' => true]);
+        $this->post('/my-bookings/logout')->assertRedirect('/');
+        $this->assertDatabaseCount('client_account_sessions', 0);
+        $this->get('/my-bookings')->assertForbidden();
     }
 
     public function test_client_dashboard_cannot_access_without_verified_session_or_from_other_account(): void
