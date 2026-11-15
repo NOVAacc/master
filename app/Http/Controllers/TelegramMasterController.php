@@ -40,14 +40,14 @@ final class TelegramMasterController extends Controller {
       ->where('client_telegram_link_expires_at', '>', now())
       ->first();
     if (!$appointment) return response()->json(['ok'=>true]);
-    $accountId = DB::transaction(function () use ($chatId) {
-      $account = DB::table('client_accounts')->where('telegram_chat_id', $chatId)->first();
-      if ($account) return $account->id;
-      return DB::table('client_accounts')->insertGetId([
-        'telegram_chat_id' => $chatId, 'notifications_enabled' => true,
-        'created_at' => now(), 'updated_at' => now(),
-      ]);
-    });
+    // Telegram may retry webhooks concurrently. Unique chat IDs and insertOrIgnore
+    // make account linking idempotent without exposing another client's records.
+    DB::table('client_accounts')->insertOrIgnore([
+      'telegram_chat_id' => $chatId, 'notifications_enabled' => true,
+      'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $accountId = DB::table('client_accounts')->where('telegram_chat_id', $chatId)->value('id');
+    if (!$accountId) return response()->json(['ok'=>true]);
     $updated = \App\Models\MasterAppointment::whereKey($appointment->id)
       ->where('client_telegram_link_hash', hash('sha256', $match[2]))
       ->where('client_telegram_link_expires_at', '>', now())
