@@ -63,9 +63,9 @@ class IndustryOnboardingTest extends TestCase
         $this->post('/onboarding/complete')->assertRedirect('/dashboard')->assertSessionHas('onboarding_completed', true);
         $this->assertFalse((bool) $master->fresh()->onboarding_telegram_required);
         $this->assertNotNull($master->fresh()->onboarding_completed_at);
-        $this->get('/dashboard')->assertInertia(fn (\\Inertia\\Testing\\AssertableInertia $page) => $page
+        $this->get('/dashboard')->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
             ->where('onboardingPersisted', true));
-        $this->get('/dashboard')->assertInertia(fn (\\Inertia\\Testing\\AssertableInertia $page) => $page
+        $this->get('/dashboard')->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
             ->where('onboardingPersisted', true));
     }
 
