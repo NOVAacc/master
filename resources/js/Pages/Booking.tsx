@@ -23,10 +23,12 @@ type Props = {
     slots: { value: string; label: string; available: boolean }[];
     storyTime?: string | null;
     hotOffer: { token: string; special_price_som: number | null; slots: { id: number; starts_at: string }[] } | null;
+    clientConnected?: boolean;
     bookingReceipt: {
         status: string;
         details?: { id: number; client_name: string; services: string; starts_at: string; ends_at: string; price_som: number };
         manageUrl: string;
+        clientConnected?: boolean;
         clientTelegramUrl?: string | null;
     } | null;
 };
@@ -144,14 +146,22 @@ export default function Booking(p: Props) {
                                 <p className="muted small">
                                     {tr("Запись пока ожидает подтверждения мастера.")}{" "}</p>
                             )}
-                            {p.bookingReceipt.clientTelegramUrl && (
+                            {(p.clientConnected || p.bookingReceipt.clientConnected) && (
+                                <div style={{margin:"14px 0",padding:16,border:"1px solid var(--border, #ddd)",borderRadius:12}}>
+                                    <strong>{tr("Telegram подключён для будущих записей")}</strong>
+                                    <p className="muted small">{tr("Следующие записи в этом браузере будут доступны в разделе «Мои записи». На другом устройстве подтвердите Telegram ещё раз.")}</p>
+                                    <a className="button" href="/my-bookings">{tr("Мои записи")}</a>
+                                </div>
+                            )}
+                            {p.bookingReceipt.clientTelegramUrl && !p.clientConnected && !p.bookingReceipt.clientConnected && (
                                 <div style={{margin:"16px 0",padding:"16px",border:"1px solid var(--border, #ddd)",borderRadius:12}}>
                                     <strong>{tr("Получайте изменения записи в Telegram")}</strong>
                                     <p className="muted small">{tr("Подключите уведомления бесплатно, чтобы узнавать о переносе или отмене записи. Регистрация не нужна.")}</p>
                                     <a className="primary" href={p.bookingReceipt.clientTelegramUrl} target="_blank" rel="noreferrer">
                                         {tr("Подключить Telegram")}
                                     </a>
-                                    <p className="muted small">{tr("Нажмите Start в открывшемся боте. Подключение необязательно.")}</p>
+                                    <p className="muted small">{tr("Нажмите Start в открывшемся боте, затем вернитесь сюда. Подключение необязательно.")}</p>
+                                    <button className="button" type="button" onClick={() => router.reload({only:["clientConnected","bookingReceipt"]})}>{tr("Проверить подключение")}</button>
                                 </div>
                             )}
                             <button type="button" className="button small" onClick={() => router.get(`/m/${p.master.slug}`, {}, { replace: true })}>

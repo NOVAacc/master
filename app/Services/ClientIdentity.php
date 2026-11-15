@@ -5,7 +5,6 @@ use App\Models\MasterAppointment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 final class ClientIdentity
 {

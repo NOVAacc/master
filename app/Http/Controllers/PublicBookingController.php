@@ -18,7 +18,7 @@ class PublicBookingController extends Controller
 {
     public function show(Request $request, MasterProfile $master, WorkingHours $hours)
     {
-        app(ClientIdentity::class)->claimBrowser($request);
+        $clientConnected = app(ClientIdentity::class)->claimBrowser($request);
         $today = CarbonImmutable::now($master->timezone)->startOfDay();
         $data = $request->validate([
             'offer' => ['nullable', 'string', 'size:40', 'regex:/^[A-Za-z0-9]+$/'],
@@ -101,8 +101,7 @@ class PublicBookingController extends Controller
             'date' => $date, 'minDate' => $today->toDateString(),
             'maxDate' => $today->addDays(90)->toDateString(), 'slots' => $slots,
             'bookingReceipt' => $request->session()->get('booking_receipt.master_slug') === $master->slug ? $request->session()->get('booking_receipt') : null,
-            'clientConnected' => app(ClientIdentity::class)->account($request) !== null
-                || (bool) $request->session()->get('client_telegram_verified', false),
+            'clientConnected' => $clientConnected,
         ]);
     }
 
@@ -154,6 +153,9 @@ class PublicBookingController extends Controller
                 'client_account_id' => $clientAccount->id,
                 'client_telegram_chat_id' => $clientAccount->notifications_enabled ? $clientAccount->telegram_chat_id : null,
             ])->save();
+            if ($clientAccount->notifications_enabled) {
+                app(\App\Services\ClientBookingAlerts::class)->record($appointment, $appointment->status === 'confirmed' ? 'confirmed' : 'pending');
+            }
         }
         $username = config('services.telegram.bot_username');
         if (!$clientAccount && $username && config('services.telegram.bot_token') && preg_match('/^[A-Za-z0-9_]{5,32}$/D', $username)) {
