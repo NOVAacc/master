@@ -176,7 +176,7 @@ export default function Booking(p: Props) {
                                     </a>
                                     <p className="muted small">{tr("Нажмите Start в открывшемся боте, затем вернитесь сюда. Подключение необязательно.")}</p>
                                     <button className="button" type="button" disabled={telegramChecking} onClick={() => void checkTelegram()}>{telegramChecking ? tr("Проверка…") : tr("Проверить подключение")}</button>
-                                    {telegramCheckError && <p role="status" className="muted small">{tr("Подключение пока не подтверждено. Нажмите Start в боте и попробуйте ещё раз.")}</p>
+                                    {telegramCheckError && <p role="status" className="muted small">{tr("Подключение пока не подтверждено. Нажмите Start в боте и попробуйте ещё раз.")}</p>}
                                 </div>
                             )}
                             <button type="button" className="button small" onClick={() => router.get(`/m/${p.master.slug}`, {}, { replace: true })}>
