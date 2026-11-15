@@ -70,7 +70,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
                         : <p className="muted small">{tr("Нажмите «Подключить», затем Start в Telegram и вернитесь сюда.")}</p>}
                     {!telegramConnected && telegramConfigured && <a className="primary wide" href="/telegram/connect" target="_blank" rel="noreferrer">{tr("Подключить @Boshkg_bot")}</a>}
                     {!telegramConfigured && <p role="alert">{tr("Подключение Telegram сейчас недоступно. Обратитесь в поддержку BOSH.")}</p>}
-                    <button className="button wide" type="button" onClick={() => router.reload({only:["telegramConnected","onboarding"],preserveScroll:true})}>{tr("Проверить подключение")}</button>
+                    <button className="button wide" type="button" onClick={() => router.reload({only:["telegramConnected","onboarding"]})}>{tr("Проверить подключение")}</button>
                 </div>
                 <button className="primary wide" type="button" disabled={!telegramConnected} onClick={() => router.post("/onboarding/complete",{},{
                     preserveScroll:true,
