@@ -123,6 +123,8 @@ class AdminController extends Controller
                 'activity' => null,
                 'onboarding_industry_done' => false,
                 'onboarding_restart_step' => 0,
+                'onboarding_completed_at' => null,
+                'onboarding_telegram_required' => false,
             ]);
         }, 3);
         return back()->with('success', 'Стартовая настройка сброшена. Мастер повторно увидит три шага при входе в кабинет. Клиенты, записи и действующие услуги сохранены.');
