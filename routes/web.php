@@ -147,7 +147,7 @@ Route::post('/onboarding/complete', function (\Illuminate\Http\Request $request)
     $profile = \App\Models\MasterProfile::where('user_id', $request->user()->id)->firstOrFail();
     abort_unless($profile->telegram_chat_id, 422, 'Сначала подключите Telegram.');
     abort_unless($profile->services()->exists(), 422, 'Сначала добавьте услуги.');
-    $profile->forceFill(['onboarding_telegram_required' => false, 'telegram_alerts_enabled' => true])->save();
+    $profile->forceFill(['onboarding_telegram_required' => false, 'telegram_alerts_enabled' => true, 'onboarding_completed_at' => now(), 'onboarding_restart_step' => null])->save();
     return redirect()->route('dashboard')->with('onboarding_completed', true);
 })->middleware(['auth', 'throttle:10,1'])->name('onboarding.complete');
 Route::post('/onboarding/industry', function (\Illuminate\Http\Request $request) {
