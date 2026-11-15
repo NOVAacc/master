@@ -5,6 +5,7 @@ import MasterModeSwitch from "../MasterModeSwitch";
 import PhoneInput from "../PhoneInput";
 import Icon from "../Icon";
 import { Head, router, useForm } from "@inertiajs/react";
+import axios from "axios";
 import { useRef, useState } from "react";
 import ProfileIdentity from "../ProfileIdentity";
 import BookingCalendar from "../BookingCalendar";
@@ -34,6 +35,19 @@ type Props = {
 };
 export default function Booking(p: Props) {
     const { t: tr, locale } = useI18n();
+    const [clientConnected, setClientConnected] = useState(!!p.clientConnected || !!p.bookingReceipt?.clientConnected);
+    const [telegramChecking, setTelegramChecking] = useState(false);
+    const [telegramCheckError, setTelegramCheckError] = useState(false);
+    const checkTelegram = async () => {
+        setTelegramChecking(true);
+        setTelegramCheckError(false);
+        try {
+            const {data} = await axios.get<{connected:boolean}>("/client/telegram/status");
+            setClientConnected(!!data.connected);
+            if (!data.connected) setTelegramCheckError(true);
+        } catch { setTelegramCheckError(true); }
+        finally { setTelegramChecking(false); }
+    };
     const f = useForm({
         service_ids: p.selectedServices,
         starts_at: p.storyTime ? (p.slots.find(s => s.available && s.label === p.storyTime)?.value ?? "") : "",
@@ -146,14 +160,14 @@ export default function Booking(p: Props) {
                                 <p className="muted small">
                                     {tr("Запись пока ожидает подтверждения мастера.")}{" "}</p>
                             )}
-                            {(p.clientConnected || p.bookingReceipt.clientConnected) && (
+                            {clientConnected && (
                                 <div style={{margin:"14px 0",padding:16,border:"1px solid var(--border, #ddd)",borderRadius:12}}>
                                     <strong>{tr("Telegram подключён для будущих записей")}</strong>
                                     <p className="muted small">{tr("Следующие записи в этом браузере будут доступны в разделе «Мои записи». На другом устройстве подтвердите Telegram ещё раз.")}</p>
                                     <a className="button" href="/my-bookings">{tr("Мои записи")}</a>
                                 </div>
                             )}
-                            {p.bookingReceipt.clientTelegramUrl && !p.clientConnected && !p.bookingReceipt.clientConnected && (
+                            {p.bookingReceipt.clientTelegramUrl && !clientConnected && (
                                 <div style={{margin:"16px 0",padding:"16px",border:"1px solid var(--border, #ddd)",borderRadius:12}}>
                                     <strong>{tr("Получайте изменения записи в Telegram")}</strong>
                                     <p className="muted small">{tr("Подключите уведомления бесплатно, чтобы узнавать о переносе или отмене записи. Регистрация не нужна.")}</p>
@@ -161,7 +175,8 @@ export default function Booking(p: Props) {
                                         {tr("Подключить Telegram")}
                                     </a>
                                     <p className="muted small">{tr("Нажмите Start в открывшемся боте, затем вернитесь сюда. Подключение необязательно.")}</p>
-                                    <button className="button" type="button" onClick={() => router.reload({only:["clientConnected","bookingReceipt"]})}>{tr("Проверить подключение")}</button>
+                                    <button className="button" type="button" disabled={telegramChecking} onClick={() => void checkTelegram()}>{telegramChecking ? tr("Проверка…") : tr("Проверить подключение")}</button>
+                                    {telegramCheckError && <p role="status" className="muted small">{tr("Подключение пока не подтверждено. Нажмите Start в боте и попробуйте ещё раз.")}</p>
                                 </div>
                             )}
                             <button type="button" className="button small" onClick={() => router.get(`/m/${p.master.slug}`, {}, { replace: true })}>

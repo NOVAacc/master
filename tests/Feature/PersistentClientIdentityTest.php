@@ -70,7 +70,7 @@ class PersistentClientIdentityTest extends TestCase
         $accountId = $first->fresh()->client_account_id;
         $this->assertNotNull($accountId);
         $this->assertSame('12345', DB::table('client_accounts')->where('id', $accountId)->value('telegram_chat_id'));
-        $claim = $this->get('/m/'.$master->slug)->assertOk()->assertCookie('bosh_client_session');
+        $claim = $this->get('/client/telegram/status')->assertOk()->assertJsonPath('connected', true)->assertCookie('bosh_client_session');
         $cookie = collect($claim->headers->getCookies())->first(fn ($cookie) => $cookie->getName() === 'bosh_client_session');
         $this->assertNotNull($cookie);
         // Feature tests do not automatically keep response cookies across requests.
