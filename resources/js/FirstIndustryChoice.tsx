@@ -23,7 +23,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
     const needSchedule = counts.hoursCount === 0;
     const needServices = counts.servicesCount === 0;
     const telegramRequired = !!counts.telegramRequired;
-    const firstStep = counts.restartStep != null ? counts.restartStep : needCategory ? 0 : needSchedule ? 1 : needServices ? 2 : telegramRequired ? 3 : 4;
+    const firstStep = counts.restartStep != null ? Math.min(counts.restartStep, 2) : needCategory ? 0 : needSchedule ? 1 : needServices || telegramRequired ? 2 : 3;
     const [days, setDays] = useRemember<number[]>([1, 2, 3, 4, 5, 6], `bosh-onboarding-${master.id}-days`);
     const [start, setStart] = useRemember("09:00", `bosh-onboarding-${master.id}-start`);
     const [end, setEnd] = useRemember("18:00", `bosh-onboarding-${master.id}-end`);
@@ -34,9 +34,11 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
     const [locationSaved, setLocationSaved] = useState(false);
     const [drafted, setDrafted] = useState(false);
     const [done, setDone] = useState(false);
+    const [servicesSaved, setServicesSaved] = useState(!needServices);
+    const [checkingTelegram, setCheckingTelegram] = useState(false);
     const [step, setStep] = useState(firstStep);
     useEffect(() => { setStep(firstStep); }, [firstStep]);
-    if (done || (step === 4 && !telegramRequired && !completed)) return null;
+    if (done || (step === 3 && !telegramRequired && !completed)) return null;
     const active = catalog[category.data.industry]?.activities ?? {};
     const suggested = starters[master.activity ?? ""] ?? [tr("Первая услуга")];
     const submitSchedule = () => {
@@ -52,32 +54,15 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
     };
     const submitServices = () => {
         if (!service.data.services.every(s => s.name.trim() && s.duration_minutes >= 5 && s.price_som >= 0)) return;
-        service.post("/onboarding/services", { preserveScroll: true, preserveState: true, onSuccess: () => setStep(3) });
+        service.post("/onboarding/services", { preserveScroll: true, preserveState: true, onSuccess: () => setServicesSaved(true) });
     };
     return <div className="industry-onboarding-backdrop">
         <section className="industry-onboarding" role="dialog" aria-modal="true" aria-labelledby="industry-title">
-            <LanguageSwitch /><p className="eyebrow">{tr("BOSH · БЫСТРЫЙ СТАРТ")}</p>
-            {step < 4 && <p className="muted small">{tr("Шаг")}{" "}{step + 1} {tr("из 4")}</p>}
-            {step < 4 && <div className="onboarding-progress">{[0, 1, 2, 3].map(i => <span key={i} className={i <= step ? "active" : ""} />)}</div>}
+            <div className="onboarding-header"><p className="eyebrow">{tr("BOSH · БЫСТРЫЙ СТАРТ")}</p><LanguageSwitch /></div>
+            {step < 3 && <div className="onboarding-step-heading"><span className="onboarding-step-index">{String(step + 1).padStart(2, "0")}</span><div><strong>{tr("Шаг")} {step + 1} {tr("из 3")}</strong><p>{tr(["Направление", "Рабочее время", "Услуги и Telegram"][step])}</p></div><span className="onboarding-step-percent">{Math.round((step / 3) * 100)}%</span></div>}
+            {step < 3 && <div className="onboarding-progress" role="progressbar" aria-label={tr("Прогресс настройки")} aria-valuenow={step} aria-valuemin={0} aria-valuemax={3}>{[0, 1, 2].map(i => <span key={i} className={i <= step ? "active" : ""} />)}</div>}
             <Notice />
-            {step === 3 && <section className="onboarding-telegram-step">
-                <h2 id="industry-title">{tr("Подключите Telegram для уведомлений")}</h2>
-                <p>{tr("Это обязательный шаг. Бот BOSH будет сообщать вам о новых записях, переносах и отменах.")}</p>
-                <div className="panel" style={{padding:16,display:"grid",gap:12,margin:"16px 0"}}>
-                    <strong>{tr("Шаг 4 · Telegram")}</strong>
-                    {telegramConnected
-                        ? <p role="status">{tr("Telegram подключён. Можно завершить настройку.")}</p>
-                        : <p className="muted small">{tr("Нажмите «Подключить», затем Start в Telegram и вернитесь сюда.")}</p>}
-                    {!telegramConnected && telegramConfigured && <a className="primary wide" href="/telegram/connect" target="_blank" rel="noreferrer">{tr("Подключить @Boshkg_bot")}</a>}
-                    {!telegramConfigured && <p role="alert">{tr("Подключение Telegram сейчас недоступно. Обратитесь в поддержку BOSH.")}</p>}
-                    <button className="button wide" type="button" onClick={() => router.reload({only:["telegramConnected","onboarding"]})}>{tr("Проверить подключение")}</button>
-                </div>
-                <button className="primary wide" type="button" disabled={!telegramConnected} onClick={() => router.post("/onboarding/complete",{},{
-                    preserveScroll:true,
-                    onSuccess:()=>setStep(4),
-                })}>{tr("Продолжить")}</button>
-            </section>}
-            {step === 4 && <section className="onboarding-finish">
+            {step === 3 && <section className="onboarding-finish">
                 <h2 id="industry-title">{tr("Ваша страница готова!")}</h2>
                 <p className="muted small">{tr("Всё готово. Отправьте клиентам ссылку — они смогут выбрать услугу и время самостоятельно.")}</p>
                 <ShareProfile url={publicUrl} />
@@ -133,23 +118,33 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
                 <button type="button" className="primary wide" disabled={schedule.processing || !days.length || start >= end} onClick={submitSchedule}>{tr("Сохранить расписание")}</button>
             </>}
             {step === 2 && <>
-                <h2 id="industry-title">{tr("Ваши первые услуги")}</h2>
-                <p className="muted small">{tr("Добавьте хотя бы одну услугу. Цены и продолжительность можно изменить позже.")}</p>
-                {!drafted && <div className="onboarding-suggestions">
+                <h2 id="industry-title">{tr("Услуги и связь с клиентами")}</h2>
+                <p className="muted small">{tr("Добавьте первую услугу и подключите Telegram, чтобы сразу получать уведомления о записях.")}</p>
+                {!servicesSaved && !drafted && <div className="onboarding-suggestions">
                     {suggested.map(name => <button type="button" key={name} className="button small" onClick={() => {
                         service.setData("services", [{ name: tr(name), duration_minutes: 60, price_som: 0 }]); setDrafted(true);
                     }}>{tr(name)}</button>)}
                 </div>}
-                {service.data.services.map((item, i) => <div className="onboarding-service" key={i}>
+                {!servicesSaved && service.data.services.map((item, i) => <div className="onboarding-service" key={i}>
                     <label className="field"><span>{tr("Название")}</span><input required maxLength={150} placeholder={tr("Название услуги")} value={item.name} onChange={e => service.setData("services", service.data.services.map((s,j) => i===j ? {...s,name:e.target.value} : s))} /></label>
                     <div className="onboarding-time">
                         <label className="field"><span>{tr("Цена, сом")}</span><input type="number" min="0" max="10000000" value={item.price_som} onChange={e => service.setData("services", service.data.services.map((s,j) => i===j ? {...s,price_som:Number(e.target.value)} : s))}/></label>
                         <label className="field"><span>{tr("Минут")}</span><select value={item.duration_minutes} onChange={e => service.setData("services", service.data.services.map((s,j) => i===j ? {...s,duration_minutes:Number(e.target.value)} : s))}>{[15,30,45,60,90,120].map(n => <option value={n} key={n}>{n}</option>)}</select></label>
                     </div>
                 </div>)}
-                {service.data.services.length < 3 && <button type="button" className="button small" onClick={() => service.setData("services",[...service.data.services,{name:"",duration_minutes:60,price_som:0}])}>{tr("+ Ещё услуга")}</button>}
+                {!servicesSaved && service.data.services.length < 3 && <button type="button" className="button small" onClick={() => service.setData("services",[...service.data.services,{name:"",duration_minutes:60,price_som:0}])}>{tr("+ Ещё услуга")}</button>}
                 {Object.values(service.errors).map((error,i) => <p className="errors" key={i}>{tr(error)}</p>)}
-                <button type="button" className="primary wide" disabled={service.processing || service.data.services.some(x=>!x.name.trim())} onClick={submitServices}>{tr("Завершить настройку")}</button>
+                {!servicesSaved && <button type="button" className="button wide" disabled={service.processing || service.data.services.some(x=>!x.name.trim())} onClick={submitServices}>{service.processing ? tr("Сохранение…") : tr("Сохранить услуги")}</button>}
+                {servicesSaved && <p className="onboarding-saved" role="status">✓ {tr("Услуги добавлены")}</p>}
+                <section className="onboarding-telegram-card">
+                    <div className="onboarding-telegram-title"><span className="onboarding-telegram-mark">✈</span><div><strong>{tr("Telegram для уведомлений")}</strong><p className="muted small">{tr("Новые записи, отмены и переносы — сразу в Telegram.")}</p></div></div>
+                    {telegramConnected
+                        ? <p className="onboarding-connected" role="status">✓ {tr("Telegram подключён")}</p>
+                        : <><p className="muted small">{tr("Нажмите «Подключить», затем Start в Telegram. Вернитесь сюда и проверьте соединение.")}</p>
+                            {telegramConfigured ? <a className="primary wide" href="/telegram/connect" target="_blank" rel="noopener noreferrer">{tr("Подключить Telegram")}</a> : <p role="alert">{tr("Подключение Telegram сейчас недоступно. Обратитесь в поддержку BOSH.")}</p>}
+                            <button className="button wide" type="button" disabled={checkingTelegram} onClick={() => {setCheckingTelegram(true);router.reload({only:["telegramConnected","onboarding"],onFinish:()=>setCheckingTelegram(false)});}}>{checkingTelegram ? tr("Проверяем…") : tr("Проверить подключение")}</button></>}
+                </section>
+                <button className="primary wide" type="button" disabled={!servicesSaved || !telegramConnected} onClick={() => router.post("/onboarding/complete", {}, {preserveScroll:true,onSuccess:()=>setStep(3)})}>{tr("Завершить настройку")}</button>
             </>}
         </section>
     </div>;
