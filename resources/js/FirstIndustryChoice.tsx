@@ -34,11 +34,14 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
     const [locationSaved, setLocationSaved] = useState(false);
     const [drafted, setDrafted] = useState(false);
     const [done, setDone] = useState(false);
+    // Show the completion screen only for a successful completion in this visit.
+    // Flash/session props must not reopen it after a full dashboard refresh.
+    const [showFinish, setShowFinish] = useState(false);
     const [servicesSaved, setServicesSaved] = useState(!needServices);
     const [checkingTelegram, setCheckingTelegram] = useState(false);
     const [step, setStep] = useState(firstStep);
     useEffect(() => { setStep(firstStep); }, [firstStep]);
-    if (done || (step === 3 && !telegramRequired && !completed)) return null;
+    if (done || (step === 3 && !showFinish)) return null;
     const active = catalog[category.data.industry]?.activities ?? {};
     const suggested = starters[master.activity ?? ""] ?? [tr("Первая услуга")];
     const submitSchedule = () => {
@@ -144,7 +147,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
                             {telegramConfigured ? <a className="primary wide" href="/telegram/connect" target="_blank" rel="noopener noreferrer">{tr("Подключить Telegram")}</a> : <p role="alert">{tr("Подключение Telegram сейчас недоступно. Обратитесь в поддержку BOSH.")}</p>}
                             <button className="button wide" type="button" disabled={checkingTelegram} onClick={() => {setCheckingTelegram(true);router.reload({only:["telegramConnected","onboarding"],onFinish:()=>setCheckingTelegram(false)});}}>{checkingTelegram ? tr("Проверяем…") : tr("Проверить подключение")}</button></>}
                 </section>
-                <button className="primary wide" type="button" disabled={!servicesSaved || !telegramConnected} onClick={() => router.post("/onboarding/complete", {}, {preserveScroll:true,onSuccess:()=>setStep(3)})}>{tr("Завершить настройку")}</button>
+                <button className="primary wide" type="button" disabled={!servicesSaved || !telegramConnected} onClick={() => router.post("/onboarding/complete", {}, {preserveScroll:true,onSuccess:()=>{setShowFinish(true);setStep(3);}})}>{tr("Завершить настройку")}</button>
             </>}
         </section>
     </div>;
