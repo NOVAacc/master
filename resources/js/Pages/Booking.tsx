@@ -160,25 +160,36 @@ export default function Booking(p: Props) {
                                 <p className="muted small">
                                     {tr("Запись пока ожидает подтверждения мастера.")}{" "}</p>
                             )}
-                            {clientConnected && (
-                                <div style={{margin:"14px 0",padding:16,border:"1px solid var(--border, #ddd)",borderRadius:12}}>
-                                    <strong>{tr("Telegram подключён для будущих записей")}</strong>
-                                    <p className="muted small">{tr("Следующие записи в этом браузере будут доступны в разделе «Мои записи». На другом устройстве подтвердите Telegram ещё раз.")}</p>
-                                    <a className="button" href="/my-bookings">{tr("Мои записи")}</a>
+                            <section className="booking-telegram-card" aria-label={tr("Уведомления в Telegram")}
+                                style={{margin:"18px 0",padding:18,border:"1px solid var(--border, #ddd)",borderRadius:14,display:"grid",gap:12}}>
+                                <div>
+                                    <strong>{clientConnected ? tr("Telegram уже подключён") : tr("Получайте изменения записи в Telegram")}</strong>
+                                    <p className="muted small" style={{marginTop:6}}>
+                                        {clientConnected
+                                            ? tr("Вы будете получать сообщения о подтверждении, переносе и отмене записи. Повторное подключение не требуется.")
+                                            : tr("Подключите уведомления бесплатно, чтобы узнать, если мастер изменит время или отменит запись. Регистрация не нужна.")}
+                                    </p>
                                 </div>
-                            )}
-                            {p.bookingReceipt.clientTelegramUrl && !clientConnected && (
-                                <div style={{margin:"16px 0",padding:"16px",border:"1px solid var(--border, #ddd)",borderRadius:12}}>
-                                    <strong>{tr("Получайте изменения записи в Telegram")}</strong>
-                                    <p className="muted small">{tr("Подключите уведомления бесплатно, чтобы узнавать о переносе или отмене записи. Регистрация не нужна.")}</p>
-                                    <a className="primary" href={p.bookingReceipt.clientTelegramUrl} target="_blank" rel="noreferrer">
-                                        {tr("Подключить Telegram")}
-                                    </a>
-                                    <p className="muted small">{tr("Нажмите Start в открывшемся боте, затем вернитесь сюда. Подключение необязательно.")}</p>
-                                    <button className="button" type="button" disabled={telegramChecking} onClick={() => void checkTelegram()}>{telegramChecking ? tr("Проверка…") : tr("Проверить подключение")}</button>
-                                    {telegramCheckError && <p role="status" className="muted small">{tr("Подключение пока не подтверждено. Нажмите Start в боте и попробуйте ещё раз.")}</p>}
-                                </div>
-                            )}
+                                {clientConnected ? (
+                                    <div className="row wrap" style={{gap:10}}>
+                                        <a className="primary" href="/my-bookings">{tr("Мои записи")}</a>
+                                        <a className="button" href="https://t.me/Boshkg_bot" target="_blank" rel="noopener noreferrer">{tr("Открыть Telegram")}</a>
+                                    </div>
+                                ) : p.bookingReceipt.clientTelegramUrl ? (
+                                    <>
+                                        <a className="primary" href={p.bookingReceipt.clientTelegramUrl} target="_blank" rel="noopener noreferrer">
+                                            {tr("Подключить Telegram")}
+                                        </a>
+                                        <p className="muted small">{tr("Нажмите Start в открывшемся боте, затем вернитесь сюда. Подключение необязательно.")}</p>
+                                        <button className="button" type="button" disabled={telegramChecking} onClick={() => void checkTelegram()}>
+                                            {telegramChecking ? tr("Проверка…") : tr("Проверить подключение")}
+                                        </button>
+                                        {telegramCheckError && <p role="status" className="muted small">{tr("Подключение пока не подтверждено. Нажмите Start в боте и попробуйте ещё раз.")}</p>}
+                                    </>
+                                ) : (
+                                    <p className="muted small" role="status">{tr("Подключение Telegram временно недоступно. Запись сохранена; мастер может связаться с вами по телефону.")}</p>
+                                )}
+                            </section>
                             <button type="button" className="button small" onClick={() => router.get(`/m/${p.master.slug}`, {}, { replace: true })}>
                                 {tr("Записаться ещё раз")}{" "}</button>
                         </section>
