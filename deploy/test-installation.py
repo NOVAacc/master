@@ -110,6 +110,11 @@ def run(args):
             assert 'TELEGRAM_BOT_USERNAME="Boshkg_bot"' in first_env
             assert 'TELEGRAM_BOT_TOKEN="inert-test-telegram-token"' in first_env
             assert 'TELEGRAM_WEBHOOK_SECRET="inert-test-webhook-secret"' in first_env
+            first_env = first_env.replace('GOOGLE_CLIENT_ID=""', 'GOOGLE_CLIENT_ID="inert-test-google-client-id"')
+            first_env = first_env.replace('GOOGLE_CLIENT_SECRET=""', 'GOOGLE_CLIENT_SECRET="inert-test-google-client-secret"')
+            assert 'GOOGLE_CLIENT_ID="inert-test-google-client-id"' in first_env
+            assert 'GOOGLE_CLIENT_SECRET="inert-test-google-client-secret"' in first_env
+            assert 'GOOGLE_REDIRECT_URI="https://bosh.kg/auth/google/callback"' in first_env
             first_env = first_env.replace('WHATSAPP_TOKEN=""', 'WHATSAPP_TOKEN="test-token-keep-private"')
             first_env = first_env.replace('WHATSAPP_SENDER_NUMBER="996550512233"', 'WHATSAPP_SENDER_NUMBER="996555000001"')
             first_env = first_env.replace('WHATSAPP_CLIENT_TEMPLATE="bosh_booking_client"', 'WHATSAPP_CLIENT_TEMPLATE="custom_booking_client"')
