@@ -13,7 +13,7 @@ class SiteSetting extends Model
 
     public static function notificationSettings(): array
     {
-        $defaults = \\App\\Support\\TelegramNotificationDefaults::VALUES;
+        $defaults = \App\Support\TelegramNotificationDefaults::VALUES;
         $stored = static::query()->whereIn('key', array_map(fn ($key) => 'telegram_'.$key, array_keys($defaults)))
             ->pluck('value', 'key');
         foreach ($defaults as $key => $default) {
