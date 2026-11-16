@@ -1,6 +1,6 @@
 import LanguageSwitch from "../i18n";
 import { useI18n } from "../i18n";
-import { Head, Link, usePage } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import { Brand } from "../Shared";
 import Icon from "../Icon";
@@ -79,9 +79,7 @@ export default function Home() {
     const action = auth.user ? t("Перейти в кабинет") : t("Начать бесплатно");
     return (
         <div className="landing">
-            <Head title={t("BOSH — онлайн-запись для вашего дела")}>
-                <meta name="description" content={t("BOSH — бесплатный сервис онлайн-записи для мастеров и специалистов. Своя страница, услуги, календарь и клиентская база. Расскажем, как начать принимать записи.")} />
-            </Head>
+
             <header className="landing-header">
                 <Brand /><span className="landing-mobile-name">BOSH</span>
                 <nav className="landing-header-sections" aria-label={t("О сервисе")}><a href="#features">{t("Возможности")}</a><a href="#start">{t("Как начать")}</a><a href="#questions">{t("Вопросы")}</a></nav>
@@ -90,7 +88,7 @@ export default function Home() {
             <main>
                 <section className="landing-hero">
                     <div className="landing-hero-copy">
-                        
+
                         <h1>{t("Вы занимаетесь делом.")}<br /><span>{t("Клиенты записываются сами.")}</span></h1>
                         <p className="landing-lead">{t("Создайте страницу с услугами и свободным временем. Клиенты выберут удобный час, а вы увидите запись в календаре.")}</p>
                         <div className="landing-hero-actions"><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link><Link className="landing-text-link" href="/demo">{t("Посмотреть демо")}<Icon name="arrow" /></Link></div>

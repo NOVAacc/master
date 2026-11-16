@@ -14,6 +14,9 @@ final class SecurityHeaders
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
+        if (! $request->routeIs('home', 'legal.document', 'public.master') || $response->getStatusCode() >= 400) {
+            $response->headers->set('X-Robots-Tag', 'noindex, follow');
+        }
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
