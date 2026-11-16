@@ -4,7 +4,8 @@ import Icon from "./Icon";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "@inertiajs/react";
 import { Errors, Field } from "./Shared";
-import type { Service } from "./types";
+import type { Master, Service } from "./types";
+import PriceListGenerator from "./PriceListGenerator";
 import { serviceBookingLink } from "./service-links";
 
 function ServiceEditor({
@@ -140,8 +141,9 @@ function ServiceEditor({
     );
 }
 
-export default function ServicesPanel({ services, publicUrl }: { services: Service[]; publicUrl: string }) {
+export default function ServicesPanel({ services, publicUrl, master }: { services: Service[]; publicUrl: string; master: Master }) {
     const { t: tr, locale } = useI18n();
+    const [priceOpen, setPriceOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [linkSelections, setLinkSelections] = useState<number[]>([]);
     const [linkFeedback, setLinkFeedback] = useState("");
@@ -195,12 +197,15 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                     {tr("Всего:")}{" "}{services.length} {tr("· Доступно для записи:")}{" "}
                     {services.filter((s) => s.is_active).length}
                 </p>
+                <div className="row wrap">
+                    <button type="button" className="ghost" disabled={!services.some(service => service.is_active)} onClick={() => setPriceOpen(true)}>{tr("Создать прайс")}</button>
                 <button
                     type="button"
                     className="primary"
                     onClick={() => setEditor("new")}
                 >
                     {tr("+ Добавить услугу")}{" "}</button>
+                </div>
             </div>
             <div className="panel" aria-label={tr("Ссылки для записи")}>
                 <h3>{tr("Ссылки на услуги")}</h3>
@@ -387,6 +392,7 @@ export default function ServicesPanel({ services, publicUrl }: { services: Servi
                         {tr("Далее")}{" "}</button>
                 </nav>
             </div>
+            {priceOpen && <PriceListGenerator master={master} services={services} publicUrl={publicUrl} onClose={() => setPriceOpen(false)} />}
             {editor !== null && (editor === "new" || selected) && (
                 <ServiceEditor
                     key={editor}
