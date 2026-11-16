@@ -59,12 +59,14 @@ class MasterTest extends TestCase
         $queries = DB::getQueryLog();
         DB::disableQueryLog();
         $response->assertOk()->assertInertia(fn (Assert $page) => $page->component('Home')
-            ->missing('newMasters')->missing('topMasters')->missing('industries')->missing('filters'))
+            ->missing('newMasters')->missing('topMasters')->missing('industries')->missing('filters')
+            ->where('statistics.masters', 1)->where('statistics.appointments', 1)->has('statistics.updatedAt'))
             ->assertDontSee('Private Master Fixture')->assertDontSee('private-directory-fixture')
             ->assertDontSee('Secret Customer')->assertDontSee('+996555999888')->assertDontSee($user->email);
         foreach ($queries as $query) {
-            $this->assertStringNotContainsString('master_profiles', $query['query']);
-            $this->assertStringNotContainsString('master_appointments', $query['query']);
+            if (str_contains($query['query'], 'master_profiles') || str_contains($query['query'], 'master_appointments')) {
+                $this->assertStringContainsString('count(*) as aggregate', strtolower($query['query']));
+            }
         }
         // Direct booking links and the master's private cabinet still work.
         $this->get('/m/'.$master->slug)->assertOk()->assertInertia(fn (Assert $page) => $page->component('Booking'));

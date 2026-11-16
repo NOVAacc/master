@@ -1,10 +1,12 @@
 import LanguageSwitch from "../i18n";
 import { useI18n } from "../i18n";
 import { Link, usePage } from "@inertiajs/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Brand } from "../Shared";
 import Icon from "../Icon";
 import useSectionScroll from "../useSectionScroll";
+
+import kyrgyzFlag from "../../../public/brand/kyrgyzstan-flag.svg?url";
 
 const services = [
     { name: "Стрижка", duration: "45 мин", price: "500 сом" },
@@ -71,10 +73,48 @@ function BookingExample() {
     );
 }
 
+type Statistics = { masters: number; appointments: number; updatedAt: string };
+
+function HomeStatistics({ statistics }: { statistics: Statistics }) {
+    const { t, locale } = useI18n();
+    const root = useRef<HTMLElement>(null);
+    const [progress, setProgress] = useState(0);
+    useEffect(() => {
+        let frame = 0;
+        const element = root.current;
+        if (!element) return;
+        const animate = () => {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                setProgress(1);
+                return;
+            }
+            const start = performance.now();
+            const tick = (now: number) => {
+                const elapsed = Math.min((now - start) / 1400, 1);
+                setProgress(1 - Math.pow(1 - elapsed, 3));
+                if (elapsed < 1) frame = requestAnimationFrame(tick);
+            };
+            frame = requestAnimationFrame(tick);
+        };
+        if (!('IntersectionObserver' in window)) { animate(); return () => cancelAnimationFrame(frame); }
+        const observer = new IntersectionObserver(entries => {
+            if (entries.some(entry => entry.isIntersecting)) { observer.disconnect(); animate(); }
+        }, { threshold: 0.2 });
+        observer.observe(element);
+        return () => { observer.disconnect(); cancelAnimationFrame(frame); };
+    }, [statistics.masters, statistics.appointments]);
+    const format = new Intl.NumberFormat(locale === 'ky' ? 'ky-KG' : 'ru-RU');
+    return <section className="landing-statistics" ref={root} aria-label={t("BOSH в цифрах")}>
+        <div className="landing-statistics-heading"><h2>{t("BOSH в цифрах")}</h2><p>{t("Мастера и записи нашего сервиса")}</p></div>
+        <dl>{[[statistics.masters, t("Мастеров на BOSH")], [statistics.appointments, t("Записей создано")]].map(([count, label]) => <div key={String(label)}><dt>{label}</dt><dd><span aria-hidden="true">{format.format(Math.round(Number(count) * progress))}</span><span className="sr-only">{format.format(Number(count))}</span></dd></div>)}</dl>
+        <p className="landing-statistics-updated">{t("Обновлено")} <time dateTime={statistics.updatedAt}>{new Intl.DateTimeFormat(locale === 'ky' ? 'ky-KG' : 'ru-RU', { timeZone: 'Asia/Bishkek', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(statistics.updatedAt))}</time> · {t("Время Бишкека")}</p>
+    </section>;
+}
+
 export default function Home() {
     const { t } = useI18n();
     useSectionScroll();
-    const { auth } = usePage<{ auth: { user: { name: string } | null } }>().props;
+    const { auth, statistics } = usePage<{ auth: { user: { name: string } | null }; statistics: Statistics }>().props;
     const destination = auth.user ? "/dashboard" : "/register";
     const action = auth.user ? t("Перейти в кабинет") : t("Начать бесплатно");
     return (
@@ -89,13 +129,16 @@ export default function Home() {
                 <section className="landing-hero">
                     <div className="landing-hero-copy">
 
+                        <p className="landing-origin"><img src={kyrgyzFlag} alt="" />{t("Сделано в Кыргызстане")}</p>
                         <h1>{t("Вы занимаетесь делом.")}<br /><span>{t("Клиенты записываются сами.")}</span></h1>
                         <p className="landing-lead">{t("Создайте страницу с услугами и свободным временем. Клиенты выберут удобный час, а вы увидите запись в календаре.")}</p>
+                        <p className="landing-languages">{t("На русском и кыргызском языках — для вас и ваших клиентов.")}</p>
                         <div className="landing-hero-actions"><Link className="primary" href={destination}>{action}<Icon name="arrow" /></Link><Link className="landing-text-link" href="/demo">{t("Посмотреть демо")}<Icon name="arrow" /></Link></div>
                         <p className="landing-hero-note">{t("Бесплатно · Работает в браузере")}</p>
                     </div>
                     <BookingExample />
                 </section>
+                <HomeStatistics statistics={statistics} />
                 <section className="landing-audience" aria-label={t("Для кого BOSH")}><p>{t("Для тех, к кому приходят по записи")}</p><div>{[t("Красота и уход"), t("Здоровье"), t("Спорт"), t("Обучение"), t("Консультации"), t("Услуги")].map(item => <span key={item}>{t(item)}</span>)}</div></section>
                 <section id="features" className="landing-section">
                     <div className="landing-section-heading"><h2>{t("Всё для записи клиентов")}</h2></div>

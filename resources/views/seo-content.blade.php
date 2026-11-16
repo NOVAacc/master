@@ -1,8 +1,10 @@
 @if($page['component'] === 'Home')
 <main class="landing"><header class="landing-header"><a href="/">BOSH</a><a href="/register">Начать бесплатно</a><a href="/login">Войти</a></header>
-<section class="landing-hero"><h1>Вы занимаетесь делом. Клиенты записываются сами.</h1>
+<section class="landing-hero"><p>Сделано в Кыргызстане</p><h1>Вы занимаетесь делом. Клиенты записываются сами.</h1>
 <p>Создайте страницу с услугами и свободным временем. Клиенты выберут удобный час, а вы увидите запись в календаре.</p>
 <p>Своя страница, услуги, календарь и клиентская база. Клиент видит ваши услуги, цены и свободные часы — без переписки.</p></section>
+<p>На русском и кыргызском языках — для вас и ваших клиентов.</p>
+<section class="landing-statistics"><h2>BOSH в цифрах</h2><dl><dt>Мастеров на BOSH</dt><dd>{{ $page['props']['statistics']['masters'] }}</dd><dt>Записей создано</dt><dd>{{ $page['props']['statistics']['appointments'] }}</dd></dl><p>Обновлено {{ \Carbon\Carbon::parse($page['props']['statistics']['updatedAt'])->timezone('Asia/Bishkek')->format('d.m.Y H:i') }} · Время Бишкека</p></section>
 <section><h2>Одна ссылка для записи</h2>
 <h2>Календарь без накладок</h2><p>Рабочие часы, перерывы и записи в одном календаре. Занятое время недоступно для бронирования.</p>
 <h2>История клиентов</h2><p>Контакты, прошлые записи и заметки доступны в карточке клиента.</p>
