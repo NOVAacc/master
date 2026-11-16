@@ -99,9 +99,15 @@ function removeAbandonedUnactivatedReleases(string $base): int {
         if (!preg_match('/^[a-f0-9]{40}-[0-9]+-[0-9]+$/D', $name) ||
             $name === DEPLOY['release']) continue;
         $path = $root.'/'.$name;
-        if (in_array($path, $protected, true) ||
-            is_file($base.'/deployments/'.$name.'.json') ||
-            $entry->getMTime() > time() - 120) continue;
+        if (in_array($path, $protected, true)) continue;
+        $deploymentRecord = $base.'/deployments/'.$name.'.json';
+        if (is_file($deploymentRecord)) {
+            // Only retired, successfully activated versions can be reclaimed.
+            // Keep recent releases for operational rollback diagnostics.
+            $record = json_decode(file_get_contents($deploymentRecord), true);
+            if (!is_array($record) || ($record['status'] ?? null) !== 'activated' ||
+                $entry->getMTime() > time() - 86400) continue;
+        } elseif ($entry->getMTime() > time() - 120) continue;
         $walk = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS),
             RecursiveIteratorIterator::CHILD_FIRST);
