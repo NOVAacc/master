@@ -333,6 +333,18 @@ try {
     }
     $originalHtaccess = preg_replace('/\n?# MASTER MANAGED BEGIN.*?# MASTER MANAGED END\n?/s', '', $originalHtaccess);
     $managed = "\n# MASTER MANAGED BEGIN\nOptions -Indexes\nDirectoryIndex index.php index.html\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteRule ^ index.php [L]\n</IfModule>\n<FilesMatch \"^(\\.env|composer\\.(json|lock)|artisan|.*\\.sql)$\">\nRequire all denied\n</FilesMatch>\n# MASTER MANAGED END\n";
+    // Hosting uses a managed root .htaccess rather than release/public/.htaccess.
+    $performance = <<<'APACHE'
+<IfModule mod_deflate.c>
+AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json application/xml image/svg+xml
+</IfModule>
+<IfModule mod_headers.c>
+<FilesMatch "-[A-Za-z0-9_-]{8,}\.(css|js|woff2)$">
+Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>
+</IfModule>
+APACHE;
+    $managed = str_replace('# MASTER MANAGED END', $performance."\n# MASTER MANAGED END", $managed);
     switchRelease($release);
     writeFile(__DIR__.'/index.php', $launcher, 0644);
     writeFile(__DIR__.'/.htaccess', $originalHtaccess.$managed, 0644);
