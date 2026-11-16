@@ -43,6 +43,8 @@ final class ScheduledTelegramNotificationsTest extends TestCase
             $master, $service, CarbonImmutable::parse($date, 'UTC'), 'Айдана', '+996555111222'
         );
         $a->forceFill(['client_telegram_chat_id' => '5555'])->save();
+        // Exclude the immediate new-booking alert from scheduled-message assertions.
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => true], 200)]);
         return $a;
     }
 
