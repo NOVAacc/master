@@ -8,6 +8,7 @@ export type Service = {
 };
 export type Master = {
     telegram_alerts_enabled?: boolean;
+    telegram_reminders_enabled?: boolean;
     id: number;
     slug: string;
     display_name: string;
