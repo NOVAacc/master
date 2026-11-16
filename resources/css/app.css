@@ -3804,3 +3804,28 @@ html:has(.landing) { scroll-behavior: auto; }
 .landing-origin { display: inline-flex; align-items: center; gap: 9px; margin: 0 0 22px; font-size: 13px; font-weight: 600; color: #555; }
 .landing-origin > span { font-size: 23px; line-height: 1; }
 .landing-lead.landing-languages { margin: 12px 0 0; }
+
+
+/* Demo additions: current calendar, availability promotion, notifications and public profile. */
+.demo-hot-layout { display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,280px);gap:24px;align-items:start;margin:22px 0; }
+.demo-hot-config { border:1px solid #e8e8e8;border-radius:16px;padding:22px;display:grid;gap:12px;align-content:start; }
+.demo-hot-config p { margin:0; }.demo-hot-config button { justify-self:start; }
+.demo-hot-story { aspect-ratio:9/16;display:flex;flex-direction:column;gap:12px;background:#f33135;color:#fff;padding:22px;border-radius:20px;overflow:hidden; }
+.demo-hot-story>span:first-child { font-size:18px;font-weight:800; }
+.demo-hot-story small { margin-top:auto;letter-spacing:1px;font-size:10px; }
+.demo-hot-story strong { font-size:clamp(18px,2vw,28px);line-height:1.12;letter-spacing:-.7px; }
+.demo-hot-story b { font-size:clamp(36px,5vw,56px);line-height:1.1;background:#191919;padding:16px;border-radius:14px; }
+.demo-hot-story p { margin:0;font-size:14px; }.demo-hot-story-action { margin-top:auto;background:white;color:#151515;border-radius:999px;padding:10px;text-align:center;font-weight:700; }
+.demo-example-note { margin-top:16px;padding:12px 14px;background:#f5f5f5;border:1px solid #ececec;border-radius:12px;font-size:12px;color:#666; }
+.demo-telegram-list { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:22px 0; }
+.demo-telegram-message { display:grid;align-content:start;gap:12px;background:#f4f6f7;padding:18px;border-radius:16px;border:1px solid #e7ebef;min-width:0; }
+.demo-telegram-message .demo-indicator { justify-self:start; }
+.demo-telegram-message strong { font-size:14px; }.demo-telegram-message p { margin:0;line-height:1.8; }.demo-telegram-message small { color:#777; }
+.demo-toggle { display:flex;align-items:center;gap:10px;margin-top:22px;font-weight:550;flex-wrap:wrap; }
+.demo-toggle input { width:19px;height:19px;accent-color:#e43238; }
+.demo-profile-preview { max-width:360px;margin:24px 0;background:white;border:1px solid #ececec;border-radius:22px;padding:0 18px 20px;display:flex;flex-direction:column;gap:12px;overflow:hidden; }
+.demo-profile-cover { height:94px;margin:0 -18px -44px;background:linear-gradient(130deg,#171717,#404040); }
+.demo-profile-avatar { position:relative;align-self:flex-start;width:64px;height:64px;border:3px solid white;border-radius:50%;background:#e53239;color:white;display:grid;place-items:center;font-weight:800;font-size:24px; }
+.demo-profile-preview>p { margin:0; }.demo-profile-service { display:flex;justify-content:space-between;border:1px solid #eee;border-radius:12px;padding:12px;gap:10px; }
+.demo-profile-preview>.primary { text-align:center;display:block; }.demo-profile-preview>small { text-align:center;color:#777; }
+@media(max-width:760px){.demo-hot-layout{grid-template-columns:1fr}.demo-hot-story{max-width:250px;margin:auto;width:100%}.demo-telegram-list{grid-template-columns:1fr}.demo-topbar>.primary{font-size:12px} }
