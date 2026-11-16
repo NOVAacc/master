@@ -2,12 +2,12 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title inertia>BOSH</title>
     <meta name="application-name" content="BOSH">
     <meta name="apple-mobile-web-app-title" content="BOSH">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="description" content="BOSH — бесплатный сервис онлайн-записи для мастеров и клиентов. Своя страница, услуги, календарь и клиентская база.">
     <meta property="og:site_name" content="BOSH">
