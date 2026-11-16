@@ -638,7 +638,9 @@ export default function Dashboard({
                                 </div>
                             )}
                         </div>
-                        <MasterAvatar master={master} />
+                        <a href={publicUrl} className="dashboard-avatar-link" aria-label={tr("Открыть страницу мастера")} title={tr("Открыть страницу мастера")}>
+                            <MasterAvatar master={master} />
+                        </a>
                     </div>
                 </header>
                 <Notice />
