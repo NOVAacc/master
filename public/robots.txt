@@ -1,2 +1,13 @@
 User-agent: *
-Disallow:
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /clients
+Disallow: /appointments
+Disallow: /booking/manage/
+Disallow: /my-bookings
+Disallow: /security/
+Disallow: /telegram/
+Disallow: /client/
+Disallow: /up
+
+Sitemap: https://bosh.kg/sitemap.xml

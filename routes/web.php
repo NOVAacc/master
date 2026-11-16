@@ -10,6 +10,8 @@ use App\Http\Controllers\MasterImageController;
 use App\Http\Controllers\PublicBookingController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/sitemap.xml', \App\Http\Controllers\SitemapController::class)->name('sitemap');
+
 Route::get('/', HomeController::class)->name('home');
 Route::get('/demo', fn () => \Inertia\Inertia::render('Demo'))->name('demo');
 Route::get('/legal/{document}', function (string $document) {
