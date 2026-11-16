@@ -23,7 +23,7 @@ Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->middlewar
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->middleware('throttle:15,1')->name('google.callback');
 Route::middleware('guest')->group(function () {
     Route::get('/auth/google/finish', [GoogleAuthController::class, 'finishPage'])->name('google.finish');
-    Route::post('/auth/google/finish', [GoogleAuthController::class, 'finish'])->middleware('throttle:5,10');
+    Route::post('/auth/google/finish', [GoogleAuthController::class, 'finish'])->middleware('throttle:google-signup');
     Route::get('/login', [AuthController::class, 'loginPage'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1');
     Route::get('/register', [AuthController::class, 'registerPage'])->name('register');
