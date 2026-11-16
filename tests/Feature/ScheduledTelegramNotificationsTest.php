@@ -32,6 +32,7 @@ final class ScheduledTelegramNotificationsTest extends TestCase
             'auto_confirm' => true, 'booking_enabled' => true,
             'telegram_chat_id' => '4444', 'telegram_alerts_enabled' => true,
         ]);
+        $master->forceFill(['telegram_chat_id' => '4444', 'telegram_alerts_enabled' => true])->save();
         $service = $master->services()->create([
             'name' => 'Маникюр', 'duration_minutes' => 60, 'price_som' => 1200, 'is_active' => true,
         ]);
