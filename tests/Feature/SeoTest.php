@@ -40,7 +40,7 @@ class SeoTest extends TestCase
         $this->assertStringContainsString('/m/verified-master', $xml);
         $this->assertStringNotContainsString('/m/demo-master', $xml);
         $this->assertNotFalse(simplexml_load_string($xml));
-        $this->get('/m/verified-master?service=1')->assertOk()
+        $this->get('/m/verified-master?service='.$master->services()->firstOrFail()->id)->assertOk()
             ->assertSee('rel="canonical" href="http://localhost/m/verified-master"', false)
             ->assertSee('Услуги и цены')->assertSee('Маникюр')
             ->assertDontSee('<script>alert(1)</script>', false);
