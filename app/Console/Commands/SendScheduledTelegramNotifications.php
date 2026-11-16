@@ -46,7 +46,7 @@ final class SendScheduledTelegramNotifications extends Command
                 if (CarbonImmutable::parse($appointment->created_at, 'UTC')->greaterThan($due)) continue;
                 $master = $appointment->masterProfile;
                 if (!$master || $master->is_demo) continue;
-                $chatId = $kind === 'master_30m' ? ($master->telegram_alerts_enabled ? $master->telegram_chat_id : null) : $this->clientChatId($appointment);
+                $chatId = $kind === 'master_30m' ? ($master->telegram_alerts_enabled && $master->telegram_reminders_enabled ? $master->telegram_chat_id : null) : $this->clientChatId($appointment);
                 if (!$chatId) continue;
                 $key = $this->appointmentKey($kind, $appointment);
                 if (DB::table('telegram_scheduled_notifications')->where('event_key', $key)->exists()) continue;
@@ -60,7 +60,7 @@ final class SendScheduledTelegramNotifications extends Command
                     continue;
                 }
                 $chatId = $kind === 'master_30m'
-                    ? ($fresh->masterProfile->telegram_alerts_enabled ? $fresh->masterProfile->telegram_chat_id : null)
+                    ? ($fresh->masterProfile->telegram_alerts_enabled && $fresh->masterProfile->telegram_reminders_enabled ? $fresh->masterProfile->telegram_chat_id : null)
                     : $this->clientChatId($fresh);
                 if (!$chatId) {
                     $this->mark($key, 'opted_out');
@@ -144,7 +144,7 @@ final class SendScheduledTelegramNotifications extends Command
     {
         $count = 0;
         MasterProfile::query()->whereNotNull('telegram_chat_id')
-            ->where('telegram_alerts_enabled', true)->where('is_demo', false)
+            ->where('telegram_alerts_enabled', true)->where('telegram_reminders_enabled', true)->where('is_demo', false)
             ->chunkById(100, function ($masters) use ($now, $time, &$count) {
                 foreach ($masters as $master) {
                     try { $local = $now->setTimezone($master->timezone ?: 'Asia/Bishkek'); }
@@ -165,7 +165,7 @@ final class SendScheduledTelegramNotifications extends Command
                     if (!$this->claim($key, 'master_digest', null, $master->id)) continue;
                     // Recheck opt-out immediately before sending.
                     $current = MasterProfile::find($master->id);
-                    if (!$current || !$current->telegram_alerts_enabled || !$current->telegram_chat_id) {
+                    if (!$current || !$current->telegram_alerts_enabled || !$current->telegram_reminders_enabled || !$current->telegram_chat_id) {
                         $this->mark($key, 'opted_out');
                         continue;
                     }
