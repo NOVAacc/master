@@ -597,6 +597,9 @@ export default function Dashboard({
                 </button>)}
                 <div className="master-bottom-more-divider" />
                 <a href={publicUrl} target="_blank" rel="noreferrer" tabIndex={mobileMenuOpen ? 0 : -1}>{tr("Открыть страницу ↗")}</a>
+                <Link href="/logout" method="post" as="button" className="text-button" tabIndex={mobileMenuOpen ? 0 : -1}>
+                    {tr("Выйти")}
+                </Link>
             </nav>
             <main className="main">
                 <div className="master-page-tools"><MasterModeSwitch mode="dashboard" publicUrl={publicUrl} /><LanguageSwitch /></div>
