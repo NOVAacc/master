@@ -61,6 +61,7 @@ class DashboardController extends Controller
                 'email' => $request->user()->email,
                 'emailVerified' => $request->user()->email_verified_at !== null,
                 'passwordSet' => $request->user()->password_initialized_at !== null,
+                'googleLinked' => $request->user()->google_sub !== null,
             ],
             'groupSessions' => function () use ($master) {
                 $groupParticipants = DB::table('master_group_participants as p')

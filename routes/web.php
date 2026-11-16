@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GoogleAuthController;
 use App\Http\Controllers\AccountSecurityController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ClientController;
@@ -18,7 +19,11 @@ Route::get('/legal/{document}', function (string $document) {
     abort_unless(in_array($document, ['terms', 'privacy', 'cookies'], true), 404);
     return \Inertia\Inertia::render('Legal', ['document' => $document]);
 })->name('legal.document');
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->middleware('throttle:10,1')->name('google.redirect');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->middleware('throttle:15,1')->name('google.callback');
 Route::middleware('guest')->group(function () {
+    Route::get('/auth/google/finish', [GoogleAuthController::class, 'finishPage'])->name('google.finish');
+    Route::post('/auth/google/finish', [GoogleAuthController::class, 'finish'])->middleware('throttle:5,10');
     Route::get('/login', [AuthController::class, 'loginPage'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1');
     Route::get('/register', [AuthController::class, 'registerPage'])->name('register');
