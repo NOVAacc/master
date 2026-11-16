@@ -883,7 +883,7 @@ export default function Dashboard({
                         </div>
                     )}
                     {tab === "services" && (
-                        <ServicesPanel services={services} publicUrl={publicUrl} />
+                        <ServicesPanel services={services} publicUrl={publicUrl} master={master} />
                     )}
                     {tab === "schedule" && <Schedule hours={hours} />}
                     {tab === "profile" && (
