@@ -26,6 +26,11 @@ final class TelegramMasterController extends Controller {
   MasterProfile::where('user_id',$r->user()->id)->update(['telegram_alerts_enabled'=>$data['enabled']]);
   return back();
  }
+ public function toggleReminders(Request $r) {
+  $data=$r->validate(['enabled'=>['required','boolean']]);
+  MasterProfile::where('user_id',$r->user()->id)->update(['telegram_reminders_enabled'=>$data['enabled']]);
+  return back();
+ }
  public function webhook(Request $r) {
   $secret=config('services.telegram.webhook_secret');
   abort_unless($secret&&hash_equals($secret,(string)$r->header('X-Telegram-Bot-Api-Secret-Token')),403);

@@ -9,4 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // On shared hosting, invoke `php artisan schedule:run` every minute via cron.
-Schedule::command('bosh:send-client-reminders')->everyMinute()->withoutOverlapping(5);
+Schedule::command('bosh:send-scheduled-telegram')->everyMinute()->withoutOverlapping(5);

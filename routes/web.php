@@ -41,6 +41,7 @@ Route::post('/telegram/webhook', [\App\Http\Controllers\TelegramMasterController
 Route::middleware('auth')->group(function () {
     Route::get('/telegram/connect', [\App\Http\Controllers\TelegramMasterController::class, 'connect'])->middleware('throttle:5,1');
     Route::post('/telegram/disconnect', [\App\Http\Controllers\TelegramMasterController::class, 'disconnect'])->middleware('throttle:5,1');
+    Route::post('/telegram/reminders/toggle', [\App\Http\Controllers\TelegramMasterController::class, 'toggleReminders'])->middleware('throttle:10,1');
     Route::post('/telegram/toggle', [\App\Http\Controllers\TelegramMasterController::class, 'toggle'])->middleware('throttle:10,1');
     Route::post('/alerts/read', function (\Illuminate\Http\Request $request) {
         \Illuminate\Support\Facades\DB::table('master_alerts')->where('master_profile_id', \App\Models\MasterProfile::where('user_id', $request->user()->id)->value('id'))->whereNull('read_at')->update(['read_at' => now()]);
@@ -201,6 +202,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/categories/{industry}/{activity}/stories/{role}', [\App\Http\Controllers\CategoryStoryTemplateController::class, 'update'])->middleware('throttle:20,1')->name('categories.stories.update');
         Route::get('/categories/{industry}/{activity}/stories/{role}/image/{version}', [\App\Http\Controllers\CategoryStoryTemplateController::class, 'image'])->where('version', '[a-f0-9]{40}')->name('categories.stories.image');
         Route::get('/settings', [\App\Http\Controllers\AdminController::class, 'settings'])->name('settings');
+        Route::post('/settings/notifications', [\App\Http\Controllers\AdminController::class, 'notificationSettings'])->middleware('throttle:20,1')->name('settings.notifications');
         Route::post('/settings/social', [\App\Http\Controllers\AdminController::class, 'socialSettings'])->middleware('throttle:20,1')->name('settings.social');
         Route::post('/password', [\App\Http\Controllers\AdminController::class, 'password'])->middleware('throttle:5,10')->name('password');
         Route::post('/logout', [\App\Http\Controllers\AdminController::class, 'logout'])->name('logout');
