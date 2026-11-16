@@ -267,6 +267,10 @@ try {
         'TELEGRAM_BOT_USERNAME' => '',
         'TELEGRAM_BOT_TOKEN' => '',
         'TELEGRAM_WEBHOOK_SECRET' => '',
+        // Google OAuth credentials are supplied privately and persist across releases.
+        'GOOGLE_CLIENT_ID' => '',
+        'GOOGLE_CLIENT_SECRET' => '',
+        'GOOGLE_REDIRECT_URI' => 'https://bosh.kg/auth/google/callback',
         'WHATSAPP_ENABLED' => 'false', 'WHATSAPP_SENDER_NUMBER' => '996550512233',
         'WHATSAPP_TOKEN' => '', 'WHATSAPP_PHONE_NUMBER_ID' => '', 'WHATSAPP_API_VERSION' => '',
         'WHATSAPP_LANGUAGE' => 'ru', 'WHATSAPP_CLIENT_TEMPLATE' => 'bosh_booking_client',
