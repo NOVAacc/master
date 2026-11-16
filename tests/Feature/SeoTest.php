@@ -21,6 +21,14 @@ class SeoTest extends TestCase
         $this->assertStringNotContainsString('noindex', $response->getContent());
     }
 
+    public function test_canonical_origin_is_independent_of_the_request_host(): void
+    {
+        config(['app.url' => 'https://bosh.kg']);
+        $this->get('http://www.bosh.kg/?utm_source=test')->assertOk()
+            ->assertSee('rel="canonical" href="https://bosh.kg"', false);
+        $this->assertStringNotContainsString('www.bosh.kg', $this->get('/sitemap.xml')->streamedContent());
+    }
+
     public function test_private_and_authentication_pages_are_not_indexable(): void
     {
         $this->get('/login')->assertOk()->assertHeader('X-Robots-Tag', 'noindex, follow')

@@ -13,12 +13,12 @@ final class SitemapController extends Controller
             $emit = function (string $url) {
                 echo '<url><loc>'.htmlspecialchars($url, ENT_XML1 | ENT_QUOTES, 'UTF-8').'</loc></url>';
             };
-            $emit(route('home'));
+            $emit(Seo::url());
             foreach (['terms', 'privacy', 'cookies'] as $document) {
-                $emit(route('legal.document', $document));
+                $emit(Seo::url(route('legal.document', $document, false)));
             }
             foreach (Seo::eligibleMasters()->select('id', 'slug')->orderBy('id')->cursor() as $master) {
-                $emit(route('public.master', $master->slug));
+                $emit(Seo::url(route('public.master', $master->slug, false)));
             }
             echo '</urlset>';
         }, 200, ['Content-Type' => 'application/xml; charset=UTF-8', 'X-Robots-Tag' => 'noindex']);
