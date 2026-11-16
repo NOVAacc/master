@@ -171,7 +171,30 @@ class AdminController extends Controller
 
     public function settings()
     {
-        return view('admin.settings', ['instagramUsername' => SiteSetting::instagramUsername()]);
+        return view('admin.settings', ['instagramUsername' => SiteSetting::instagramUsername(), 'notifications' => SiteSetting::notificationSettings()]);
+    }
+
+    public function notificationSettings(Request $request)
+    {
+        $data = $request->validate([
+            'client_24h_enabled' => ['required', 'boolean'],
+            'client_2h_enabled' => ['required', 'boolean'],
+            'master_30m_enabled' => ['required', 'boolean'],
+            'master_digest_enabled' => ['required', 'boolean'],
+            'client_24h_minutes' => ['required', 'integer', 'min:1', 'max:10080'],
+            'client_2h_minutes' => ['required', 'integer', 'min:1', 'max:10080'],
+            'master_30m_minutes' => ['required', 'integer', 'min:1', 'max:1440'],
+            'master_digest_time' => ['required', 'date_format:H:i'],
+        ]);
+        if ($data['client_24h_minutes'] <= $data['client_2h_minutes']) {
+            throw ValidationException::withMessages(['client_24h_minutes' => 'Первое напоминание должно быть раньше второго.']);
+        }
+        DB::transaction(function () use ($data) {
+            foreach ($data as $key => $value) {
+                SiteSetting::updateOrCreate(['key' => 'telegram_'.$key], ['value' => is_bool($value) ? ($value ? '1' : '0') : (string) $value]);
+            }
+        });
+        return redirect()->route('admin.settings')->with('success', 'Настройки Telegram-уведомлений сохранены.');
     }
 
     public function socialSettings(Request $request)
