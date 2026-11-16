@@ -21,6 +21,7 @@ final class Seo
         $description = 'Бесплатная онлайн-запись для мастеров красоты и специалистов: страница с услугами и ценами, календарь, клиентская база и уведомления в Telegram.';
         $canonical = url('/');
         $index = $request->routeIs('home');
+        if (! $index) $title = 'BOSH';
         $schema = null;
         if ($index) {
             $schema = ['@context' => 'https://schema.org', '@type' => 'SoftwareApplication',
