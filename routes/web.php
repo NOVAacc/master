@@ -41,6 +41,7 @@ Route::post('/telegram/webhook', [\App\Http\Controllers\TelegramMasterController
 Route::middleware('auth')->group(function () {
     Route::get('/telegram/connect', [\App\Http\Controllers\TelegramMasterController::class, 'connect'])->middleware('throttle:5,1');
     Route::post('/telegram/disconnect', [\App\Http\Controllers\TelegramMasterController::class, 'disconnect'])->middleware('throttle:5,1');
+    Route::post('/telegram/reminders/toggle', [\\App\\Http\\Controllers\\TelegramMasterController::class, 'toggleReminders'])->middleware('throttle:10,1');
     Route::post('/telegram/toggle', [\App\Http\Controllers\TelegramMasterController::class, 'toggle'])->middleware('throttle:10,1');
     Route::post('/alerts/read', function (\Illuminate\Http\Request $request) {
         \Illuminate\Support\Facades\DB::table('master_alerts')->where('master_profile_id', \App\Models\MasterProfile::where('user_id', $request->user()->id)->value('id'))->whereNull('read_at')->update(['read_at' => now()]);
