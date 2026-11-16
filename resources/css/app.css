@@ -3743,3 +3743,59 @@ html:has(.landing) { scroll-behavior: auto; }
 .onboarding-connected,.onboarding-saved{color:#19754c;font-weight:650;font-size:14px;margin:14px 0}
 .onboarding-telegram-card .button.wide{width:100%;margin-top:10px}
 @media(max-width:600px){.industry-onboarding-backdrop{padding:8px;align-items:center}.industry-onboarding{padding:22px 18px;border-radius:20px;max-height:94dvh;width:100%;scrollbar-gutter:auto}.industry-onboarding h2{font-size:24px}.onboarding-step-index{height:42px;width:42px;font-size:18px}.onboarding-telegram-card{padding:15px}.industry-onboarding .onboarding-weekdays{gap:4px}.industry-onboarding .onboarding-weekdays button{font-size:11px;padding:12px 0}}
+
+
+/* Native-style mobile master navigation. Desktop sidebar is preserved. */
+.master-bottom-navigation,.master-bottom-more,.master-bottom-more-backdrop{display:none}
+@media(max-width:700px){
+  .shell > .sidebar{position:relative;z-index:4}
+  .shell .sidebar-menu-toggle{display:none!important}
+  .shell .sidebar > nav,.shell .sidebar > .sidebar-bottom,.shell .sidebar > .eyebrow,
+  .shell .sidebar.mobile-menu-open > nav,.shell .sidebar.mobile-menu-open > .sidebar-bottom{display:none!important}
+  .shell > .main{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))!important}
+  .master-bottom-navigation{
+    display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+    position:fixed;inset:auto 0 0;z-index:105;
+    width:100%;max-width:100vw;
+    padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));
+    background:rgba(255,255,255,.97);border-top:1px solid #e7e7e9;
+    box-shadow:0 -5px 25px #1111110b;
+    box-sizing:border-box;
+  }
+  .master-bottom-navigation button{
+    appearance:none;box-sizing:border-box;min-width:0;width:100%;
+    min-height:54px;border:0;background:transparent;color:#737681;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:5px;padding:6px 2px;border-radius:12px;font-size:clamp(9px,2.65vw,11px);
+    font-weight:550;line-height:1.15;text-align:center;cursor:pointer;
+  }
+  .master-bottom-navigation button .icon{width:21px;height:21px;flex:none}
+  .master-bottom-navigation button span{display:block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .master-bottom-navigation button.active{color:#c82731;background:#fff1f2;font-weight:700}
+  .master-bottom-navigation button:focus-visible,.master-bottom-more button:focus-visible{outline:2px solid #c82731;outline-offset:-2px}
+  .master-bottom-more-backdrop{display:block;position:fixed;inset:0;z-index:103;background:rgba(10,12,18,.22)}
+  .master-bottom-more{
+    display:grid;position:fixed;z-index:104;
+    left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));
+    max-width:440px;margin-inline:auto;padding:9px;background:#fff;
+    border:1px solid #e8e8ec;border-radius:20px;box-shadow:0 14px 42px #0002;
+    opacity:0;visibility:hidden;pointer-events:none;
+    transform:translateY(8px);transition:transform .18s ease,opacity .18s ease,visibility .18s ease;
+  }
+  .master-bottom-more.open{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0)}
+  .master-bottom-more button,.master-bottom-more>a{
+    display:flex;align-items:center;gap:12px;width:100%;min-height:47px;
+    padding:11px 13px;border:0;border-radius:11px;background:transparent;
+    font-size:14px;color:#24252b;text-align:left;text-decoration:none;cursor:pointer;box-sizing:border-box;
+  }
+  .master-bottom-more button.active{background:#fff1f2;color:#c82731;font-weight:700}
+  .master-bottom-more .icon{width:19px;height:19px}
+  .master-bottom-more-divider{height:1px;background:#ececef;margin:5px}
+  .shell .services-pagination{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;width:100%;box-sizing:border-box}
+  .shell .services-pagination>*{flex:0 0 auto;min-height:40px}
+}
+@media(max-width:360px){
+  .master-bottom-navigation{padding-left:4px;padding-right:4px}
+  .master-bottom-navigation button{font-size:9px;gap:4px}
+}
+@media(prefers-reduced-motion:reduce){.master-bottom-more{transition:none}}
