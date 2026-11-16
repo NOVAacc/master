@@ -566,6 +566,38 @@ export default function Dashboard({
                         {tr("Выйти")}{" "}</Link>
                 </div>
             </aside>
+            <nav className="master-bottom-navigation" aria-label={tr("Разделы кабинета")}>
+                {([
+                    ["appointments", tr("Записи"), "calendar"],
+                    ["schedule", tr("Расписание"), "clock"],
+                    ["clients", tr("Клиенты"), "user"],
+                    ["services", tr("Услуги"), "grid"],
+                ] as const).map(([key, label, icon]) => (
+                    <button key={key} type="button" className={tab === key ? "active" : ""}
+                        aria-current={tab === key ? "page" : undefined} onClick={() => selectTab(key)}>
+                        <Icon name={icon}/><span>{label}</span>
+                    </button>
+                ))}
+                <button type="button" className={mobileMenuOpen || ["groups","profile","settings"].includes(tab) ? "active" : ""}
+                    aria-label={tr("Ещё")} aria-expanded={mobileMenuOpen} aria-controls="master-bottom-more"
+                    onClick={() => setMobileMenuOpen(open => !open)}>
+                    <Icon name="more"/><span>{tr("Ещё")}</span>
+                </button>
+            </nav>
+            {mobileMenuOpen && <div className="master-bottom-more-backdrop" onClick={() => setMobileMenuOpen(false)} />}
+            <nav id="master-bottom-more" className={`master-bottom-more${mobileMenuOpen ? " open" : ""}`} aria-label={tr("Другие разделы")} aria-hidden={!mobileMenuOpen}>
+                {([
+                    ["groups", tr("Групповые занятия"), "calendar"],
+                    ["profile", tr("Моя страница"), "user"],
+                    ["settings", tr("Настройки профиля"), "settings"],
+                ] as const).map(([key,label,icon]) => <button type="button" key={key}
+                    tabIndex={mobileMenuOpen ? 0 : -1} aria-current={tab===key ? "page" : undefined}
+                    className={tab===key ? "active" : ""} onClick={() => selectTab(key)}>
+                    <Icon name={icon}/><span>{label}</span>
+                </button>)}
+                <div className="master-bottom-more-divider" />
+                <a href={publicUrl} target="_blank" rel="noreferrer" tabIndex={mobileMenuOpen ? 0 : -1}>{tr("Открыть страницу ↗")}</a>
+            </nav>
             <main className="main">
                 <div className="master-page-tools"><MasterModeSwitch mode="dashboard" publicUrl={publicUrl} /><LanguageSwitch /></div>
                 <header className="row between dashboard-header">
