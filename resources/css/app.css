@@ -3799,33 +3799,3 @@ html:has(.landing) { scroll-behavior: auto; }
   .master-bottom-navigation button{font-size:9px;gap:4px}
 }
 @media(prefers-reduced-motion:reduce){.master-bottom-more{transition:none}}
-
-
-/* Public master profile: edge-to-edge cover on phones, including iOS safe area. */
-@media (max-width:700px) {
-  .booking-wrap {
-    padding-top:0 !important;
-    margin-top:0;
-  }
-  .booking-wrap > .public-page-tools {
-    display:none;
-  }
-  .booking-wrap > .booking-grid {
-    margin-top:0;
-    padding-top:0;
-  }
-  .booking-wrap > .booking-grid > .profile-card {
-    margin-top:0;
-    border-top:0;
-    border-top-left-radius:0;
-    border-top-right-radius:0;
-  }
-  .booking-wrap > .booking-grid > .profile-card .profile-cover {
-    height:calc(132px + env(safe-area-inset-top, 0px));
-  }
-  .booking-wrap > .booking-grid > .profile-card .profile-cover img {
-    display:block;
-    height:100%;
-    object-fit:cover;
-  }
-}
