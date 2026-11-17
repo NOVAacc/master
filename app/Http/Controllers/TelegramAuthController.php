@@ -80,6 +80,9 @@ class TelegramAuthController extends Controller
 
         $user = User::where('telegram_sub', $sub)->first();
         if ($user) {
+            if (!$user->email_verified_at) {
+                return redirect()->route('login')->with('error', 'Сначала подтвердите почту по ссылке из письма.');
+            }
             if ($user->login_locked_until && $user->login_locked_until->isFuture()) {
                 return redirect()->route('login')->with('error', 'Доступ к аккаунту временно заблокирован.');
             }
