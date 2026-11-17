@@ -1,7 +1,7 @@
 <?php
 return [
     'google' => ['client_id' => env('GOOGLE_CLIENT_ID'), 'client_secret' => env('GOOGLE_CLIENT_SECRET'), 'redirect' => env('GOOGLE_REDIRECT_URI')],
-    'telegram' => ['bot_token' => env('TELEGRAM_BOT_TOKEN'), 'bot_username' => env('TELEGRAM_BOT_USERNAME'), 'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET')],
+    'telegram' => ['bot_token' => env('TELEGRAM_BOT_TOKEN'), 'bot_username' => env('TELEGRAM_BOT_USERNAME'), 'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'), 'client_id' => env('TELEGRAM_CLIENT_ID'), 'client_secret' => env('TELEGRAM_CLIENT_SECRET')],
     'turnstile' => [
         'site_key' => env('TURNSTILE_SITE_KEY'),
         'secret_key' => env('TURNSTILE_SECRET_KEY'),
