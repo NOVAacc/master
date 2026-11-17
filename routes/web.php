@@ -151,16 +151,15 @@ Route::post('/onboarding/services', function (\Illuminate\Http\Request $request)
         if ($profile->onboarding_restart_step === 2) {
             $profile->update(['onboarding_restart_step' => null]);
         }
-        // New onboarding completion is gated by Telegram link confirmation.
-        $profile->update(['onboarding_telegram_required' => true]);
+        // Telegram notifications are optional during onboarding.
+        $profile->update(['onboarding_telegram_required' => false]);
     });
     return redirect()->route('dashboard');
 })->middleware(['auth', 'throttle:10,1'])->name('onboarding.services');
 Route::post('/onboarding/complete', function (\Illuminate\Http\Request $request) {
     $profile = \App\Models\MasterProfile::where('user_id', $request->user()->id)->firstOrFail();
-    abort_unless($profile->telegram_chat_id, 422, 'Сначала подключите Telegram.');
     abort_unless($profile->services()->exists(), 422, 'Сначала добавьте услуги.');
-    $profile->forceFill(['onboarding_telegram_required' => false, 'telegram_alerts_enabled' => true, 'onboarding_completed_at' => now(), 'onboarding_restart_step' => null])->save();
+    $profile->forceFill(['onboarding_telegram_required' => false, 'telegram_alerts_enabled' => (bool) $profile->telegram_chat_id, 'onboarding_completed_at' => now(), 'onboarding_restart_step' => null])->save();
     return redirect()->route('dashboard')->with('onboarding_completed', true);
 })->middleware(['auth', 'throttle:10,1'])->name('onboarding.complete');
 Route::post('/onboarding/industry', function (\Illuminate\Http\Request $request) {
