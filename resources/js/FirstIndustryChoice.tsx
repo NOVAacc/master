@@ -22,8 +22,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
     const needCategory = !validCategory;
     const needSchedule = counts.hoursCount === 0;
     const needServices = counts.servicesCount === 0;
-    const telegramRequired = !!counts.telegramRequired;
-    const firstStep = counts.restartStep != null ? Math.min(counts.restartStep, 2) : needCategory ? 0 : needSchedule ? 1 : needServices || telegramRequired ? 2 : 3;
+    const firstStep = counts.restartStep != null ? Math.min(counts.restartStep, 2) : needCategory ? 0 : needSchedule ? 1 : needServices ? 2 : 3;
     const [days, setDays] = useRemember<number[]>([1, 2, 3, 4, 5, 6], `bosh-onboarding-${master.id}-days`);
     const [start, setStart] = useRemember("09:00", `bosh-onboarding-${master.id}-start`);
     const [end, setEnd] = useRemember("18:00", `bosh-onboarding-${master.id}-end`);
@@ -122,7 +121,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
             </>}
             {step === 2 && <>
                 <h2 id="industry-title">{tr("Услуги и связь с клиентами")}</h2>
-                <p className="muted small">{tr("Добавьте первую услугу и подключите Telegram, чтобы сразу получать уведомления о записях.")}</p>
+                <p className="muted small">{tr("Добавьте первую услугу. Telegram для уведомлений можно подключить сейчас или позже в настройках кабинета.")}</p>
                 {!servicesSaved && !drafted && <div className="onboarding-suggestions">
                     {suggested.map(name => <button type="button" key={name} className="button small" onClick={() => {
                         service.setData("services", [{ name: tr(name), duration_minutes: 60, price_som: 0 }]); setDrafted(true);
@@ -140,6 +139,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
                 {!servicesSaved && <button type="button" className="button wide" disabled={service.processing || service.data.services.some(x=>!x.name.trim())} onClick={submitServices}>{service.processing ? tr("Сохранение…") : tr("Сохранить услуги")}</button>}
                 {servicesSaved && <p className="onboarding-saved" role="status">✓ {tr("Услуги добавлены")}</p>}
                 <section className="onboarding-telegram-card">
+                    <p className="muted small">{tr("Необязательно · можно подключить позже в настройках")}</p>
                     <div className="onboarding-telegram-title"><span className="onboarding-telegram-mark">✈</span><div><strong>{tr("Telegram для уведомлений")}</strong><p className="muted small">{tr("Новые записи, отмены и переносы — сразу в Telegram.")}</p></div></div>
                     {telegramConnected
                         ? <p className="onboarding-connected" role="status">✓ {tr("Telegram подключён")}</p>
@@ -147,7 +147,7 @@ export default function FirstIndustryChoice({ master, publicUrl, completed }: { 
                             {telegramConfigured ? <a className="primary wide" href="/telegram/connect" target="_blank" rel="noopener noreferrer">{tr("Подключить Telegram")}</a> : <p role="alert">{tr("Подключение Telegram сейчас недоступно. Обратитесь в поддержку BOSH.")}</p>}
                             <button className="button wide" type="button" disabled={checkingTelegram} onClick={() => {setCheckingTelegram(true);router.reload({only:["telegramConnected","onboarding"],onFinish:()=>setCheckingTelegram(false)});}}>{checkingTelegram ? tr("Проверяем…") : tr("Проверить подключение")}</button></>}
                 </section>
-                <button className="primary wide" type="button" disabled={!servicesSaved || !telegramConnected} onClick={() => router.post("/onboarding/complete", {}, {preserveScroll:true,onSuccess:()=>{setShowFinish(true);setStep(3);}})}>{tr("Завершить настройку")}</button>
+                <button className="primary wide" type="button" disabled={!servicesSaved} onClick={() => router.post("/onboarding/complete", {}, {preserveScroll:true,onSuccess:()=>{setShowFinish(true);setStep(3);}})}>{tr("Завершить настройку")}</button>
             </>}
         </section>
     </div>;

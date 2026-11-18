@@ -110,9 +110,16 @@ def run(args):
             assert 'TELEGRAM_BOT_USERNAME="Boshkg_bot"' in first_env
             assert 'TELEGRAM_BOT_TOKEN="inert-test-telegram-token"' in first_env
             assert 'TELEGRAM_WEBHOOK_SECRET="inert-test-webhook-secret"' in first_env
+            first_env = first_env.replace('GOOGLE_CLIENT_ID=""', 'GOOGLE_CLIENT_ID="inert-test-google-client-id"')
+            first_env = first_env.replace('GOOGLE_CLIENT_SECRET=""', 'GOOGLE_CLIENT_SECRET="inert-test-google-client-secret"')
+            assert 'GOOGLE_CLIENT_ID="inert-test-google-client-id"' in first_env
+            assert 'GOOGLE_CLIENT_SECRET="inert-test-google-client-secret"' in first_env
+            assert 'GOOGLE_REDIRECT_URI="https://bosh.kg/auth/google/callback"' in first_env
             first_env = first_env.replace('WHATSAPP_TOKEN=""', 'WHATSAPP_TOKEN="test-token-keep-private"')
             first_env = first_env.replace('WHATSAPP_SENDER_NUMBER="996550512233"', 'WHATSAPP_SENDER_NUMBER="996555000001"')
             first_env = first_env.replace('WHATSAPP_CLIENT_TEMPLATE="bosh_booking_client"', 'WHATSAPP_CLIENT_TEMPLATE="custom_booking_client"')
+            # Unknown application keys and comments must not be discarded or normalized.
+            first_env += '\n# Operator-managed settings (preserve verbatim)\nTELEGRAM_CLIENT_ID="test-client-id"\nTELEGRAM_CLIENT_SECRET="test-client-secret"\nCUSTOM_FUTURE_SETTING="keep-this"\n'
             (private / 'shared/.env').write_text(first_env)
             out2, names2, token2 = prepare(2)
             code, result = request(names2, token2, json.loads((out2 / 'request.json').read_text()))
@@ -122,6 +129,7 @@ def run(args):
             assert (private / 'shared/storage/app/private/retained.txt').read_text() == 'persistent data'
             assert request(names2, token2, {'action': 'rollback'})[1]['status'] == 'rolled_back'
             assert (private / 'current').resolve() == first
+            assert (private / 'shared/.env').read_text() == first_env
 
             # Corrupted ciphertext cannot change the active release.
             out3, names3, token3 = prepare(3)

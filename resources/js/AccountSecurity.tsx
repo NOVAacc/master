@@ -9,6 +9,7 @@ export type SecurityStatus = {
     email: string | null;
     emailVerified: boolean;
     passwordSet: boolean;
+    googleLinked: boolean;
 };
 
 export default function AccountSecurity({ status }: { status: SecurityStatus }) {
@@ -35,6 +36,11 @@ export default function AccountSecurity({ status }: { status: SecurityStatus }) 
                     <button type="button" className="ghost" onClick={() => setDismissPassword(true)}>{tr("Напомнить позже")}</button>
                 </div>
             )}
+            <div className="notice">
+                <h3>{tr("Вход через Google")}</h3>
+                <p>{status.googleLinked ? tr("Google-аккаунт подключён.") : tr("Подключите Google для входа без пароля. Адрес Google должен совпадать с почтой BOSH.")}</p>
+                {!status.googleLinked && <a href="/auth/google" className="secondary">{tr("Подключить Google")}</a>}
+            </div>
             <div className="profile-settings-layout">
                 <form onSubmit={e => {
                     e.preventDefault();

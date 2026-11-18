@@ -42,7 +42,7 @@ function rollback(array $state): array {
     if (is_link($current) && !in_array(readlink($current), [DEPLOY['base'].'/releases/'.DEPLOY['release'], $state['previous']], true)) deployFail('release_has_changed');
     switchRelease($state['previous']);
     restoreRoot($state);
-    if ($state['env_existed']) writeFile(DEPLOY['base'].'/shared/.env', file_get_contents($state['backup'].'/previous.env'));
+    // Rollbacks never modify the shared environment; it may have been updated independently.
     $state['status'] = 'rolled_back';
     saveState($state);
     return $state;
@@ -250,6 +250,9 @@ try {
     }
     if ($state['env_existed']) writeFile($backup.'/previous.env', file_get_contents($envPath));
     saveState($state);
+    // Immutable across releases: never rewrite, normalize, remove or replace an existing shared/.env.
+    // Operators may append new variables separately; deployment must preserve every original byte.
+    if (!$state['env_existed']) {
     $existing = $state['env_existed'] ? Dotenv\Dotenv::parse(file_get_contents($envPath)) : [];
     $appKey = $existing['APP_KEY'] ?? ('base64:'.base64_encode(random_bytes(32)));
     $env = ['APP_NAME' => 'BOSH', 'APP_ENV' => 'production', 'APP_KEY' => $appKey, 'APP_DEBUG' => 'false',
@@ -267,6 +270,10 @@ try {
         'TELEGRAM_BOT_USERNAME' => '',
         'TELEGRAM_BOT_TOKEN' => '',
         'TELEGRAM_WEBHOOK_SECRET' => '',
+        // Google OAuth credentials are supplied privately and persist across releases.
+        'GOOGLE_CLIENT_ID' => '',
+        'GOOGLE_CLIENT_SECRET' => '',
+        'GOOGLE_REDIRECT_URI' => 'https://bosh.kg/auth/google/callback',
         'WHATSAPP_ENABLED' => 'false', 'WHATSAPP_SENDER_NUMBER' => '996550512233',
         'WHATSAPP_TOKEN' => '', 'WHATSAPP_PHONE_NUMBER_ID' => '', 'WHATSAPP_API_VERSION' => '',
         'WHATSAPP_LANGUAGE' => 'ru', 'WHATSAPP_CLIENT_TEMPLATE' => 'bosh_booking_client',
@@ -296,6 +303,7 @@ try {
     // Verify lossless encoding of passwords containing punctuation before saving.
     if (Dotenv\Dotenv::parse($text)['DB_PASSWORD'] !== $input['db_password']) deployFail('environment_encoding_failed');
     writeFile($envPath, $text); unset($input['db_password'], $input['nikita_otp_api_key'], $input['smtp'], $env, $text);
+    }
     if (!symlink($envPath, $release.'/.env')) deployFail('env_link_failed');
     $storage = $base.'/shared/storage';
     foreach (['app/private','app/public','framework/cache/data','framework/sessions','framework/views','logs'] as $dir) makeDir($storage.'/'.$dir);

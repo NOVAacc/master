@@ -1,5 +1,7 @@
 <?php
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GoogleAuthController;
+use App\Http\Controllers\TelegramAuthController;
 use App\Http\Controllers\AccountSecurityController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ClientController;
@@ -18,7 +20,15 @@ Route::get('/legal/{document}', function (string $document) {
     abort_unless(in_array($document, ['terms', 'privacy', 'cookies'], true), 404);
     return \Inertia\Inertia::render('Legal', ['document' => $document]);
 })->name('legal.document');
+Route::get('/auth/telegram', [TelegramAuthController::class, 'redirect'])->middleware('throttle:10,1')->name('telegram.auth.redirect');
+Route::get('/auth/telegram/callback', [TelegramAuthController::class, 'callback'])->middleware('throttle:15,1')->name('telegram.auth.callback');
+Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->middleware('throttle:10,1')->name('google.redirect');
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->middleware('throttle:15,1')->name('google.callback');
 Route::middleware('guest')->group(function () {
+    Route::get('/auth/telegram/finish', [TelegramAuthController::class, 'finishPage'])->name('telegram.auth.finish');
+    Route::post('/auth/telegram/finish', [TelegramAuthController::class, 'finish'])->middleware('throttle:5,10');
+    Route::get('/auth/google/finish', [GoogleAuthController::class, 'finishPage'])->name('google.finish');
+    Route::post('/auth/google/finish', [GoogleAuthController::class, 'finish'])->middleware('throttle:google-signup');
     Route::get('/login', [AuthController::class, 'loginPage'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,1');
     Route::get('/register', [AuthController::class, 'registerPage'])->name('register');
@@ -141,16 +151,15 @@ Route::post('/onboarding/services', function (\Illuminate\Http\Request $request)
         if ($profile->onboarding_restart_step === 2) {
             $profile->update(['onboarding_restart_step' => null]);
         }
-        // New onboarding completion is gated by Telegram link confirmation.
-        $profile->update(['onboarding_telegram_required' => true]);
+        // Telegram notifications are optional during onboarding.
+        $profile->update(['onboarding_telegram_required' => false]);
     });
     return redirect()->route('dashboard');
 })->middleware(['auth', 'throttle:10,1'])->name('onboarding.services');
 Route::post('/onboarding/complete', function (\Illuminate\Http\Request $request) {
     $profile = \App\Models\MasterProfile::where('user_id', $request->user()->id)->firstOrFail();
-    abort_unless($profile->telegram_chat_id, 422, 'Сначала подключите Telegram.');
     abort_unless($profile->services()->exists(), 422, 'Сначала добавьте услуги.');
-    $profile->forceFill(['onboarding_telegram_required' => false, 'telegram_alerts_enabled' => true, 'onboarding_completed_at' => now(), 'onboarding_restart_step' => null])->save();
+    $profile->forceFill(['onboarding_telegram_required' => false, 'telegram_alerts_enabled' => (bool) $profile->telegram_chat_id, 'onboarding_completed_at' => now(), 'onboarding_restart_step' => null])->save();
     return redirect()->route('dashboard')->with('onboarding_completed', true);
 })->middleware(['auth', 'throttle:10,1'])->name('onboarding.complete');
 Route::post('/onboarding/industry', function (\Illuminate\Http\Request $request) {

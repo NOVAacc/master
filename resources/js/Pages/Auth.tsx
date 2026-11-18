@@ -94,6 +94,12 @@ export default function Auth({ register, turnstileSiteKey }: { register: boolean
                 <h1>{t("Вход")}</h1>
             </>}
             <Notice />
+            <a href="/auth/telegram" style={{display:"flex",justifyContent:"center",alignItems:"center",gap:10,border:"1px solid #d4d4d8",borderRadius:12,padding:"13px 16px",textDecoration:"none",color:"inherit",fontWeight:600,marginBottom:10}}><span aria-hidden="true" style={{color:"#229ED9",fontSize:19}}>✈</span>{t("Продолжить через Telegram")}</a>
+            <a className="google-signin" href="/auth/google" style={{display:"flex",justifyContent:"center",alignItems:"center",gap:10,border:"1px solid #d4d4d8",borderRadius:12,padding:"13px 16px",textDecoration:"none",color:"inherit",fontWeight:600,marginBottom:18}}>
+                <svg width="19" height="19" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 5.38 6.51 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.28 5.48-4.82 7.18l7.73 6C44.36 38.03 46.98 31.87 46.98 24.55z"/><path fill="#FBBC05" d="M10.53 28.59A14.41 14.41 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.2A23.89 23.89 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.91-5.8l-7.73-6C30.03 37.64 27.29 38.5 24 38.5c-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                {t("Продолжить с Google")}
+            </a>
+            <div className="muted" style={{textAlign:"center",marginBottom:18}}>{t("или по электронной почте")}</div>
             <form onSubmit={submit}>
                 <Errors errors={f.errors} />
                 {register ? <>
